@@ -1,0 +1,387 @@
+/* ============================================================================
+   THE OVERLAY SHEET — every menu, popover, dropdown, dialog and drawer that
+   the DynamicTable floats above the grid.
+   ----------------------------------------------------------------------------
+   SCOPE CHANGE. This file used to hold only the right-click menu's entrance
+   animation and its two inner spans. It now owns the *chrome* of every
+   overlay surface in the grid: background, outline, corner, elevation, item
+   state layers, selected fills, dividers and motion.
+
+   WHY HERE. `globals.css` imports this file second-to-last —
+     DynamicTable.css → DynamicTable.v2.css → density.css → dateCell.css
+     → ContextMenu.css → SearchBar.css
+   so at equal specificity these rules win over every per-surface literal in
+   the three big sheets. Those literals (`border-radius: 8px`,
+   `box-shadow: 0 8px 24px rgba(0,0,0,.12)`, `background: var(--m3-surface-container-lowest)`)
+   are SUPERSEDED, not deleted: they still describe the box model, and only
+   the values restated below are taken over. When you change an overlay's
+   appearance, change it here — one edit lands on all of them at once, which
+   is the entire point of collecting them.
+
+   ONE THEME, NO `.dark` BLOCK. Every shell used to carry a `.dark X`
+   companion (0,2,0 specificity) that swapped a hand-written light shadow for
+   a hand-written dark one. Those are gone: the M3 elevation, surface and ink
+   roles are already theme-aware — `.dark` in m3.css raises the shadow's key
+   and ambient alphas and re-points every container role at the slate ramp —
+   so ONE declaration serves both schemes. If you find yourself writing a
+   `.dark` rule in this file, the token you are reaching for is the thing
+   that needs fixing.
+
+   WHAT IS *NOT* HERE. Row, cell and toolbar chrome: those live in the grid
+   sheets and belong to their own owners. No `--dt-*` density variable, row
+   height, header height or cell padding is touched by this file.
+
+   MENU ITEM HEIGHT IS FROZEN. M3's 48dp list row is rejected outright — a
+   dispatcher's column menu would need scrolling for six entries. Items keep
+   their 6px/10px (column menu) and 6px/8px (option lists) padding and their
+   ~28px box. Only the corner, the state layer and the transition change.
+
+   HISTORY. The removed `@media (prefers-color-scheme: dark)` block was dead
+   code: this app themes with a `.dark` CLASS, not the OS preference, so the
+   right-click menu rendered as a white card in the dark app.
+   ========================================================================== */
+
+/* ── Shells: menus, dropdowns, option lists ─────────────────────────────────
+   One surface role (`surface-container`), one soft outline
+   (`outline-variant`, never the harder `--m3-outline`), one 12px corner and
+   one two-shadow elevation.
+
+   The four `*-popover` classes an earlier draft listed here
+   (`columns-popover`, `filter-popover`, `sort-popover`,
+   `perspective-popover`) are deliberately ABSENT: nothing in the app renders
+   them any more, so a rule for them would be paint on dead code. Verified:
+   `grep -rE 'columns-popover|filter-popover|sort-popover|perspective-popover'`
+   over `packages/` and `apps/web/src` matches only CSS — zero TSX. Their 86
+   remaining rules in DynamicTable.css are unreachable and want DELETING by
+   that file's owner, not restyling. */
+.hot-col-menu,
+.hot-select-menu,
+.hot-filter-suggestions,
+.hot-quick-filter,
+.hot-editor-popup,
+.hot-editor-dropdown,
+.hot-mention-popup,
+.hot-export-menu {
+  background: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-md);
+  box-shadow: var(--m3-elevation-2);
+  color: var(--m3-on-surface);
+}
+
+/* ── Shells: comment surfaces ───────────────────────────────────────────────
+   The comment popover is a small DIALOG — header, thread, composer — so it
+   takes the dialog corner. The hover preview is a read-only card floating
+   over the grid and stays one step lower at 16px: the single explicit
+   exception to "an overlay is 12px or 24px". */
+.hot-comment-popover {
+  background: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-xl);
+  box-shadow: var(--m3-elevation-3);
+  color: var(--m3-on-surface);
+}
+
+.hot-comment-hover-popup {
+  background: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-lg);
+  box-shadow: var(--m3-elevation-3);
+  color: var(--m3-on-surface);
+}
+
+/* ── Shells: dialogs ────────────────────────────────────────────────────────
+   RETINT HOOK, exactly like `.hot-config-panel.hot-appearance-v2` above.
+
+   The four dialogs the grid opens — the large-write confirmation in
+   `DynamicTable.tsx`, `PerspectivePublishDialog`, `PerspectiveDeleteDialog`
+   and `TableDeleteDialog` — all render on `primitives/dialog.tsx`, which is
+   shared by the whole app and is NOT ours to migrate. Left alone it draws a
+   14px corner, Tailwind's `shadow-lg`, `bg-card` / `border` / `muted-
+   foreground` from the legacy shadcn ramp and a `focus:ring-ring` blue ring:
+   an unmigrated card sitting inside a migrated grid. So the call sites add a
+   `hot-dialog` class and this block retints it in place. Nothing in the
+   primitive is renamed, no DOM moves, and every other dialog in the app is
+   untouched.
+
+   CASCADE. The primitive states its corner as `sm:rounded-xl`, a Tailwind
+   UTILITY, and `@import "tailwindcss"` (v4.3.1) puts every utility inside
+   `@layer utilities`. This file is imported by `globals.css` UNLAYERED, and
+   unlayered declarations beat layered ones outright — layer order is
+   consulted before specificity, so `.hot-dialog` alone would already win.
+   The selector is still written as `[data-dialog-content].hot-dialog`
+   (0,2,0) so it also wins on specificity alone, for any consumer — the
+   Storybook preview, a future `@layer` wrapper — that does not reproduce
+   globals.css's unlayered import. `data-dialog-content` is the attribute the
+   primitive already sets; nothing new was added to the DOM for it.
+
+   GEOMETRY. Corner, colour, edge and elevation only. No width, height,
+   padding or margin is restated, so the dialogs keep the primitive's box.
+   The mobile bottom-sheet form (< 40rem, docked to the viewport bottom) takes
+   `--m3-shape-xl-top` — rounding its bottom edge would show the scrim through
+   two corners that sit on the screen edge. From `sm` up it is a centred
+   dialog and all four corners round. 40rem is Tailwind's default `sm`, which
+   this repo does not override. */
+[data-dialog-content].hot-dialog {
+  background: var(--m3-surface-container);
+  border-color: var(--m3-outline-variant);
+  border-radius: var(--m3-shape-xl-top);
+  box-shadow: var(--m3-elevation-3);
+  color: var(--m3-on-surface);
+}
+
+@media (min-width: 40rem) {
+  [data-dialog-content].hot-dialog {
+    border-radius: var(--m3-shape-xl);
+  }
+}
+
+/* The description ink. `DialogDescription` hardcodes `text-muted-foreground`,
+   a neutral grey from the legacy ramp, which reads visibly cold beside the
+   slate `--m3-on-surface-variant` every other label in the grid uses. Scoped
+   to `.hot-dialog`, so only these four dialogs are affected. Selecting on the
+   utility class is the only stable hook the primitive offers — Radix gives
+   the description no class or `data-*` of its own. */
+.hot-dialog .text-muted-foreground {
+  color: var(--m3-on-surface-variant);
+}
+
+/* The close X. The primitive dims it with `opacity-70` → `hover:opacity-100`,
+   which is the opacity-as-dimmer pattern this system bans: opacity is for
+   genuinely disabled controls only. Full opacity, variant ink at rest,
+   full-strength ink on hover. */
+[data-dialog-content].hot-dialog > [data-dialog-close] {
+  opacity: 1;
+  color: var(--m3-on-surface-variant);
+  border-radius: var(--m3-shape-full);
+  transition: var(--m3-transition-state);
+}
+
+[data-dialog-content].hot-dialog > [data-dialog-close]:hover {
+  /* Beats the primitive's `.hover\:opacity-100:hover` (0,2,0) on both layer
+     and specificity — without it the element would fade back in on hover
+     while our `color` stayed put, which is the same dimmer by another name. */
+  opacity: 1;
+  color: var(--m3-on-surface);
+}
+
+/* `focus:ring-2 focus:ring-ring focus:ring-offset-2` composes a BLUE ring out
+   of `--tw-ring-shadow`; the grid focuses TEAL. Overwriting `box-shadow`
+   wholesale drops the ring's every part at once. `:focus` clears it for
+   pointer focus, `:focus-visible` (declared second, same specificity) paints
+   the M3 halo for keyboard focus. */
+[data-dialog-content].hot-dialog > [data-dialog-close]:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+[data-dialog-content].hot-dialog > [data-dialog-close]:focus-visible {
+  box-shadow: var(--m3-focus-halo);
+}
+
+/* ── Item rows ──────────────────────────────────────────────────────────────
+   8px, not 4px. The shells are 12px with a 4px gutter, so 8px is the
+   CONCENTRIC radius: the item's corner runs parallel to the menu's instead
+   of cutting across it. These rows are not inside a table row or the header
+   bar, so the density floor (which caps in-row chrome at 8px) does not bind
+   here — and where a choice between two radii exists, the larger one wins.
+   Height and padding come from the base rules and are unchanged. */
+.hot-col-menu-item,
+.hot-select-menu-option,
+.hot-filter-suggestion,
+.hot-quick-filter-option,
+.hot-export-menu-item,
+.hot-editor-dropdown-item,
+.hot-mention-popup-item {
+  border-radius: var(--m3-shape-sm);
+  transition: var(--m3-transition-state);
+}
+
+/* "Select all" keeps a square bottom edge: it is separated from the value
+   list by a hairline, and rounding the bottom would peel it off that rule. */
+.hot-quick-filter-option.hot-quick-filter-select-all {
+  border-radius: var(--m3-shape-sm) var(--m3-shape-sm) 0 0;
+  border-bottom-color: var(--m3-outline-faint);
+}
+
+/* State layers. Translucent, because these rows sit on containers whose
+   colour differs per surface — a pre-composited fill would band on one of
+   them. (Grid ROWS use the opaque fills instead; see m3.css.) */
+.hot-col-menu-item:hover:not(:disabled),
+.hot-select-menu-option:hover,
+.hot-filter-suggestion:hover,
+.hot-quick-filter-option:hover,
+.hot-export-menu-item:hover,
+.hot-editor-dropdown-item:hover,
+.hot-editor-dropdown-item.highlighted,
+.hot-mention-popup-item:hover,
+.hot-mention-popup-item.highlighted {
+  background-color: var(--m3-state-layer-hover);
+}
+
+.hot-col-menu-item:active:not(:disabled),
+.hot-select-menu-option:active,
+.hot-quick-filter-option:active,
+.hot-export-menu-item:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+
+/* Selection swaps the CONTAINER and the ink — M3 defines no "selected"
+   opacity. It is the same `secondary-container` blue a selected grid row
+   takes, so selection reads identically everywhere in the product. */
+.hot-select-menu-option[aria-selected='true'],
+.hot-quick-filter-option[data-selected='true'],
+.hot-editor-dropdown-item.selected {
+  background-color: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+}
+
+/* Disabled is the ONE legitimate use of opacity in this system. Never dim
+   text with it — an inactive-looking label uses `--m3-on-surface-variant`. */
+.hot-col-menu-item:disabled,
+.hot-export-menu-item:disabled {
+  opacity: var(--m3-disabled-content-opacity);
+}
+
+/* Leading glyphs are meta, not content: variant ink, so a menu reads
+   label-first and the icons recede. */
+.hot-col-menu-item svg,
+.hot-export-menu-item svg,
+.context-menu-item-icon {
+  color: var(--m3-on-surface-variant);
+}
+
+/* Dividers take the FAINT outline. `--m3-outline-variant` is already the
+   softest edge a container should draw; a divider *inside* one has to be
+   quieter still, or the menu reads as a stack of boxes.
+   `.hot-quick-filter-select-all` is deliberately NOT in this rule — it is
+   the "Select all" option row, not a divider, and tinting it would paint a
+   solid band across the top of every quick-filter popover. */
+.hot-col-menu-divider {
+  background-color: var(--m3-outline-faint);
+}
+
+/* ── Quick-filter internals ─────────────────────────────────────────────────
+   Kept intact: the 268px width, both bodies, every `data-quick-filter-*`
+   hook, and the transient note — which is now the only carrier of
+   "temporary, not saved with the view", since the dashed border that used to
+   say it is gone. */
+.hot-quick-filter-search {
+  border-bottom-color: var(--m3-outline-faint);
+}
+
+.hot-quick-filter-note,
+.hot-quick-filter-transient,
+.hot-filter-suggestion-note,
+.hot-editor-dropdown-empty,
+.hot-editor-dropdown-item-secondary {
+  color: var(--m3-on-surface-variant);
+}
+
+/* The footer pair reads as M3 text + filled buttons. Radius only: size,
+   spacing and variant stay with the Button primitive. */
+.hot-quick-filter-footer > button {
+  border-radius: var(--m3-shape-full);
+}
+
+/* ── Export menu ────────────────────────────────────────────────────────────
+   `.hot-export-menu-item` renders inside a Radix popover portalled OUTSIDE
+   `.hot-appearance-v2`, so it is intentionally unscoped. It used to read the
+   base shadcn tokens (`--popover-foreground`, `--accent`) and therefore
+   missed every grid retint — it is now stated against `--m3-*` directly,
+   like the surface that holds it. */
+.hot-export-menu-item {
+  color: var(--m3-on-surface);
+}
+
+/* ── Configure View drawer ──────────────────────────────────────────────────
+   A right-docked M3 side sheet: 24px on its free (left) edge, square where
+   it meets the viewport edge. The scrim is M3's on-surface at 32% (55% in
+   dark) with no blur — restated with `!important` because the base rule is
+   `!important` too. `max-width`, `padding: 0` and the font stack stay with
+   the base rules; only the surface, corner, edge and elevation move. */
+.hot-config-overlay {
+  background: var(--m3-scrim) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.hot-config-panel.hot-appearance-v2 {
+  background: var(--m3-surface-container-low);
+  border-left: 1px solid var(--m3-outline-variant);
+  /* Composed inline rather than through a `--m3-shape-xl-start` token: m3.css
+     ships `-start` / `-end` variants for `lg` only, and adding an `xl` one is
+     that file's call, not this one's. */
+  border-radius: var(--m3-shape-xl) 0 0 var(--m3-shape-xl);
+  box-shadow: var(--m3-elevation-3);
+  color: var(--m3-on-surface);
+  /* Clips the square header and footer bands to the new corner. */
+  overflow: hidden;
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────────────
+   M3's asymmetric pairing: an overlay ENTERS on the decelerate curve over
+   `medium1` (250ms) and LEAVES faster, on accelerate over `short4` (200ms).
+   The exit keyframes are declared for the surfaces that can drive a
+   `data-state="closed"`; `.hot-context-menu` unmounts immediately, so only
+   the enter fires there today. Both durations already collapse to 1ms under
+   `prefers-reduced-motion` via the token overrides in m3.css — the guard
+   below still stops the animation outright, because a 1ms scale reads as a
+   flicker rather than as nothing. */
+.hot-context-menu {
+  animation: contextMenuFadeIn var(--m3-duration-medium1) var(--m3-ease-emphasized-decelerate);
+  transform-origin: top left;
+}
+
+.hot-context-menu[data-state='closed'] {
+  animation: contextMenuFadeOut var(--m3-duration-short4) var(--m3-ease-emphasized-accelerate);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hot-context-menu,
+  .hot-context-menu[data-state='closed'] {
+    animation: none;
+  }
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes contextMenuFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98) translateY(-2px);
+  }
+}
+
+/* Icons are optional single glyphs; the 16px box keeps every label on the same
+   left edge whether or not its row has one — matching `.hot-col-menu-item svg`,
+   which is 16px for the same reason. (Its colour comes from the shared
+   meta-ink rule above.) */
+.context-menu-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.context-menu-item-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

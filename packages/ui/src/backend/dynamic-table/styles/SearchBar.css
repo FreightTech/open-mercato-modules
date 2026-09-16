@@ -1,0 +1,426 @@
+/* ============================================================================
+   SearchBar — the dataset search FIELD and the active-filter CHIP row.
+
+   This sheet is imported LAST in `apps/web/src/app/globals.css` (and last in
+   `packages/ui/.storybook/preview.css`), so it owns both surfaces outright at
+   ordinary specificity. The v2 re-skin that used to live in
+   `DynamicTable.v2.css` is gone; the treatment below is the only one.
+
+   Every rule that competes with a `.hot-appearance-v2 .hot-toolbar …` selector
+   is written as a SELECTOR PAIR — the bare class for any host that mounts a
+   `SearchBar` outside the grid toolbar, and the scoped twin so this sheet still
+   wins inside it. Same declarations, one rule.
+
+   M3 ADOPTED: shape (`--m3-shape-full` — the field and the chips are pills),
+   the surface-container ladder as the affordance (a tint instead of a 1px
+   outline), state layers, the two-shadow elevation on focus and the motion
+   tokens.  M3 REJECTED: its 56dp search bar. This field is 28px because the
+   toolbar is a density budget; see the header of `theme/m3.css`.
+
+   The leading icon is full-strength `--m3-on-surface` and the trailing clear
+   button is `--m3-on-surface-variant`. That asymmetry is deliberate M3: the
+   magnifier names the field, the "×" is a secondary action inside it.
+   ========================================================================== */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* `position: relative` is the containing block for the icon and the clear
+   button — both are absolutely positioned. Never remove it.
+   The 320px cap is overridden to `none` by the narrow-container query in
+   DynamicTable.v2.css, which is why it lives on the WRAPPER, not on
+   `.search-bar`. */
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+}
+
+.search-icon,
+.hot-appearance-v2 .hot-toolbar .search-icon {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  color: var(--m3-on-surface);
+  pointer-events: none;
+}
+
+/* The tint IS the affordance — no border. Symmetric 30px insets clear the
+   14px icon at left:10px and the 20px clear button at right:4px; the dead
+   60px reservation for a "⌘K" hint that this bar never had is gone. */
+.search-input,
+.hot-appearance-v2 .hot-toolbar .search-input {
+  width: 100%;
+  height: 28px;
+  padding: 0 30px;
+  border: none;
+  border-radius: var(--m3-shape-full);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: var(--text-body-regular-xs);
+  line-height: var(--text-body-regular-xs--line-height);
+  font-weight: var(--text-body-regular-xs--font-weight);
+  color: var(--m3-on-surface);
+  background-color: var(--m3-surface-container-high);
+  transition: var(--m3-transition-state), var(--m3-transition-elevation);
+}
+
+.search-input::placeholder,
+.hot-appearance-v2 .hot-toolbar .search-input::placeholder {
+  color: var(--m3-on-surface-variant);
+}
+
+.search-input:hover,
+.hot-appearance-v2 .hot-toolbar .search-input:hover {
+  background-color: var(--m3-container-hover);
+}
+
+/* FOUR distinguishable steps, with every token chain resolved and checked in
+   BOTH schemes:
+
+     rest    surface-container-high  → surface-v2-raised  #E9EEF5 / #1E293B
+     hover   container-hover         → 8% on-surface over surface-container,
+                                       which computes to  #E0E3E7 / #28314A
+     focus   surface-bright          → surface-v2-bright  #FFFFFF / #334155
+                                       + elevation-1 + the TEAL focus halo
+     typing  focus, plus the clear button appearing at the trailing edge
+
+   The focus fill is `surface-bright`, NOT `surface-container-highest`. Highest
+   resolves to #293449 in dark — rgb(41,52,73) against hover's rgb(40,49,74), a
+   1/3/1 delta that is invisible on a screen. Hover and focus would have collapsed
+   into one step and only the halo would have told them apart. `surface-bright` is
+   #334155 in dark — an 11/16/11 move off hover, so the FILL itself carries the
+   state change, which is the stronger signal.
+
+   `surface-container-lowest` is also deliberately not the focus fill: in dark it
+   is the recessed ground behind the toolbar, so the focused field would vanish
+   into it. Focus steps the surface UP in both schemes.
+
+   Written AFTER `:hover` so it wins when both match. */
+.search-input:focus,
+.hot-appearance-v2 .hot-toolbar .search-input:focus {
+  outline: none;
+  background-color: var(--m3-surface-bright);
+  box-shadow: var(--m3-elevation-1), var(--m3-focus-halo);
+}
+
+.search-clear-btn,
+.hot-appearance-v2 .hot-toolbar .search-clear-btn {
+  position: absolute;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent;
+  border-radius: var(--m3-shape-full);
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+
+.search-clear-btn:hover,
+.hot-appearance-v2 .hot-toolbar .search-clear-btn:hover {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+
+/* A state layer, not a `transform: scale()`. M3 presses with ink. */
+.search-clear-btn:active,
+.hot-appearance-v2 .hot-toolbar .search-clear-btn:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+
+.search-clear-btn:focus,
+.hot-appearance-v2 .hot-toolbar .search-clear-btn:focus {
+  outline: none;
+}
+
+/* Inset, not an outward halo: this button sits INSIDE the field's rounded box,
+   so an outward ring would be clipped by it. */
+.search-clear-btn:focus-visible,
+.hot-appearance-v2 .hot-toolbar .search-clear-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--m3-focus-ring-inset);
+}
+
+/* ============================================================================
+   ACTIVE FILTER CHIPS  (`components/ActiveFilterChips.tsx`)
+
+   One chip per live quick filter, rendered INSIDE `.hot-toolbar-actions`
+   immediately before the "Clear all filters" button, so the chips and their
+   clear-all read as one group. It adds NO row: the strip scrolls horizontally
+   inside the toolbar it already sits in, so the grid's height math is
+   untouched.
+
+   ONE form only. The saved-vs-transient two-variant chip that was drafted for
+   this row was dead code — every filter reaching this component is an ad-hoc
+   quick filter (A2/D6: they are never written to the saved view), so a "saved"
+   variant could never render. M3 chip form: pill, tonal container, a soft
+   `outline-variant` hairline, and the trailing "×" INSIDE the chip rather than
+   as a second bordered button beside it.
+
+   The chip shares the search field's `surface-container-high` tint on purpose:
+   the two are the toolbar's only filter-shaped controls and should read as one
+   family.
+   ========================================================================== */
+
+.hot-filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 360px;
+  flex: 0 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.hot-filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.hot-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  height: 22px;
+  padding: 0 4px 0 10px;
+  max-width: 220px;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-full);
+  background-color: var(--m3-surface-container-high);
+  color: var(--m3-on-surface-variant);
+  transition: var(--m3-transition-state);
+}
+
+.hot-filter-chip:hover {
+  background-color: var(--m3-container-hover);
+}
+
+.hot-filter-chip-label {
+  flex: 0 0 auto;
+  color: var(--m3-on-surface);
+  font-size: var(--text-caption-medium-md);
+  line-height: var(--text-caption-medium-md--line-height);
+  font-weight: var(--text-caption-medium-md--font-weight);
+}
+
+.hot-filter-chip-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--m3-on-surface-variant);
+  font-size: var(--text-body-regular-xs);
+  line-height: var(--text-body-regular-xs--line-height);
+  font-weight: var(--text-body-regular-xs--font-weight);
+}
+
+.hot-filter-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background-color: transparent;
+  border-radius: var(--m3-shape-full);
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+
+.hot-filter-chip-remove:hover {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+
+.hot-filter-chip-remove:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+
+.hot-filter-chip-remove:focus {
+  outline: none;
+}
+
+.hot-filter-chip-remove:focus-visible {
+  outline: none;
+  box-shadow: var(--m3-focus-ring-inset);
+}
+
+/* ============================================================================
+   SEARCH SUGGESTIONS — the panel under the box.
+
+   PORTALLED TO `document.body`, positioned by a measured rect. It is not
+   `position: absolute` inside `.search-input-wrapper`, even though that wrapper
+   is already a containing block: the toolbar lives inside `.hot-card`, which is
+   `overflow: hidden`, so an in-flow panel is clipped at the card's edge. Only
+   the `left/top/width` come from JS — every visual value is here.
+
+   M3: a MENU, which is elevation level 2 → `--m3-surface-container`, 8px corner
+   (shape.small, what menus take), no outline. The shadow is the exception the
+   spec allows, because this floats over the grid's own busy content and tone
+   alone cannot separate it from the rows it covers.
+   ========================================================================== */
+.hot-search-suggestions {
+  position: fixed;
+  z-index: 60;
+  max-height: min(60vh, 480px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  border-radius: var(--m3-shape-small, 8px);
+  background-color: var(--m3-surface-container, #f3edf7);
+  color: var(--m3-on-surface, #1d1b20);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.3),
+    0 2px 6px 2px rgb(0 0 0 / 0.15);
+}
+
+/* One hint. 48px is the M3 two-line list item less the density this app runs at;
+   the row carries a 40px thumbnail plus two lines of text. */
+.hot-search-suggestion {
+  display: flex;
+  /* TOP, not centre: the primary line can be two lines tall now, and centring
+     a 40px thumbnail against it drags the thumbnail down past the text. */
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: var(--m3-shape-small, 8px);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--m3-duration-short2, 100ms) var(--m3-ease-standard, cubic-bezier(0.2, 0, 0, 1));
+}
+
+/* A STATE LAYER, not a background swap — 8% of the content colour, which is what
+   makes a hover read as Material rather than as a highlighted row. `[data-active]`
+   is keyboard selection and takes the 10% focus layer, so arrowing through the
+   list and hovering it look like the same mechanism at two strengths. */
+.hot-search-suggestion:hover {
+  background-color: color-mix(in srgb, currentColor 8%, transparent);
+}
+.hot-search-suggestion[data-active='true'] {
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
+}
+.hot-search-suggestion:focus-visible {
+  outline: 2px solid var(--m3-primary, #6750a4);
+  outline-offset: -2px;
+}
+
+.hot-search-suggestion-thumb {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: var(--m3-surface-container-high, #ece6f0);
+  color: var(--m3-on-surface-variant, #49454f);
+}
+.hot-search-suggestion-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hot-search-suggestion-body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Body Medium / Body Small — the list-item pair from the type scale.
+   `-title` is the PRIMARY line and `-meta` the secondary one; which CONTENT
+   goes in each is the host's call. For documents the primary line is the
+   matched text, not the filename — see `DocumentSearchSuggestions`. */
+
+/* IT WRAPS. The primary line used to be `nowrap` + ellipsis, which is right for
+   a filename and wrong for a match: the whole point of the line is the term and
+   its context, and a single clipped line cuts off the term itself when the
+   context runs long. Two lines, clamped — enough to read a phrase, bounded so a
+   row cannot grow without limit. */
+.hot-search-suggestion-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  overflow-wrap: anywhere;
+}
+.hot-search-suggestion-meta {
+  overflow: hidden;
+  color: var(--m3-on-surface-variant, #49454f);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The little label naming WHERE the match came from — "B/L", "In the document".
+   A quiet prefix on the primary line rather than a line of its own: it earns
+   about four words of space, and giving it a whole row would push the match
+   itself down. */
+.hot-search-suggestion-where {
+  margin-right: 5px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background-color: var(--m3-surface-container-highest, #e6e0e9);
+  color: var(--m3-on-surface-variant, #49454f);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The matched substring. A TINT PLUS WEIGHT, never a yellow highlighter: the
+   panel has to stay legible in both schemes, and `mark`'s UA yellow is a fixed
+   colour that ignores every token in the sheet. */
+.hot-search-suggestions mark {
+  padding: 0;
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--m3-primary, #6750a4) 18%, transparent);
+  color: inherit;
+  font-weight: 600;
+}
+
+/* Status lines: loading, no hits, "keep typing". Body Small, muted, never a
+   suggestion-shaped row — a state is not something you can click. */
+.hot-search-suggestions-status {
+  padding: 10px 10px;
+  color: var(--m3-on-surface-variant, #49454f);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+}
+
+/* The footer line: "press Enter to search all N". Separated by a rule in
+   `--m3-outline-variant`, which is what dividers take. */
+.hot-search-suggestions-footer {
+  margin-top: 4px;
+  padding: 8px 10px 4px;
+  border-top: 1px solid var(--m3-outline-variant, #cac4d0);
+  color: var(--m3-on-surface-variant, #49454f);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+}

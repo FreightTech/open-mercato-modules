@@ -1,0 +1,146 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DynamicTable — DATE CELL
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Layout + density response for `components/DateCell.tsx`.
+
+   Everything here is geometry, visibility and ink RECESSION. There is NO
+   font-size, weight, line-height or letter-spacing rule in this file, on
+   purpose: a date cell must inherit the type ramp that `density.css` sets on
+   `td`/`th`, or a date column would stay 12px while every neighbouring column
+   shrank to 11px at `dense`. See the typography note at the top of
+   DateCell.tsx.
+
+   ── No `opacity` as a text dimmer ─────────────────────────────────────────
+   Every recession here is a COLOUR (a `color-mix` toward `--m3-surface`, or
+   the `--m3-on-surface-variant` role), never an `opacity`. In the M3 system
+   opacity means "disabled" and nothing else. The reasoning is written out at
+   each rule; the short version is that opacity dims against whatever fill the
+   row is carrying, so one marker would read three different ways across
+   zebra / hover / selected rows.
+
+   ── Load order ────────────────────────────────────────────────────────────
+   Imported AFTER density.css in `apps/web/src/app/globals.css`. Grid
+   stylesheets are pulled in by explicit path, so a file that is not listed
+   there compiles fine and silently never renders.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* `inline-flex` + `gap` rather than spaces inside the strings: it gives the
+   density levels one number to tune, and it keeps the parts as real elements
+   so `dense` can hide the low-value ones. `baseline` alignment matters — the
+   glyph is a geometric shape with a different optical centre to the digits. */
+.dt-date {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* The certainty ramp (○ ◐ ●). Slightly recessed so it reads as a marker rather
+   than as a character in the value. `flex: none` stops it being the thing that
+   shrinks when the column is narrow — losing the glyph would lose the level.
+
+   ── Why `color-mix`, not `opacity` ─────────────────────────────────────────
+   The recession used to be `opacity`. Opacity is a LAYER operation: it dims
+   the glyph against whatever fill the row happens to be carrying, so the same
+   marker reads differently on a zebra row, a hovered row and a selected row —
+   and in the M3 system opacity is reserved for genuinely disabled controls
+   (`--m3-disabled-content-opacity`), never for de-emphasising text.
+   `color-mix` toward `--m3-surface` is the colour-space equivalent: it lands
+   on ONE resolved ink regardless of the fill behind it, it moves the right
+   way in both themes (surface is near-white in light, near-black in dark),
+   and — the reason it is used here instead of a flat
+   `--m3-on-surface-variant` — it KEEPS the hue it inherits. The parent span
+   carries the certainty-level colour (and the overdue red) from
+   `DateCell.tsx`; flattening these parts to neutral grey would delete that
+   domain signal from two thirds of the cell. */
+.dt-date-glyph {
+  flex: none;
+  color: color-mix(in oklab, currentColor 80%, var(--m3-surface));
+  font-size: 0.9em; /* relative to the inherited cell size — never a fixed px */
+}
+
+/* The date itself is the last thing allowed to truncate. */
+.dt-date-day {
+  flex: none;
+}
+
+/* Time and week are secondary: recessed, and first in line to be dropped.
+   Same colour-mix recession as the glyph, for the same reason — the inherited
+   level/overdue hue survives, and no translucent layer is involved. */
+.dt-date-time {
+  flex: none;
+  color: color-mix(in oklab, currentColor 85%, var(--m3-surface));
+}
+
+.dt-date-week {
+  flex: none;
+  color: color-mix(in oklab, currentColor 70%, var(--m3-surface));
+}
+
+.dt-date-variance {
+  flex: none;
+}
+
+/* An empty or broken value should not draw the eye. The invalid marker keeps
+   its own attribute so a QA sweep can count broken values across a table.
+
+   These two spans carry NO semantic colour of their own — `DateCell.tsx` gives
+   them the muted ink and this rule used to stack `opacity: 0.6` on top of it,
+   dimming an already-dimmed grey twice. One M3 secondary-ink role replaces
+   both halves: `--m3-on-surface-variant` is the role for exactly this (meta
+   text, placeholders), it is legible in both themes, and it removes the last
+   opacity-as-text-dimmer from this file. Declared unlayered, so it wins over
+   the utility class on the same element. */
+.dt-date-empty,
+.dt-date-invalid {
+  color: var(--m3-on-surface-variant);
+}
+
+
+/* ── Density response ──────────────────────────────────────────────────────
+   Reduction, not re-layout: the same elements, less spacing, and at `dense`
+   one fewer decoration. Zero React involvement — the container attribute
+   flips and the browser recalculates style for the subtree.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.hot-container[data-density-level="compact"] .dt-date {
+  gap: 2px;
+}
+
+/* At 20px rows with 11px type the variance chip ("+2d") is the least valuable
+   thing competing for the width — it is a derived figure, it is redundant with
+   the two levels themselves, and it stays available on hover in the title.
+   The date, its time and the ISO week all survive: B14 says the week is read
+   constantly, so density must not be what takes it away. */
+.hot-container[data-density-level="dense"] .dt-date {
+  gap: 2px;
+}
+
+.hot-container[data-density-level="dense"] .dt-date-variance {
+  display: none;
+}
+
+
+/* ── Accessibility floor ───────────────────────────────────────────────────
+   The glyph and the secondary parts are distinguished by a recessed ink. A
+   viewer who has asked their OS for more contrast has explicitly said that is
+   not good enough for them, so drop the recession entirely — the shape ramp
+   and the colour still carry the level, and nothing here depended on the
+   dimming to convey meaning.
+
+   `color: inherit` is the exact inverse of the recession above: it hands every
+   part back the full-strength ink of its parent — the certainty/overdue hue on
+   a real value, the cell's own `--m3-on-surface` on an empty or broken one.
+   Kept in lockstep with the four rules above; if a recession changes there, it
+   is undone here. */
+@media (prefers-contrast: more) {
+  .dt-date-glyph,
+  .dt-date-time,
+  .dt-date-week,
+  .dt-date-empty,
+  .dt-date-invalid {
+    color: inherit;
+  }
+}

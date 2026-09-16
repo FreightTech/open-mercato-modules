@@ -1,0 +1,222 @@
+[
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "transportCall": {
+      "transportCallID": "PLGDNGA551W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA551W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000001",
+        "vesselName": "EXAMPLE VESSEL 01",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "Q1RS2"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AA00A0000001S1"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000004"
+      }
+    ],
+    "description": "Estimated Time of Arrival",
+    "eventId": "EST2026-02-20T06:00:00:00+01:00",
+    "eventDateTime": "2026-02-20T06:00:00+01:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-02-17T13:06:24+00:00",
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "transportCall": {
+      "transportCallID": "CNYTNGA551W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA551W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000001",
+        "vesselName": "EXAMPLE VESSEL 01",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "Q1RS2"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AA00A0000001S1"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000004"
+      }
+    ],
+    "description": "Vessel Departure",
+    "eventId": "ACT2026-01-06T10:18:00:00+08:00",
+    "eventDateTime": "2026-01-06T10:18:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-06T10:18:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000001",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNYTNGA551W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA551W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000001",
+        "vesselName": "EXAMPLE VESSEL 01",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "Q1RS2"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AA00A0000001S1"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000004"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "YANTIAN",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FJ26631610",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1725677169",
+    "eventDateTime": "2026-01-06T06:19:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-06T06:19:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000001",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNYTNTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AA00A0000001S1"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000004"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "YANTIAN",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FJ26631610",
+        "sealSource": "CAR"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1722140291",
+    "eventDateTime": "2025-12-30T17:34:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-12-30T17:34:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000001",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNYTNTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AA00A0000001S1"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000004"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "YANTIAN",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [],
+    "description": "Empty to Shipper",
+    "eventId": "1721811252",
+    "eventDateTime": "2025-12-30T05:36:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-12-30T05:36:00+08:00",
+    "references": []
+  }
+]

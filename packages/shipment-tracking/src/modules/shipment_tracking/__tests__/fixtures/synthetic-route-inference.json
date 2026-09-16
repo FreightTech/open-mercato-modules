@@ -1,0 +1,201 @@
+[
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "eventId": "ROUTE-GTOT-001",
+    "eventDateTime": "2026-01-05T08:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-05T08:00:00+08:00",
+    "description": "Empty to Shipper",
+    "equipmentReference": "TEST7654321",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNSZXTRB",
+      "unLocationCode": "CNSZX",
+      "facilityCode": "DEPOT1",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "SHENZHEN DEPOT",
+      "unLocationCode": "CNSZX",
+      "facilityCode": "DEPOT1",
+      "facilityCodeListProvider": "BIC"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ROUTE-001" }
+    ],
+    "seals": [],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "eventId": "ROUTE-GTIN-001",
+    "eventDateTime": "2026-01-06T14:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-06T14:00:00+08:00",
+    "description": "Export received",
+    "equipmentReference": "TEST7654321",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNSZXTRB",
+      "unLocationCode": "CNSZX",
+      "facilityCode": "DEPOT1",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "SHENZHEN DEPOT",
+      "unLocationCode": "CNSZX",
+      "facilityCode": "DEPOT1",
+      "facilityCodeListProvider": "BIC"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ROUTE-001" }
+    ],
+    "seals": [{ "sealNumber": "ROUTESEAL1", "sealSource": "SHI" }],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "eventId": "ROUTE-GTIN-002",
+    "eventDateTime": "2026-01-08T10:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T10:00:00+08:00",
+    "description": "Export received at CY",
+    "equipmentReference": "TEST7654321",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNYTNTRB",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "YANTIAN",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ROUTE-001" }
+    ],
+    "seals": [{ "sealNumber": "ROUTESEAL1", "sealSource": "SHI" }],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "eventId": "ROUTE-LOAD-001",
+    "eventDateTime": "2026-01-10T06:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-10T06:00:00+08:00",
+    "description": "Export Loaded on Vessel",
+    "equipmentReference": "TEST7654321",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNYTN-GA551W",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": "GA551W",
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "YANTIAN",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ROUTE-001" }
+    ],
+    "seals": [{ "sealNumber": "ROUTESEAL1", "sealSource": "TER" }],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "eventId": "ROUTE-ACT-DEPA-001",
+    "eventDateTime": "2026-01-10T10:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-10T10:00:00+08:00",
+    "description": "Vessel Departure",
+    "transportCall": {
+      "transportCallID": "CNYTN-GA551W",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": "GA551W",
+      "importVoyageNumber": null
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ROUTE-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "eventId": "ROUTE-EST-ARRI-001",
+    "eventDateTime": "2026-02-15T06:00:00+01:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-01-10T10:00:00+08:00",
+    "description": "Estimated Time of Arrival",
+    "transportCall": {
+      "transportCallID": "PLGDN-GA551W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA551W"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ROUTE-001" }
+    ],
+    "references": []
+  }
+]

@@ -1,0 +1,175 @@
+{
+  "terminal_tracking": {
+    "title": "Terminal Tracking",
+    "stops": {
+      "title": "Restricciones de carga",
+      "vsl": "Sin carga a buque",
+      "road": "Sin recogida por carretera",
+      "rail": "Sin recogida por ferrocarril"
+    },
+    "nav": {
+      "group": "Terminal Tracking",
+      "terminal_configs": "Terminals",
+      "tracking_jobs": "Tracked Containers"
+    },
+    "errors": {
+      "tenant_required": "Tenant context is required",
+      "organization_required": "Organization context is required"
+    },
+    "terminal_config": {
+      "title": "Terminal Configurations",
+      "displayName": "Name",
+      "terminalCode": "Terminal code",
+      "adapterType": "Adapter",
+      "baseUrl": "API base URL",
+      "proxyUrl": "URL de proxy de la API (opcional)",
+      "unlocode": "UN/LOCODE",
+      "isActive": "Active",
+      "gctHint": "Clave (base32) mostrada en el panel de GCT junto al código QR. A partir de ella se calcula un código de un solo uso en cada inicio de sesión."
+    },
+    "tracking_job": {
+      "title": "Terminal Tracking Jobs",
+      "containerNumber": "Container",
+      "status": "Status",
+      "lastPollAt": "Last polled",
+      "details": "Container Details",
+      "noEvents": "No terminal events yet. Use \"Poll now\" to fetch.",
+      "leg": "Facility visit",
+      "recentErrors": "Recent poll errors",
+      "jobInfo": "Tracking",
+      "nextPollAt": "Next poll",
+      "retryCount": "Retries",
+      "jobId": "Job ID",
+      "actions": {
+        "details": "Details",
+        "poll": "Poll now"
+      },
+      "flash": {
+        "polled": "Consultado — {n} nuevos, {u} actualizados evento(s)"
+      },
+      "statuses": {
+        "active": "Activo",
+        "paused": "Pausado",
+        "deactivated": "Desactivado",
+        "failed": "Fallido",
+        "completed": "Completado"
+      }
+    },
+    "event": {
+      "source_badge": "Terminal",
+      "yardPosition": "Yard position",
+      "vgm": "VGM (kg)",
+      "visitPhase": "Visit phase",
+      "impediments": "Holds",
+      "seals": "Seals",
+      "eta": "ETA",
+      "etd": "ETD",
+      "ata": "ATA",
+      "atd": "ATD",
+      "gate_in": "Gate In",
+      "yard": "In Yard / Discharged",
+      "loaded": "Loaded",
+      "loadedAt": "Cargado el",
+      "departed": "Departed",
+      "ufvGkey": "Ufv_Gkey",
+      "rawData": "Raw terminal data"
+    },
+    "holds": {
+      "unknown": {
+        "label": "Bloqueo desconocido",
+        "description": "Bloqueo de terminal no reconocido. Consulte los detalles con la terminal.",
+        "resolution": "Contacte con la terminal para determinar cómo se levanta este bloqueo."
+      },
+      "cfs_appointment": {
+        "label": "Cita CFS",
+        "description": "Se aplica mientras se acepta un pedido de importación del almacén CFS.",
+        "resolution": "Se elimina automáticamente al completar el pedido y el trabajo del almacén."
+      },
+      "customs_import_permission": {
+        "label": "Permiso aduanero (importación)",
+        "description": "Se aplica sistemáticamente a todos los contenedores de importación pendientes de despacho aduanero.",
+        "resolution": "Se elimina automáticamente tras actualizar el número MRN mediante los códigos PCS polacos."
+      },
+      "customs_import_hold": {
+        "label": "Retención aduanera (importación)",
+        "description": "Aplicada manualmente por un agente de aduanas para escaneo, inspección o por un problema de despacho.",
+        "resolution": "Solo un agente de aduanas puede levantarla — contacte con la oficina de aduanas."
+      },
+      "line_import_permission": {
+        "label": "Permiso de la naviera (importación)",
+        "description": "Se aplica sistemáticamente a todos los contenedores de importación hasta que la naviera los libera.",
+        "resolution": "Se elimina cuando la naviera libera el contenedor mediante su número PIN."
+      },
+      "oog_hold": {
+        "label": "Retención OOG",
+        "description": "Se aplica a contenedores de importación fuera de gálibo que requieren permisos especiales.",
+        "resolution": "Debe ser verificada por Baltic Hub antes de la recogida; hasta entonces el contenedor no puede avisarse para retirada."
+      },
+      "cfs_hold": {
+        "label": "Retención CFS",
+        "description": "Se aplica mientras se acepta un pedido de exportación del almacén CFS.",
+        "resolution": "Se elimina automáticamente al completar el pedido y el trabajo del almacén."
+      },
+      "customs_export_permission": {
+        "label": "Permiso aduanero (exportación)",
+        "description": "Se aplica sistemáticamente a los contenedores de exportación pendientes de despacho aduanero.",
+        "resolution": "Se elimina automáticamente tras la actualización del MRN; debe levantarse antes del plazo de despacho aduanero."
+      },
+      "customs_export_hold": {
+        "label": "Retención aduanera (exportación)",
+        "description": "Aplicada manualmente por un agente de aduanas para escaneo, inspección o por un problema de despacho.",
+        "resolution": "Solo un agente de aduanas puede levantarla — contacte con la oficina de aduanas."
+      },
+      "unit_vgm_load_permission": {
+        "label": "Permiso de carga VGM",
+        "description": "Se aplica a todos los contenedores de exportación llenos que aún no tienen masa bruta verificada.",
+        "resolution": "Se elimina cuando se carga el peso VGM en Navis."
+      },
+      "dgd_hold": {
+        "label": "Retención DGD",
+        "description": "Se aplica automáticamente a todos los contenedores de exportación con carga IMO (peligrosa).",
+        "resolution": "Requiere la presentación del documento DGD (declaración de mercancías peligrosas)."
+      },
+      "scanning_hold": {
+        "label": "Retención de escaneo",
+        "description": "Aplicada manualmente por un agente de aduanas; el contenedor debe presentarse para escaneo.",
+        "resolution": "La levanta aduanas tras el escaneo (selección DCT_CFS_SCANNING)."
+      },
+      "empty_permission": {
+        "label": "Permiso (vacío)",
+        "description": "Se aplica sistemáticamente a todos los contenedores vacíos pendientes de una referencia de liberación.",
+        "resolution": "Se elimina al proporcionar el número EDO / de reserva de la naviera."
+      },
+      "missing_agent_permission": {
+        "label": "Falta permiso del agente",
+        "description": "Relacionado con un pago PCS inactivo. Actualmente no bloquea la carga al buque ni la recogida.",
+        "resolution": "Se elimina introduciendo el código de la naviera en el campo Agent One."
+      },
+      "technical_full_container": {
+        "label": "Técnico (contenedor lleno)",
+        "description": "Se aplica a todos los contenedores llenos de importación/exportación para el reconocimiento de caracteres OCR. No bloquea el movimiento.",
+        "resolution": "No requiere acción — solo informativo."
+      },
+      "technical_live_reefer": {
+        "label": "Técnico (reefer activo)",
+        "description": "Se aplica a todos los contenedores reefer llenos para apoyar el OCR. No bloquea las operaciones.",
+        "resolution": "No requiere acción — solo informativo."
+      },
+      "terminal_hold": {
+        "label": "Retención de terminal",
+        "description": "Se aplica por una irregularidad del contenedor (etiquetado incorrecto, vigas dobladas, etc.).",
+        "resolution": "Contacte con el Servicio de Atención al Cliente de Baltic Hub."
+      },
+      "czrm_hold": {
+        "label": "Retención CZRM",
+        "description": "Aplicada por la oficina de aduanas.",
+        "resolution": "Contacte directamente con la oficina de aduanas para levantarla."
+      },
+      "izrx_hold": {
+        "label": "Retención IZRX",
+        "description": "Aplicada por la oficina de aduanas.",
+        "resolution": "Contacte directamente con la oficina de aduanas para levantarla."
+      }
+    }
+  }
+}

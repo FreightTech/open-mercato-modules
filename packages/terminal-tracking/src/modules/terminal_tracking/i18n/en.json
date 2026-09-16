@@ -1,0 +1,178 @@
+{
+  "terminal_tracking": {
+    "title": "Terminal Tracking",
+    "stops": {
+      "title": "Loading restrictions",
+      "vsl": "No vessel loading",
+      "road": "No road pickup",
+      "rail": "No rail pickup"
+    },
+    "nav": {
+      "group": "Terminal Tracking",
+      "terminal_configs": "Terminals",
+      "tracking_jobs": "Tracked Containers"
+    },
+    "errors": {
+      "tenant_required": "Tenant context is required",
+      "organization_required": "Organization context is required"
+    },
+    "terminal_config": {
+      "title": "Terminal Configurations",
+      "displayName": "Name",
+      "terminalCode": "Terminal code",
+      "adapterType": "Adapter",
+      "baseUrl": "API base URL",
+      "proxyUrl": "API proxy URL (optional)",
+      "unlocode": "UN/LOCODE",
+      "isActive": "Active",
+      "gctHint": "The base32 key shown in the GCT panel next to the QR code. A fresh one-time code is computed from it on each login."
+    },
+    "tracking_job": {
+      "title": "Terminal Tracking Jobs",
+      "containerNumber": "Container",
+      "status": "Status",
+      "gateIn": "Gate in",
+      "gateOut": "Gate out",
+      "holds": "Holds",
+      "lastPollAt": "Last polled",
+      "details": "Container Details",
+      "noEvents": "No terminal events yet. Use \"Poll now\" to fetch.",
+      "leg": "Facility visit",
+      "recentErrors": "Recent poll errors",
+      "jobInfo": "Tracking",
+      "nextPollAt": "Next poll",
+      "retryCount": "Retries",
+      "jobId": "Job ID",
+      "actions": {
+        "details": "Details",
+        "poll": "Poll now"
+      },
+      "flash": {
+        "polled": "Polled — {n} new, {u} updated event(s)"
+      },
+      "statuses": {
+        "active": "Active",
+        "paused": "Paused",
+        "deactivated": "Deactivated",
+        "failed": "Failed",
+        "completed": "Completed"
+      }
+    },
+    "event": {
+      "source_badge": "Terminal",
+      "yardPosition": "Yard position",
+      "vgm": "VGM (kg)",
+      "visitPhase": "Visit phase",
+      "impediments": "Holds",
+      "seals": "Seals",
+      "eta": "ETA",
+      "etd": "ETD",
+      "ata": "ATA",
+      "atd": "ATD",
+      "gate_in": "Gate In",
+      "yard": "In Yard / Discharged",
+      "loaded": "Loaded",
+      "loadedAt": "Loaded at",
+      "departed": "Departed",
+      "ufvGkey": "Ufv_Gkey",
+      "rawData": "Raw terminal data"
+    },
+    "holds": {
+      "unknown": {
+        "label": "Unknown hold",
+        "description": "Unrecognised terminal hold. Refer to the terminal for details.",
+        "resolution": "Contact the terminal to determine how this hold is cleared."
+      },
+      "cfs_appointment": {
+        "label": "CFS appointment",
+        "description": "Applied while a CFS (warehouse) import order is being accepted.",
+        "resolution": "Cleared automatically once the order is completed and warehouse work is done."
+      },
+      "customs_import_permission": {
+        "label": "Customs import permission",
+        "description": "Applied systematically to every import container pending customs release.",
+        "resolution": "Removed automatically after the MRN number is updated via the Polish PCS codes."
+      },
+      "customs_import_hold": {
+        "label": "Customs import hold",
+        "description": "Placed manually by a customs officer for scanning, inspection or a clearance issue.",
+        "resolution": "Only a customs officer can lift it — contact the customs office."
+      },
+      "line_import_permission": {
+        "label": "Line import permission",
+        "description": "Applied systematically to every import container until the shipping line releases it.",
+        "resolution": "Removed once the line releases the container via its PIN number."
+      },
+      "oog_hold": {
+        "label": "OOG hold",
+        "description": "Applied to out-of-gauge import containers that require special handling permits.",
+        "resolution": "Must be verified by Baltic Hub before pickup; the container cannot be notified for collection until then."
+      },
+      "cfs_hold": {
+        "label": "CFS hold",
+        "description": "Applied while a CFS (warehouse) export order is being accepted.",
+        "resolution": "Cleared automatically once the order is completed and warehouse work is done."
+      },
+      "customs_export_permission": {
+        "label": "Customs export permission",
+        "description": "Applied systematically to export containers pending customs release.",
+        "resolution": "Removed automatically after the MRN update; must be cleared before the customs-clearance deadline."
+      },
+      "customs_export_hold": {
+        "label": "Customs export hold",
+        "description": "Placed manually by a customs officer for scanning, inspection or a clearance issue.",
+        "resolution": "Only a customs officer can lift it — contact the customs office."
+      },
+      "unit_vgm_load_permission": {
+        "label": "VGM load permission",
+        "description": "Applied to every full export container that has no verified gross mass yet.",
+        "resolution": "Removed when the VGM weight is uploaded to Navis."
+      },
+      "dgd_hold": {
+        "label": "DGD hold",
+        "description": "Applied automatically to every export container carrying IMO (dangerous) cargo.",
+        "resolution": "Requires the DGD (dangerous-goods declaration) document to be submitted."
+      },
+      "scanning_hold": {
+        "label": "Scanning hold",
+        "description": "Placed manually by a customs officer; the container must be presented for scanning.",
+        "resolution": "Cleared by customs after scanning (DCT_CFS_SCANNING selection)."
+      },
+      "empty_permission": {
+        "label": "Empty permission",
+        "description": "Applied systematically to every empty container pending a release reference.",
+        "resolution": "Removed once the EDO / booking number from the shipping line is provided."
+      },
+      "missing_agent_permission": {
+        "label": "Missing agent permission",
+        "description": "Relates to an inactive PCS payment. Does not currently block ship loading or pickup.",
+        "resolution": "Removed by entering the shipping code in the Agent One field."
+      },
+      "technical_full_container": {
+        "label": "Technical (full container)",
+        "description": "Applied to every full import/export container to support OCR character recognition. Does not block movement.",
+        "resolution": "No action required — informational only."
+      },
+      "technical_live_reefer": {
+        "label": "Technical (live reefer)",
+        "description": "Applied to every full reefer container to support OCR. Does not block operations.",
+        "resolution": "No action required — informational only."
+      },
+      "terminal_hold": {
+        "label": "Terminal hold",
+        "description": "Applied for a container irregularity (incorrect labelling, bent container beams, etc.).",
+        "resolution": "Contact Baltic Hub Customer Service to resolve."
+      },
+      "czrm_hold": {
+        "label": "CZRM hold",
+        "description": "Applied by the customs office.",
+        "resolution": "Contact the customs office directly to have it lifted."
+      },
+      "izrx_hold": {
+        "label": "IZRX hold",
+        "description": "Applied by the customs office.",
+        "resolution": "Contact the customs office directly to have it lifted."
+      }
+    }
+  }
+}

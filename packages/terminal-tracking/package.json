@@ -1,0 +1,80 @@
+{
+  "name": "@freighttech/terminal-tracking",
+  "version": "0.7.0",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "src",
+    "generated",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./modules/terminal_tracking/*": {
+      "types": [
+        "./src/modules/terminal_tracking/*.ts",
+        "./src/modules/terminal_tracking/*.tsx"
+      ],
+      "default": "./dist/modules/terminal_tracking/*.js"
+    },
+    "./modules/terminal_tracking/*.json": "./src/modules/terminal_tracking/*.json"
+  },
+  "imports": {
+    "#generated/entities.ids.generated": {
+      "types": "./generated/entities.ids.generated.ts",
+      "default": "./generated/entities.ids.generated.ts"
+    }
+  },
+  "dependencies": {
+    "fuse.js": "^7.1.0",
+    "undici": "^7.25.0"
+  },
+  "peerDependencies": {
+    "@freighttech/ui": "^0.13.0",
+    "@mikro-orm/core": "^7.0.17",
+    "@mikro-orm/decorators": "^7.0.17",
+    "@mikro-orm/migrations": "^7.0.17",
+    "@mikro-orm/postgresql": "^7.0.17",
+    "@open-mercato/cache": "0.6.2",
+    "@open-mercato/core": "0.6.2",
+    "@open-mercato/events": "0.6.2",
+    "@open-mercato/queue": "0.6.2",
+    "@open-mercato/scheduler": "0.6.2",
+    "@open-mercato/shared": "0.6.2",
+    "@tanstack/react-query": "^5.90.12",
+    "awilix": "^12.0.5",
+    "lucide-react": "^0.556.0",
+    "next": "^16.2.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@open-mercato/scheduler": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "npx --no-install vitest run",
+    "test:watch": "npx --no-install vitest",
+    "build": "node ../../scripts/build-package.mjs",
+    "prepack": "node ../../scripts/build-package.mjs"
+  }
+}

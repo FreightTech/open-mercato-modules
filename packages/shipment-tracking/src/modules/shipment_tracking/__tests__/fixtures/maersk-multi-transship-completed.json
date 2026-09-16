@@ -1,0 +1,1518 @@
+[
+  {
+    "eventID": "49587a7f-8f48-4fbf-acd8-cd16ee8ddc25D1",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2025-12-25T18:18:00+03:00",
+    "eventCreatedDateTime": "2026-02-06T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "DEPA",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "550N",
+      "carrierVoyageNumber": "550N",
+      "facilityCode": "DPWYAR",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "DP World Terminal - Yarimca",
+        "latitude": "40.770385",
+        "longitude": "29.752012"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "DP World Terminal - Yarimca Cd No 168 Korfez Kocaeli Mimar Sinan Mehmet Akif Ersoy Izmit Korfezi Turkey 41780",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000007",
+        "vesselName": "EXAMPLE VESSEL 07",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "9LMN0"
+      },
+      "UNLocationCode": "TRYAR"
+    }
+  },
+  {
+    "eventID": "49587a7f-8f48-4fbf-acd8-cd16ee8ddc25A1",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-04T13:56:00Z",
+    "eventCreatedDateTime": "2026-02-06T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "ARRI",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "550N",
+      "carrierVoyageNumber": "550N",
+      "facilityCode": "TTY",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "FELIXSTOWE TRINITY TERMINAL",
+        "latitude": "51.946038",
+        "longitude": "1.323659"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "FELIXSTOWE TRINITY TERMINAL TOMLINE HOUSE Dock Rd Felixstowe United Kingdom IP11 3SY",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000007",
+        "vesselName": "EXAMPLE VESSEL 07",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "9LMN0"
+      },
+      "UNLocationCode": "GBFXT"
+    }
+  },
+  {
+    "eventID": "49587a7f-8f48-4fbf-acd8-cd16ee8ddc25D2",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-08T20:38:00Z",
+    "eventCreatedDateTime": "2026-02-06T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "DEPA",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "602S",
+      "carrierVoyageNumber": "602S",
+      "facilityCode": "TTY",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "FELIXSTOWE TRINITY TERMINAL",
+        "latitude": "51.946038",
+        "longitude": "1.323659"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "FELIXSTOWE TRINITY TERMINAL TOMLINE HOUSE Dock Rd Felixstowe United Kingdom IP11 3SY",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000008",
+        "vesselName": "EXAMPLE VESSEL 08",
+        "vesselFlag": "MH",
+        "vesselCallSignNumber": "Q2R3456"
+      },
+      "UNLocationCode": "GBFXT"
+    }
+  },
+  {
+    "eventID": "49587a7f-8f48-4fbf-acd8-cd16ee8ddc25A2",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-17T18:19:00+01:00",
+    "eventCreatedDateTime": "2026-02-06T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "ARRI",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "602S",
+      "carrierVoyageNumber": "602S",
+      "facilityCode": "NTB",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "NTB North Sea Terminal Bremerhaven",
+        "latitude": "53.546800",
+        "longitude": "8.578100"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "NTB North Sea Terminal Bremerhaven NTB CT4 27568 Bremerhaven Senator-Bortscheller-Str 14 Bremerhaven Germany 27568",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000008",
+        "vesselName": "EXAMPLE VESSEL 08",
+        "vesselFlag": "MH",
+        "vesselCallSignNumber": "Q2R3456"
+      },
+      "UNLocationCode": "DEBRV"
+    }
+  },
+  {
+    "eventID": "49587a7f-8f48-4fbf-acd8-cd16ee8ddc25D3",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-19T16:44:00+01:00",
+    "eventCreatedDateTime": "2026-02-06T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "DEPA",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "603N",
+      "carrierVoyageNumber": "603N",
+      "facilityCode": "NTB",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "NTB North Sea Terminal Bremerhaven",
+        "latitude": "53.546800",
+        "longitude": "8.578100"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "NTB North Sea Terminal Bremerhaven NTB CT4 27568 Bremerhaven Senator-Bortscheller-Str 14 Bremerhaven Germany 27568",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000006",
+        "vesselName": "EXAMPLE VESSEL 06",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "6H7890"
+      },
+      "UNLocationCode": "DEBRV"
+    }
+  },
+  {
+    "eventID": "49587a7f-8f48-4fbf-acd8-cd16ee8ddc25A3",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-22T13:41:00+01:00",
+    "eventCreatedDateTime": "2026-02-06T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "ARRI",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "603N",
+      "carrierVoyageNumber": "603N",
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000006",
+        "vesselName": "EXAMPLE VESSEL 06",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "6H7890"
+      },
+      "UNLocationCode": "PLGDN"
+    }
+  },
+  {
+    "eventID": "14054861144",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-08T07:57:23Z",
+    "eventCreatedDateTime": "2025-12-08T07:57:23Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RECE",
+    "documentTypeCode": "VGM",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14054860854",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-08T07:57:24Z",
+    "eventCreatedDateTime": "2025-12-08T07:57:24Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RECE",
+    "documentTypeCode": "VGM",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14054864084",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-08T07:57:34Z",
+    "eventCreatedDateTime": "2025-12-08T07:57:34Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RECE",
+    "documentTypeCode": "SHI",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14054864766",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-08T07:57:46Z",
+    "eventCreatedDateTime": "2025-12-08T07:57:46Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "DRFT",
+    "documentTypeCode": "TRD",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14060348922",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-09T07:36:58Z",
+    "eventCreatedDateTime": "2025-12-09T07:36:58Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RECE",
+    "documentTypeCode": "VGM",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14060348936",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-09T07:36:58Z",
+    "eventCreatedDateTime": "2025-12-09T07:36:58Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RECE",
+    "documentTypeCode": "VGM",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14060346813",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-09T07:36:59Z",
+    "eventCreatedDateTime": "2025-12-09T07:36:59Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RECE",
+    "documentTypeCode": "VGM",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14069914525",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-10T22:57:13Z",
+    "eventCreatedDateTime": "2025-12-10T22:57:13Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "CONF",
+    "documentTypeCode": "BKG",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14138413160",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-25T09:56:18Z",
+    "eventCreatedDateTime": "2025-12-25T09:56:18Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "ISSU",
+    "documentTypeCode": "TRD",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14192375007",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2026-01-08T02:32:55Z",
+    "eventCreatedDateTime": "2026-01-08T02:32:55Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "PENA",
+    "documentTypeCode": "SRM",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14200431445",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2026-01-09T11:23:58Z",
+    "eventCreatedDateTime": "2026-01-09T11:23:58Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RELS",
+    "documentTypeCode": "SRM",
+    "documentID": "900000002",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000002"
+      },
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000001"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ]
+  },
+  {
+    "eventID": "14045321541",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2025-12-05T11:08:00+03:00",
+    "eventCreatedDateTime": "2025-12-05T09:40:55Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "EMPTY",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "KUMLI",
+      "transportCallSequenceNumber": 0,
+      "location": {
+        "locationName": "Kumport Terminal - Ambarli",
+        "latitude": "40.971002",
+        "longitude": "28.680308"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Kumport Terminal - Ambarli Yakuplu Koyu, Ambarli Tyrkey Marmara Mahallesi Liman Cad. No:43 Ambarli Port Istanbul Turkey 34524",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "TRKMX"
+    },
+    "seals": [],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14045354827",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2025-12-05T11:08:00+03:00",
+    "eventCreatedDateTime": "2025-12-05T09:40:55Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "EMPTY",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "KUMLI",
+      "transportCallSequenceNumber": 0,
+      "location": {
+        "locationName": "Kumport Terminal - Ambarli",
+        "latitude": "40.971002",
+        "longitude": "28.680308"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Kumport Terminal - Ambarli Yakuplu Koyu, Ambarli Tyrkey Marmara Mahallesi Liman Cad. No:43 Ambarli Port Istanbul Turkey 34524",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "TRKMX"
+    },
+    "seals": [],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14047517908",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2025-12-05T17:20:00+03:00",
+    "eventCreatedDateTime": "2025-12-05T17:04:40Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "DPWYAR",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "DP World Terminal - Yarimca",
+        "latitude": "40.770385",
+        "longitude": "29.752012"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "DP World Terminal - Yarimca Cd No 168 Korfez Kocaeli Mimar Sinan Mehmet Akif Ersoy Izmit Korfezi Turkey 41780",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "TRYAR"
+    },
+    "seals": [],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14047529331",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2025-12-05T17:42:00+03:00",
+    "eventCreatedDateTime": "2025-12-05T17:04:40Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "DPWYAR",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "DP World Terminal - Yarimca",
+        "latitude": "40.770385",
+        "longitude": "29.752012"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "DP World Terminal - Yarimca Cd No 168 Korfez Kocaeli Mimar Sinan Mehmet Akif Ersoy Izmit Korfezi Turkey 41780",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "TRYAR"
+    },
+    "seals": [],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14138454394",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2025-12-25T12:18:00+03:00",
+    "eventCreatedDateTime": "2025-12-25T10:32:47Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "550N",
+      "carrierVoyageNumber": "550N",
+      "facilityCode": "DPWYAR",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "DP World Terminal - Yarimca",
+        "latitude": "40.770385",
+        "longitude": "29.752012"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "DP World Terminal - Yarimca Cd No 168 Korfez Kocaeli Mimar Sinan Mehmet Akif Ersoy Izmit Korfezi Turkey 41780",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000007",
+        "vesselName": "EXAMPLE VESSEL 07",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "9LMN0"
+      },
+      "UNLocationCode": "TRYAR"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14138558294",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2025-12-25T12:42:00+03:00",
+    "eventCreatedDateTime": "2025-12-25T11:04:36Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "550N",
+      "carrierVoyageNumber": "550N",
+      "facilityCode": "DPWYAR",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "DP World Terminal - Yarimca",
+        "latitude": "40.770385",
+        "longitude": "29.752012"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "DP World Terminal - Yarimca Cd No 168 Korfez Kocaeli Mimar Sinan Mehmet Akif Ersoy Izmit Korfezi Turkey 41780",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000007",
+        "vesselName": "EXAMPLE VESSEL 07",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "9LMN0"
+      },
+      "UNLocationCode": "TRYAR"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14174943636",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-04T17:53:00Z",
+    "eventCreatedDateTime": "2026-01-04T19:01:51Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "550N",
+      "carrierVoyageNumber": "550N",
+      "facilityCode": "TTY",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "FELIXSTOWE TRINITY TERMINAL",
+        "latitude": "51.946038",
+        "longitude": "1.323659"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "FELIXSTOWE TRINITY TERMINAL TOMLINE HOUSE Dock Rd Felixstowe United Kingdom IP11 3SY",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000007",
+        "vesselName": "EXAMPLE VESSEL 07",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "9LMN0"
+      },
+      "UNLocationCode": "GBFXT"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14174940976",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-04T17:48:00Z",
+    "eventCreatedDateTime": "2026-01-04T19:01:51Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "550N",
+      "carrierVoyageNumber": "550N",
+      "facilityCode": "TTY",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "FELIXSTOWE TRINITY TERMINAL",
+        "latitude": "51.946038",
+        "longitude": "1.323659"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "FELIXSTOWE TRINITY TERMINAL TOMLINE HOUSE Dock Rd Felixstowe United Kingdom IP11 3SY",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000007",
+        "vesselName": "EXAMPLE VESSEL 07",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "9LMN0"
+      },
+      "UNLocationCode": "GBFXT"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14212465219",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-08T17:57:00Z",
+    "eventCreatedDateTime": "2026-01-12T21:18:01Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "602S",
+      "carrierVoyageNumber": "602S",
+      "facilityCode": "TTY",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "FELIXSTOWE TRINITY TERMINAL",
+        "latitude": "51.946038",
+        "longitude": "1.323659"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "FELIXSTOWE TRINITY TERMINAL TOMLINE HOUSE Dock Rd Felixstowe United Kingdom IP11 3SY",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000008",
+        "vesselName": "EXAMPLE VESSEL 08",
+        "vesselFlag": "MH",
+        "vesselCallSignNumber": "Q2R3456"
+      },
+      "UNLocationCode": "GBFXT"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14212474076",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-08T18:07:00Z",
+    "eventCreatedDateTime": "2026-01-12T21:18:01Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "602S",
+      "carrierVoyageNumber": "602S",
+      "facilityCode": "TTY",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "FELIXSTOWE TRINITY TERMINAL",
+        "latitude": "51.946038",
+        "longitude": "1.323659"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "FELIXSTOWE TRINITY TERMINAL TOMLINE HOUSE Dock Rd Felixstowe United Kingdom IP11 3SY",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000008",
+        "vesselName": "EXAMPLE VESSEL 08",
+        "vesselFlag": "MH",
+        "vesselCallSignNumber": "Q2R3456"
+      },
+      "UNLocationCode": "GBFXT"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14238173297",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-18T07:28:00+01:00",
+    "eventCreatedDateTime": "2026-01-18T07:48:00Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "551N",
+      "carrierVoyageNumber": "551N",
+      "facilityCode": "NTB",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "NTB North Sea Terminal Bremerhaven",
+        "latitude": "53.546800",
+        "longitude": "8.578100"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "NTB North Sea Terminal Bremerhaven NTB CT4 27568 Bremerhaven Senator-Bortscheller-Str 14 Bremerhaven Germany 27568",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000008",
+        "vesselName": "EXAMPLE VESSEL 08",
+        "vesselFlag": "MH",
+        "vesselCallSignNumber": "Q2R3456"
+      },
+      "UNLocationCode": "DEBRV"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14238291114",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-18T08:40:00+01:00",
+    "eventCreatedDateTime": "2026-01-18T09:19:12Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "551N",
+      "carrierVoyageNumber": "551N",
+      "facilityCode": "NTB",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "NTB North Sea Terminal Bremerhaven",
+        "latitude": "53.546800",
+        "longitude": "8.578100"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "NTB North Sea Terminal Bremerhaven NTB CT4 27568 Bremerhaven Senator-Bortscheller-Str 14 Bremerhaven Germany 27568",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000008",
+        "vesselName": "EXAMPLE VESSEL 08",
+        "vesselFlag": "MH",
+        "vesselCallSignNumber": "Q2R3456"
+      },
+      "UNLocationCode": "DEBRV"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14244632651",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-18T16:40:00+01:00",
+    "eventCreatedDateTime": "2026-01-19T17:10:34Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "603N",
+      "carrierVoyageNumber": "603N",
+      "facilityCode": "NTB",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "NTB North Sea Terminal Bremerhaven",
+        "latitude": "53.546800",
+        "longitude": "8.578100"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "NTB North Sea Terminal Bremerhaven NTB CT4 27568 Bremerhaven Senator-Bortscheller-Str 14 Bremerhaven Germany 27568",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000006",
+        "vesselName": "EXAMPLE VESSEL 06",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "6H7890"
+      },
+      "UNLocationCode": "DEBRV"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14244725871",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-18T17:20:00+01:00",
+    "eventCreatedDateTime": "2026-01-19T17:10:34Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "603N",
+      "carrierVoyageNumber": "603N",
+      "facilityCode": "NTB",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "NTB North Sea Terminal Bremerhaven",
+        "latitude": "53.546800",
+        "longitude": "8.578100"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "NTB North Sea Terminal Bremerhaven NTB CT4 27568 Bremerhaven Senator-Bortscheller-Str 14 Bremerhaven Germany 27568",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000006",
+        "vesselName": "EXAMPLE VESSEL 06",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "6H7890"
+      },
+      "UNLocationCode": "DEBRV"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14264448926",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-22T21:51:00+01:00",
+    "eventCreatedDateTime": "2026-01-22T22:48:22Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "603N",
+      "carrierVoyageNumber": "603N",
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000006",
+        "vesselName": "EXAMPLE VESSEL 06",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "6H7890"
+      },
+      "UNLocationCode": "PLGDN"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14264453665",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-22T21:40:00+01:00",
+    "eventCreatedDateTime": "2026-01-22T22:48:22Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "603N",
+      "carrierVoyageNumber": "603N",
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000006",
+        "vesselName": "EXAMPLE VESSEL 06",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "6H7890"
+      },
+      "UNLocationCode": "PLGDN"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14278810432",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-26T13:09:00+01:00",
+    "eventCreatedDateTime": "2026-01-26T14:51:56Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 0,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "PLGDN"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14280075294",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-26T18:37:00+01:00",
+    "eventCreatedDateTime": "2026-01-26T19:36:10Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 0,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "PLGDN"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14334299225",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-28T15:48:00+01:00",
+    "eventCreatedDateTime": "2026-02-06T00:48:29Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MAEU1000002",
+    "emptyIndicatorCode": "EMPTY",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 0,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "PLGDN"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  },
+  {
+    "eventID": "14334299546",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-28T15:48:00+01:00",
+    "eventCreatedDateTime": "2026-02-06T00:48:29Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MAEU1000001",
+    "emptyIndicatorCode": "EMPTY",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000002"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000002"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 0,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "PLGDN"
+    },
+    "seals": [
+      {
+        "sealNumber": "NOSEAL",
+        "sealSource": "SHI",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000002"
+      }
+    ],
+    "ISOEquipmentCode": "45P3"
+  }
+]

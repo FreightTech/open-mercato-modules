@@ -1,0 +1,411 @@
+{
+  "name": "@freighttech/ui",
+  "version": "0.13.18",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node watch.mjs",
+    "prepack": "node build.mjs",
+    "test": "jest --config jest.config.cjs",
+    "typecheck": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./theme": {
+      "types": "./src/theme/index.ts",
+      "default": "./dist/theme/index.js"
+    },
+    "./primitives-v2": {
+      "types": "./src/primitives-v2/index.ts",
+      "default": "./dist/primitives-v2/index.js"
+    },
+    "./backend/schedule": {
+      "types": "./src/backend/schedule/index.ts",
+      "default": "./dist/backend/schedule/index.js"
+    },
+    "./backend/dashboard": {
+      "types": "./src/backend/dashboard/index.ts",
+      "default": "./dist/backend/dashboard/index.js"
+    },
+    "./backend/dashboard/widgetRegistry": {
+      "types": "./src/backend/dashboard/widgetRegistry.ts",
+      "default": "./dist/backend/dashboard/widgetRegistry.js"
+    },
+    "./backend/BackendChromeProvider": {
+      "types": "./src/backend/BackendChromeProvider.tsx",
+      "default": "./dist/backend/BackendChromeProvider.js"
+    },
+    "./backend/BackendPageSurface": {
+      "types": "./src/backend/BackendPageSurface.tsx",
+      "default": "./dist/backend/BackendPageSurface.js"
+    },
+    "./backend/detail": {
+      "types": "./src/backend/detail/index.ts",
+      "default": "./dist/backend/detail/index.js"
+    },
+    "./backend/inputs": {
+      "types": "./src/backend/inputs/index.ts",
+      "default": "./dist/backend/inputs/index.js"
+    },
+    "./backend/confirm-dialog": {
+      "types": "./src/backend/confirm-dialog/index.ts",
+      "default": "./dist/backend/confirm-dialog/index.js"
+    },
+    "./backend/dynamic-grid": {
+      "types": "./src/backend/dynamic-grid/index.ts",
+      "default": "./dist/backend/dynamic-grid/index.js"
+    },
+    "./backend/dynamic-table": {
+      "types": "./src/backend/dynamic-table/index.ts",
+      "default": "./dist/backend/dynamic-table/index.js"
+    },
+    "./backend/document-viewer": {
+      "types": "./src/backend/document-viewer/index.ts",
+      "default": "./dist/backend/document-viewer/index.js"
+    },
+    "./backend/dynamic-table/server": {
+      "types": "./src/backend/dynamic-table/server/index.ts",
+      "default": "./dist/backend/dynamic-table/server/index.js"
+    },
+    "./backend/dynamic-table/DynamicTable": {
+      "types": "./src/backend/dynamic-table/DynamicTable.tsx",
+      "default": "./dist/backend/dynamic-table/DynamicTable.js"
+    },
+    "./backend/dynamic-table/types/index": {
+      "types": "./src/backend/dynamic-table/types/index.ts",
+      "default": "./dist/backend/dynamic-table/types/index.js"
+    },
+    "./backend/dynamic-table/hooks/useAnnotations": {
+      "types": "./src/backend/dynamic-table/hooks/useAnnotations.ts",
+      "default": "./dist/backend/dynamic-table/hooks/useAnnotations.js"
+    },
+    "./backend/dynamic-table/hooks/useGrouping": {
+      "types": "./src/backend/dynamic-table/hooks/useGrouping.ts",
+      "default": "./dist/backend/dynamic-table/hooks/useGrouping.js"
+    },
+    "./backend/dynamic-table/events/events": {
+      "types": "./src/backend/dynamic-table/events/events.ts",
+      "default": "./dist/backend/dynamic-table/events/events.js"
+    },
+    "./backend/dynamic-table/components/CellCommentDialog": {
+      "types": "./src/backend/dynamic-table/components/CellCommentDialog.tsx",
+      "default": "./dist/backend/dynamic-table/components/CellCommentDialog.js"
+    },
+    "./backend/dynamic-table/components/EntitySearchEditor": {
+      "types": "./src/backend/dynamic-table/components/EntitySearchEditor.tsx",
+      "default": "./dist/backend/dynamic-table/components/EntitySearchEditor.js"
+    },
+    "./backend/dynamic-table/components/MentionPopup": {
+      "types": "./src/backend/dynamic-table/components/MentionPopup.tsx",
+      "default": "./dist/backend/dynamic-table/components/MentionPopup.js"
+    },
+    "./backend/charts": {
+      "types": "./src/backend/charts/index.ts",
+      "default": "./dist/backend/charts/index.js"
+    },
+    "./backend/date-range": {
+      "types": "./src/backend/date-range/index.ts",
+      "default": "./dist/backend/date-range/index.js"
+    },
+    "./backend/settings": {
+      "types": "./src/backend/settings/index.ts",
+      "default": "./dist/backend/settings/index.js"
+    },
+    "./backend/section-page": {
+      "types": "./src/backend/section-page/index.ts",
+      "default": "./dist/backend/section-page/index.js"
+    },
+    "./backend/injection/widgetRegistry": {
+      "types": "./src/backend/injection/widgetRegistry.ts",
+      "default": "./dist/backend/injection/widgetRegistry.js"
+    },
+    "./backend/forms": {
+      "types": "./src/backend/forms/index.ts",
+      "default": "./dist/backend/forms/index.js"
+    },
+    "./backend/forms/FormHeader": {
+      "types": "./src/backend/forms/FormHeader.tsx",
+      "default": "./dist/backend/forms/FormHeader.js"
+    },
+    "./backend/fields/registry": {
+      "types": "./src/backend/fields/registry.ts",
+      "default": "./dist/backend/fields/registry.js"
+    },
+    "./backend/custom-fields/FieldDefinitionsEditor": {
+      "types": "./src/backend/custom-fields/FieldDefinitionsEditor.tsx",
+      "default": "./dist/backend/custom-fields/FieldDefinitionsEditor.js"
+    },
+    "./backend/detail/AttachmentVisualPreview": {
+      "types": "./src/backend/detail/AttachmentVisualPreview.tsx",
+      "default": "./dist/backend/detail/AttachmentVisualPreview.js"
+    },
+    "./backend/detail/InlineEditors": {
+      "types": "./src/backend/detail/InlineEditors.tsx",
+      "default": "./dist/backend/detail/InlineEditors.js"
+    },
+    "./backend/detail/NotesSection": {
+      "types": "./src/backend/detail/NotesSection.tsx",
+      "default": "./dist/backend/detail/NotesSection.js"
+    },
+    "./backend/injection/InjectionSpot": {
+      "types": "./src/backend/injection/InjectionSpot.tsx",
+      "default": "./dist/backend/injection/InjectionSpot.js"
+    },
+    "./backend/injection/mutationEvents": {
+      "types": "./src/backend/injection/mutationEvents.ts",
+      "default": "./dist/backend/injection/mutationEvents.js"
+    },
+    "./backend/injection/spotIds": {
+      "types": "./src/backend/injection/spotIds.ts",
+      "default": "./dist/backend/injection/spotIds.js"
+    },
+    "./backend/injection/useAppEvent": {
+      "types": "./src/backend/injection/useAppEvent.ts",
+      "default": "./dist/backend/injection/useAppEvent.js"
+    },
+    "./backend/injection/useGuardedMutation": {
+      "types": "./src/backend/injection/useGuardedMutation.ts",
+      "default": "./dist/backend/injection/useGuardedMutation.js"
+    },
+    "./backend/injection/useRegisteredComponent": {
+      "types": "./src/backend/injection/useRegisteredComponent.tsx",
+      "default": "./dist/backend/injection/useRegisteredComponent.js"
+    },
+    "./backend/injection/mutationStore": {
+      "types": "./src/backend/injection/mutationStore.ts",
+      "default": "./dist/backend/injection/mutationStore.js"
+    },
+    "./backend/injection/spotContext": {
+      "types": "./src/backend/injection/spotContext.ts",
+      "default": "./dist/backend/injection/spotContext.js"
+    },
+    "./backend/injection/widgetLoaders": {
+      "types": "./src/backend/injection/widgetLoaders.ts",
+      "default": "./dist/backend/injection/widgetLoaders.js"
+    },
+    "./backend/inputs/ComboboxInput": {
+      "types": "./src/backend/inputs/ComboboxInput.tsx",
+      "default": "./dist/backend/inputs/ComboboxInput.js"
+    },
+    "./backend/inputs/DatePicker": {
+      "types": "./src/backend/inputs/DatePicker.tsx",
+      "default": "./dist/backend/inputs/DatePicker.js"
+    },
+    "./backend/inputs/EventPatternInput": {
+      "types": "./src/backend/inputs/EventPatternInput.tsx",
+      "default": "./dist/backend/inputs/EventPatternInput.js"
+    },
+    "./backend/inputs/PhoneNumberField": {
+      "types": "./src/backend/inputs/PhoneNumberField.tsx",
+      "default": "./dist/backend/inputs/PhoneNumberField.js"
+    },
+    "./backend/inputs/TagsInput": {
+      "types": "./src/backend/inputs/TagsInput.tsx",
+      "default": "./dist/backend/inputs/TagsInput.js"
+    },
+    "./backend/markdown/MarkdownContent": {
+      "types": "./src/backend/markdown/MarkdownContent.tsx",
+      "default": "./dist/backend/markdown/MarkdownContent.js"
+    },
+    "./backend/messages/SendObjectMessageDialog": {
+      "types": "./src/backend/messages/SendObjectMessageDialog.tsx",
+      "default": "./dist/backend/messages/SendObjectMessageDialog.js"
+    },
+    "./backend/notifications/NotificationDispatcher": {
+      "types": "./src/backend/notifications/NotificationDispatcher.ts",
+      "default": "./dist/backend/notifications/NotificationDispatcher.js"
+    },
+    "./backend/notifications/useNotifications": {
+      "types": "./src/backend/notifications/useNotifications.ts",
+      "default": "./dist/backend/notifications/useNotifications.js"
+    },
+    "./backend/notifications/useNotificationsPoll": {
+      "types": "./src/backend/notifications/useNotificationsPoll.ts",
+      "default": "./dist/backend/notifications/useNotificationsPoll.js"
+    },
+    "./backend/notifications/useNotificationsSse": {
+      "types": "./src/backend/notifications/useNotificationsSse.ts",
+      "default": "./dist/backend/notifications/useNotificationsSse.js"
+    },
+    "./backend/operations/store": {
+      "types": "./src/backend/operations/store.ts",
+      "default": "./dist/backend/operations/store.js"
+    },
+    "./backend/progress/useProgress": {
+      "types": "./src/backend/progress/useProgress.ts",
+      "default": "./dist/backend/progress/useProgress.js"
+    },
+    "./backend/progress/useProgressPoll": {
+      "types": "./src/backend/progress/useProgressPoll.ts",
+      "default": "./dist/backend/progress/useProgressPoll.js"
+    },
+    "./backend/progress/useProgressSse": {
+      "types": "./src/backend/progress/useProgressSse.ts",
+      "default": "./dist/backend/progress/useProgressSse.js"
+    },
+    "./backend/utils/apiCall": {
+      "types": "./src/backend/utils/apiCall.ts",
+      "default": "./dist/backend/utils/apiCall.js"
+    },
+    "./backend/utils/crudExport": {
+      "types": "./src/backend/utils/crudExport.ts",
+      "default": "./dist/backend/utils/crudExport.js"
+    },
+    "./backend/utils/customFieldColumns": {
+      "types": "./src/backend/utils/customFieldColumns.ts",
+      "default": "./dist/backend/utils/customFieldColumns.js"
+    },
+    "./backend/utils/customFieldDefs": {
+      "types": "./src/backend/utils/customFieldDefs.ts",
+      "default": "./dist/backend/utils/customFieldDefs.js"
+    },
+    "./backend/utils/customFieldForms": {
+      "types": "./src/backend/utils/customFieldForms.ts",
+      "default": "./dist/backend/utils/customFieldForms.js"
+    },
+    "./backend/utils/customFieldRelationDisplay": {
+      "types": "./src/backend/utils/customFieldRelationDisplay.ts",
+      "default": "./dist/backend/utils/customFieldRelationDisplay.js"
+    },
+    "./backend/utils/customFieldValues": {
+      "types": "./src/backend/utils/customFieldValues.ts",
+      "default": "./dist/backend/utils/customFieldValues.js"
+    },
+    "./backend/utils/flash": {
+      "types": "./src/backend/utils/flash.ts",
+      "default": "./dist/backend/utils/flash.js"
+    },
+    "./backend/utils/navUtils": {
+      "types": "./src/backend/utils/navUtils.ts",
+      "default": "./dist/backend/utils/navUtils.js"
+    },
+    "./backend/utils/serverErrors": {
+      "types": "./src/backend/utils/serverErrors.ts",
+      "default": "./dist/backend/utils/serverErrors.js"
+    },
+    "./backend/messages": {
+      "types": "./src/backend/messages/index.ts",
+      "default": "./dist/backend/messages/index.js"
+    },
+    "./backend/notifications": {
+      "types": "./src/backend/notifications/index.ts",
+      "default": "./dist/backend/notifications/index.js"
+    },
+    "./backend/version-history": {
+      "types": "./src/backend/version-history/index.ts",
+      "default": "./dist/backend/version-history/index.js"
+    },
+    "./*.ts": {
+      "types": "./src/*.ts",
+      "default": "./dist/*.js"
+    },
+    "./*.tsx": {
+      "types": "./src/*.tsx",
+      "default": "./dist/*.js"
+    },
+    "./*": {
+      "types": [
+        "./src/*.ts",
+        "./src/*.tsx"
+      ],
+      "default": "./dist/*.js"
+    },
+    "./*/*": {
+      "types": [
+        "./src/*/*.ts",
+        "./src/*/*.tsx"
+      ],
+      "default": "./dist/*/*.js"
+    },
+    "./*/*/*": {
+      "types": [
+        "./src/*/*/*.ts",
+        "./src/*/*/*.tsx"
+      ],
+      "default": "./dist/*/*/*.js"
+    },
+    "./*/*/*/*": {
+      "types": [
+        "./src/*/*/*/*.ts",
+        "./src/*/*/*/*.tsx"
+      ],
+      "default": "./dist/*/*/*/*.js"
+    }
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@radix-ui/react-checkbox": "^1.3.3",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@radix-ui/react-visually-hidden": "^1.2.6",
+    "@tanstack/react-table": "^8.20.5",
+    "@tanstack/react-virtual": "^3.13.23",
+    "@uiw/react-md-editor": "^4.0.11",
+    "class-variance-authority": "^0.7.1",
+    "date-fns": "^4.1.0",
+    "react-big-calendar": "^1.19.4",
+    "react-day-picker": "^9.6.4",
+    "react-markdown": "^10.1.0",
+    "recharts": "^2.15.0",
+    "remark-gfm": "^4.0.1",
+    "unified": "^11.0.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "peerDependencies": {
+    "@mikro-orm/core": "^7.1.4",
+    "@mikro-orm/postgresql": "^7.0.17",
+    "@open-mercato/core": "0.6.2",
+    "@open-mercato/shared": "0.6.2",
+    "@tanstack/react-query": "^5.90.12",
+    "lucide-react": "^0.556.0",
+    "next": "^16.2.3",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@mikro-orm/core": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@open-mercato/shared": "0.6.2",
+    "@playwright/test": "^1.58.2",
+    "@storybook/react-vite": "^8.6.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@types/jest": "^30.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "lucide-react": "^0.556.0",
+    "storybook": "^8.6.0",
+    "tailwindcss": "^4.1.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

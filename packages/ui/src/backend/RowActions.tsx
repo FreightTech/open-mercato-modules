@@ -1,0 +1,158 @@
+"use client"
+import * as React from 'react'
+import { createPortal } from 'react-dom'
+import { useT } from '@open-mercato/shared/lib/i18n/context'
+import { IconButton } from '../primitives/icon-button'
+import { Button } from '../primitives/button'
+
+export type RowActionItem = {
+  id?: string
+  label: string
+  onSelect?: () => void
+  href?: string
+  destructive?: boolean
+}
+
+export function RowActions({ items = [] }: { items?: RowActionItem[] }) {
+  const t = useT()
+  const [open, setOpen] = React.useState(false)
+  const btnRef = React.useRef<HTMLButtonElement>(null)
+  const menuRef = React.useRef<HTMLDivElement>(null)
+  const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const [anchorRect, setAnchorRect] = React.useState<DOMRect | null>(null)
+  const [direction, setDirection] = React.useState<'down' | 'up'>('down')
+
+  const updatePosition = React.useCallback(() => {
+    if (!btnRef.current) return
+    const rect = btnRef.current.getBoundingClientRect()
+    setAnchorRect(rect)
+    // Decide whether to open up or down based on available viewport space
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+    setDirection(spaceBelow < 180 && spaceAbove > spaceBelow ? 'up' : 'down')
+  }, [])
+
+  React.useEffect(() => {
+    if (!open) return
+    updatePosition()
+    function onDocClick(e: MouseEvent) {
+      const t = e.target as Node
+      if (menuRef.current && !menuRef.current.contains(t) && btnRef.current && !btnRef.current.contains(t)) {
+        setOpen(false)
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        btnRef.current?.focus()
+      }
+    }
+    function onScrollOrResize() {
+      updatePosition()
+    }
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScrollOrResize, true)
+    window.addEventListener('resize', onScrollOrResize)
+    return () => {
+      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScrollOrResize, true)
+      window.removeEventListener('resize', onScrollOrResize)
+    }
+  }, [open, updatePosition])
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  if (items.length === 0) return null
+
+  const handlePointerEnter = (event: React.PointerEvent) => {
+    if (event.pointerType === 'touch') return
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+    setOpen(true)
+  }
+
+  const handlePointerLeave = (event: React.PointerEvent) => {
+    if (event.pointerType === 'touch') return
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpen(false)
+    }, 150)
+  }
+
+  return (
+    <div
+      className="relative inline-block text-left"
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+    >
+      <IconButton
+        ref={btnRef}
+        type="button"
+        variant="ghost"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); requestAnimationFrame(updatePosition) }}
+      >
+        <span aria-hidden="true">⋯</span>
+        <span className="sr-only">{t('ui.rowActions.openActions', 'Open actions')}</span>
+      </IconButton>
+      {open && anchorRect && createPortal(
+        <div
+          ref={menuRef}
+          role="menu"
+          className="fixed w-44 max-w-[calc(100vw-1rem)] rounded-md border bg-background p-1 shadow focus:outline-none z-[1000]"
+          style={{
+            top: direction === 'down' ? anchorRect.bottom + 8 : anchorRect.top - 8,
+            left: Math.min(anchorRect.right, window.innerWidth - 8),
+            transform: `translate(-100%, ${direction === 'down' ? '0' : '-100%'})`,
+          }}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
+        >
+          {items.map((it, idx) => (
+            it.href ? (
+              <a
+                key={idx}
+                href={it.href}
+                className={`block w-full text-left px-2 py-1 text-sm rounded hover:bg-accent ${it.destructive ? 'text-red-600' : ''}`}
+                role="menuitem"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setOpen(false)
+                }}
+              >
+                {it.label}
+              </a>
+            ) : (
+              <Button
+                key={idx}
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={`w-full justify-start rounded-none font-normal ${it.destructive ? 'text-red-600' : ''}`}
+                role="menuitem"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setOpen(false)
+                  it.onSelect?.()
+                }}
+              >
+                {it.label}
+              </Button>
+            )
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
+  )
+}

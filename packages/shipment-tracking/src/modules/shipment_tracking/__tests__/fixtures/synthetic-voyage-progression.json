@@ -1,0 +1,410 @@
+[
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "eventId": "SYN-1679232491",
+    "eventDateTime": "2025-10-24T05:00:00-06:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-10-24T05:00:00-06:00",
+    "description": "Empty to Shipper",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CRCARTRB",
+      "unLocationCode": "CRCAR",
+      "facilityCode": "CRCARTRAA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "DEPO",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "CARTAGO",
+      "unLocationCode": "CRCAR",
+      "facilityCode": "CRCARTRAA",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "eventId": "SYN-1679340160",
+    "eventDateTime": "2025-10-24T12:02:00-06:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-10-24T12:02:00-06:00",
+    "description": "Export received at CY",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CRMOBTRB",
+      "unLocationCode": "CRMOB",
+      "facilityCode": "APMT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "MOIN",
+      "unLocationCode": "CRMOB",
+      "facilityCode": "APMT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL001", "sealSource": "CAR" }],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "eventId": "SYN-1681072009",
+    "eventDateTime": "2025-10-27T15:10:00-06:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-10-27T15:10:00-06:00",
+    "description": "Export Loaded on Vessel",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CRMOBNN542R",
+      "unLocationCode": "CRMOB",
+      "facilityCode": "APMT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9227340",
+        "vesselName": "MSC VAISHNAVI R.",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": "NN542R",
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "MOIN",
+      "unLocationCode": "CRMOB",
+      "facilityCode": "APMT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL001", "sealSource": "CAR" }],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "eventId": "SYN-ACT-DEPA-CRMOB",
+    "eventDateTime": "2025-10-27T21:18:00-06:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-10-27T21:18:00-06:00",
+    "description": "Vessel Departure",
+    "transportCall": {
+      "transportCallID": "CRMOBNN542R",
+      "unLocationCode": "CRMOB",
+      "facilityCode": "APMT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9227340",
+        "vesselName": "MSC VAISHNAVI R.",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": "NN542R",
+      "importVoyageNumber": null
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "eventId": "SYN-ACT-ARRI-BEANR",
+    "eventDateTime": "2025-11-11T13:24:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-11-11T13:24:00+01:00",
+    "description": "Vessel Arrival",
+    "transportCall": {
+      "transportCallID": "BEANRNN542R",
+      "unLocationCode": "BEANR",
+      "facilityCode": "K1742",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9227340",
+        "vesselName": "MSC VAISHNAVI R.",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "NN542R"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "eventId": "SYN-1690735125",
+    "eventDateTime": "2025-11-11T15:18:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-11-11T15:18:00+01:00",
+    "description": "Import Discharged from Vessel",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "BEANRNN542R",
+      "unLocationCode": "BEANR",
+      "facilityCode": "K1742",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9227340",
+        "vesselName": "MSC VAISHNAVI R.",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "NN542R"
+    },
+    "eventLocation": {
+      "locationName": "ANTWERP",
+      "unLocationCode": "BEANR",
+      "facilityCode": "K1742",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL001", "sealSource": "CAR" }],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "eventId": "SYN-1693354659",
+    "eventDateTime": "2025-11-15T08:31:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-11-15T08:31:00+01:00",
+    "description": "Export Loaded on Vessel",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "BEANRQB538W",
+      "unLocationCode": "BEANR",
+      "facilityCode": "K1742",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9963619",
+        "vesselName": "MSC IERANTO",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": "QB538W",
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "ANTWERP",
+      "unLocationCode": "BEANR",
+      "facilityCode": "K1742",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL001", "sealSource": "CAR" }],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "eventId": "SYN-ACT-DEPA-BEANR",
+    "eventDateTime": "2025-11-16T07:06:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-11-16T07:06:00+01:00",
+    "description": "Vessel Departure",
+    "transportCall": {
+      "transportCallID": "BEANRQB538W",
+      "unLocationCode": "BEANR",
+      "facilityCode": "K1742",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9963619",
+        "vesselName": "MSC IERANTO",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": "QB538W",
+      "importVoyageNumber": null
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "eventId": "SYN-ACT-ARRI-PLGDY",
+    "eventDateTime": "2025-11-25T12:30:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-11-25T12:30:00+01:00",
+    "description": "Vessel Arrival",
+    "transportCall": {
+      "transportCallID": "PLGDYQB538W",
+      "unLocationCode": "PLGDY",
+      "facilityCode": "PLBCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9963619",
+        "vesselName": "MSC IERANTO",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "QB538W"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "eventId": "SYN-1700998316",
+    "eventDateTime": "2025-11-27T02:55:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-11-27T02:55:00+01:00",
+    "description": "Import Discharged from Vessel",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "PLGDYQB538W",
+      "unLocationCode": "PLGDY",
+      "facilityCode": "PLBCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9963619",
+        "vesselName": "MSC IERANTO",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "XXXXX"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "QB538W"
+    },
+    "eventLocation": {
+      "locationName": "GDYNIA",
+      "unLocationCode": "PLGDY",
+      "facilityCode": "PLBCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL001", "sealSource": "CAR" }],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "eventId": "SYN-1704657763",
+    "eventDateTime": "2025-12-03T00:16:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-12-03T00:16:00+01:00",
+    "description": "Import to consignee",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "PLGDYTRB",
+      "unLocationCode": "PLGDY",
+      "facilityCode": "PLBCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "GDYNIA",
+      "unLocationCode": "PLGDY",
+      "facilityCode": "PLBCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "eventId": "SYN-1708307647",
+    "eventDateTime": "2025-12-08T21:36:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2025-12-08T21:36:00+01:00",
+    "description": "Empty received at CY",
+    "equipmentReference": "MSNU2138133",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "PLGDYTRB",
+      "unLocationCode": "PLGDY",
+      "facilityCode": "PLBCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "GDYNIA",
+      "unLocationCode": "PLGDY",
+      "facilityCode": "PLBCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-VOYAGE-001" }
+    ],
+    "seals": [],
+    "references": []
+  }
+]

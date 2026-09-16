@@ -1,0 +1,559 @@
+/*
+  FMS-Componenets v2 design-system tokens.
+
+  Self-contained: defines its own `--*-v2` variables and registers
+  them with Tailwind v4's `@theme inline` so they emit utilities like
+  `bg-primary-v2`, `text-status-v2-success-text`, `border-accent-v2`.
+
+  Loaded alongside the legacy tokens that still live in
+  `apps/web/src/app/globals.css`. The two sets do NOT collide — every
+  v2 token uses a `-v2` suffix. apps/web screens that haven't migrated
+  yet keep rendering against the legacy tokens; new `primitives-v2/`
+  components use only what's defined here.
+
+  Consumers:
+    - `apps/web/src/app/globals.css` (imports this file alongside `tailwindcss`)
+    - `packages/ui/.storybook/preview.css` (imports this for the
+      design-system Storybook)
+    - `./m3.css` — the Material 3 system layer (shape, elevation, state
+      layers, motion). It is imported directly AFTER this file and holds
+      no hex literals of its own: every M3 colour role resolves back into
+      a token declared here. Adding a role there may mean adding a
+      `-v2` token here.
+
+  When every apps/web screen migrates to the v2 components, the
+  legacy `@theme inline` / `:root` / `.dark` blocks in globals.css
+  can be deleted and the `-v2` suffix removed from these tokens.
+
+  Note: the typography utilities (`text-heading-bold-2xl`, etc.) are
+  registered in `./typography.css` — kept separate because they're
+  the same in both legacy and v2 land.
+*/
+
+@theme inline {
+  /* Neutral surfaces */
+  --color-background-v2: var(--background-v2);
+  --color-foreground-v2: var(--foreground-v2);
+  --color-foreground-v2-muted: var(--foreground-v2-muted);
+  --color-muted-v2-foreground: var(--muted-v2-foreground);
+
+  /* Borders */
+  --color-border-v2: var(--border-v2);
+  --color-border-v2-subtle: var(--border-v2-subtle);
+  --color-border-v2-strong: var(--border-v2-strong);
+
+  /* Data-table row states (DynamicTable v2 appearance) */
+  --color-row-v2-hover: var(--row-v2-hover);
+  --color-row-v2-selected: var(--row-v2-selected);
+  --color-selection-v2: var(--selection-v2);
+
+  /* Ink ON the two blue container fills (see the `:root` block) */
+  --color-on-container-v2-primary: var(--on-container-v2-primary);
+  --color-on-container-v2-selected: var(--on-container-v2-selected);
+
+  /* DynamicTable v2 slate surfaces (Figma 220:2935 redesign) */
+  --color-table-v2-header-bg: var(--table-v2-header-bg);
+  --color-table-v2-divider: var(--table-v2-divider);
+  --color-table-v2-header-text: var(--table-v2-header-text);
+  --color-table-v2-row-stripe: var(--table-v2-row-stripe);
+  --color-table-v2-row-warning: var(--table-v2-row-warning);
+  --color-table-v2-control-border: var(--table-v2-control-border);
+
+  /* Primary (deep navy) */
+  --color-primary-v2: var(--primary-v2);
+  --color-primary-v2-hover: var(--primary-v2-hover);
+  --color-primary-v2-foreground: var(--primary-v2-foreground);
+
+  /* Secondary (neutral fill) */
+  --color-secondary-v2: var(--secondary-v2);
+  --color-secondary-v2-hover: var(--secondary-v2-hover);
+  --color-secondary-v2-foreground: var(--secondary-v2-foreground);
+
+  /* Destructive (red) */
+  --color-destructive-v2: var(--destructive-v2);
+  --color-destructive-v2-hover: var(--destructive-v2-hover);
+  --color-destructive-v2-foreground: var(--destructive-v2-foreground);
+
+  /* Accent (teal — FMS interaction-affirmative color: focus rings,
+     checked checkboxes, toggled switches, Tag `teczka` variant) */
+  --color-accent-v2: var(--accent-v2);
+  --color-accent-v2-hover: var(--accent-v2-hover);
+  --color-accent-v2-foreground: var(--accent-v2-foreground);
+  --color-accent-v2-bright: var(--accent-v2-bright);
+
+  /* Surface (light-only canvas tint shown behind components in Figma) */
+  --color-surface-v2: var(--surface-v2);
+
+  /* Extra neutral surface steps consumed by `./m3.css` (see `:root`) */
+  --color-surface-v2-bright: var(--surface-v2-bright);
+  --color-surface-v2-raised: var(--surface-v2-raised);
+  --color-surface-v2-highest: var(--surface-v2-highest);
+
+  /* Status palette — bg / border / text per variant */
+  --color-status-v2-neutral-bg: var(--status-v2-neutral-bg);
+  --color-status-v2-neutral-border: var(--status-v2-neutral-border);
+  --color-status-v2-neutral-text: var(--status-v2-neutral-text);
+
+  --color-status-v2-primary-bg: var(--status-v2-primary-bg);
+  --color-status-v2-primary-border: var(--status-v2-primary-border);
+  --color-status-v2-primary-text: var(--status-v2-primary-text);
+
+  --color-status-v2-outline-bg: var(--status-v2-outline-bg);
+  --color-status-v2-outline-border: var(--status-v2-outline-border);
+  --color-status-v2-outline-text: var(--status-v2-outline-text);
+
+  --color-status-v2-success-bg: var(--status-v2-success-bg);
+  --color-status-v2-success-border: var(--status-v2-success-border);
+  --color-status-v2-success-text: var(--status-v2-success-text);
+
+  --color-status-v2-error-bg: var(--status-v2-error-bg);
+  --color-status-v2-error-border: var(--status-v2-error-border);
+  --color-status-v2-error-text: var(--status-v2-error-text);
+
+  --color-status-v2-warning-bg: var(--status-v2-warning-bg);
+  --color-status-v2-warning-border: var(--status-v2-warning-border);
+  --color-status-v2-warning-text: var(--status-v2-warning-text);
+
+  --color-status-v2-info-bg: var(--status-v2-info-bg);
+  --color-status-v2-info-border: var(--status-v2-info-border);
+  --color-status-v2-info-text: var(--status-v2-info-text);
+
+  --color-status-v2-purple-bg: var(--status-v2-purple-bg);
+  --color-status-v2-purple-border: var(--status-v2-purple-border);
+  --color-status-v2-purple-text: var(--status-v2-purple-text);
+
+  --color-status-v2-teal-bg: var(--status-v2-teal-bg);
+  --color-status-v2-teal-border: var(--status-v2-teal-border);
+  --color-status-v2-teal-text: var(--status-v2-teal-text);
+
+  --color-status-v2-orange-bg: var(--status-v2-orange-bg);
+  --color-status-v2-orange-border: var(--status-v2-orange-border);
+  --color-status-v2-orange-text: var(--status-v2-orange-text);
+
+  --color-status-v2-sky-bg: var(--status-v2-sky-bg);
+  --color-status-v2-sky-border: var(--status-v2-sky-border);
+  --color-status-v2-sky-text: var(--status-v2-sky-text);
+
+  --color-status-v2-rose-bg: var(--status-v2-rose-bg);
+  --color-status-v2-rose-border: var(--status-v2-rose-border);
+  --color-status-v2-rose-text: var(--status-v2-rose-text);
+
+  /* Nav / sidebar surfaces */
+  --color-sidebar-v2: var(--sidebar-v2);
+  --color-sidebar-v2-border: var(--sidebar-v2-border);
+  --color-sidebar-v2-foreground: var(--sidebar-v2-foreground);
+  --color-sidebar-v2-muted: var(--sidebar-v2-muted);
+  --color-sidebar-v2-item-foreground: var(--sidebar-v2-item-foreground);
+  --color-sidebar-v2-item-disabled: var(--sidebar-v2-item-disabled);
+  --color-sidebar-v2-accent: var(--sidebar-v2-accent);
+  --color-sidebar-v2-accent-active: var(--sidebar-v2-accent-active);
+  --color-sidebar-v2-accent-foreground: var(--sidebar-v2-accent-foreground);
+  --color-sidebar-v2-badge-bg: var(--sidebar-v2-badge-bg);
+  --color-sidebar-v2-badge-foreground: var(--sidebar-v2-badge-foreground);
+
+  /* Tab active-state indicator (brand blue underline) */
+  --color-tab-v2-indicator: var(--tab-v2-indicator);
+
+  /* Selected-row highlight (light indigo wash) */
+  --color-row-v2-selected-bg: var(--row-v2-selected-bg);
+
+  /* Topbar / app header (slate palette — matches the sidebar bar so the
+     two chrome surfaces read as one). Source: Figma Topbar 781:13633. */
+  --color-topbar-v2-bg: var(--topbar-v2-bg);
+  --color-topbar-v2-border: var(--topbar-v2-border);
+  --color-topbar-v2-title: var(--topbar-v2-title);
+  --color-topbar-v2-icon: var(--topbar-v2-icon);
+  --color-topbar-v2-field-bg: var(--topbar-v2-field-bg);
+  --color-topbar-v2-field-border: var(--topbar-v2-field-border);
+  --color-topbar-v2-field-placeholder: var(--topbar-v2-field-placeholder);
+  --color-topbar-v2-avatar-bg: var(--topbar-v2-avatar-bg);
+  --color-topbar-v2-avatar-text: var(--topbar-v2-avatar-text);
+}
+
+:root {
+  /* Neutral surfaces */
+  --background-v2: #FFFFFF;
+  --foreground-v2: #18181A;
+  --foreground-v2-muted: #71717A;   /* secondary text (Figma) — between fg #18181A and tertiary #A0A0AA */
+  --muted-v2-foreground: #A0A0AA;
+
+  /* Borders (subtle → light → strong) */
+  --border-v2-subtle: #EEEEF0;      /* internal row dividers / table grid lines (Figma) */
+  --border-v2: #E4E4E7;
+  --border-v2-strong: #D4D4D8;
+
+  /* Data-table row states (DynamicTable v2 appearance) */
+  --row-v2-hover: #F1F5F9;          /* row hover — slate-100 (Figma 220:2935) */
+  --row-v2-selected: #DBEAFE;       /* selected row/cell fill — blue-100; a touch more vivid than blue-50, paired with a --selection-v2 checkbox */
+  --row-v2-new: #EFF6FF;            /* add/new-row fill — blue-50; softer than the blue-100 selected fill (Figma Frame 142) */
+  --range-v2-fill: #EFF6FF;         /* multi-cell (Excel range) selection fill. Same blue-50 as the new-row
+                                       fill in LIGHT, where it already separates cleanly from #FFFFFF cells and
+                                       #F1F5F9 hover. It is a token of its own because dark needs a different
+                                       answer — see the .dark block. */
+  --selection-v2: #3B82F6;          /* brand blue (Figma blue/500) — checkbox + selection accent, matches the active Tab underline */
+
+  /* DynamicTable v2 slate surfaces (Figma 220:2935 redesign). Scoped to the
+     table so the move from zinc → Tailwind slate doesn't disturb shared
+     --secondary-v2 / --foreground-v2-muted used by other v2 components. */
+  --table-v2-header-bg: #F1F5F9;    /* slate-100 — column-header bar */
+  --table-v2-divider: #E2E8F0;      /* slate-200 — header column dividers */
+  --table-v2-header-text: #475569;  /* slate-600 — header labels */
+  --table-v2-row-stripe: #F8FAFC;   /* slate-50 — zebra stripe */
+  --table-v2-row-warning: #FEF2F2;  /* red-50 — overdue / warning row or cell */
+  --table-v2-control-border: #CBD5E1; /* slate-300 — pagination active pill + rows-per-page select border */
+  --table-v2-body-bg: var(--background-v2); /* grid body surface — white in light; a recessed darker well in dark (see .dark) */
+
+  /* Primary (deep navy from Figma) */
+  --primary-v2: #0E3762;
+  --primary-v2-hover: #0B2C4F;   /* derived: ~10% darker; Figma uses an effect not exposed via MCP */
+  --primary-v2-foreground: #FFFFFF;
+
+  /* Secondary */
+  --secondary-v2: #F4F4F5;
+  --secondary-v2-hover: #EDEDEF;
+  --secondary-v2-foreground: #18181A;
+
+  /* Destructive */
+  --destructive-v2: #E7000B;
+  --destructive-v2-hover: #C00009;
+  --destructive-v2-foreground: #FFFFFF;
+
+  /* Accent (teal — same hex as `--status-v2-teal-text`; aliased so
+     callers don't reach into the status palette for selection states) */
+  --accent-v2: #0D9488;
+  --accent-v2-hover: #0B7F75;
+  --accent-v2-foreground: #FFFFFF;
+
+  /* Brighter accent (teal-400 in Tailwind's scale). Used by Tab's
+     active underline; Figma picks a lighter teal for that pattern
+     than for focus rings / Checkbox fill / Toggle on-state. */
+  --accent-v2-bright: #2DD4BF;
+
+  /* Canvas tint behind Figma components */
+  --surface-v2: #F8F8FA;
+
+  /* ═══ Extra neutral surface steps ═══════════════════════════════
+     Added for `./m3.css`, which needs a five-step surface-container
+     ladder and holds no hex literals of its own. `bright` is the
+     lightest neutral in the scheme; `raised` and `highest` sit above
+     --table-v2-header-bg (#F1F5F9) so a focused field / dialog / neutral
+     selection still separates from the header bar it sits on. In DARK
+     they mirror upward off the slate ramp — see the `.dark` block, where
+     the five steps read #040A11 → #0F172A → #16203A → #1E293B → #293449
+     and stay individually distinguishable on the recessed table well. */
+  --surface-v2-bright: #FFFFFF;    /* lightest neutral */
+  --surface-v2-raised: #E9EEF5;    /* derived slate between slate-100 and slate-200 */
+  --surface-v2-highest: #E2E8F0;   /* slate-200 — neutral (non-blue) selection fill */
+
+  /* Ink ON the blue container fills. Light uses the navy --primary-v2 on
+     the pale #EFF6FF / #DBEAFE tints; dark cannot (the dark --primary-v2
+     #1A5A9E is itself a mid blue), so it flips to a pale ink instead. */
+  --on-container-v2-primary: var(--primary-v2);   /* on --row-v2-new */
+  --on-container-v2-selected: var(--primary-v2);  /* on --row-v2-selected */
+
+  /* ═══ FMS-Componenets v2 status palette ════════════════════════
+     Source: Badge (45:26) — 12 variants. Alert reuses 4 of these,
+     Tag adds two semantic aliases (`container` ≈ primary, `teczka`
+     ≈ teal). Each variant ships a `-bg` / `-border` / `-text` triplet
+     so callers can style fill, outline, and label in one go. */
+
+  /* Neutral (gray) */
+  --status-v2-neutral-bg: #F4F4F5;
+  --status-v2-neutral-border: #E4E4E7;
+  --status-v2-neutral-text: #71717A;
+
+  /* Primary (light navy — matches Tag `container`) */
+  --status-v2-primary-bg: #E8EEF4;
+  --status-v2-primary-border: #C9D9E7;
+  --status-v2-primary-text: #18181A;
+
+  /* Outline (white pill) */
+  --status-v2-outline-bg: #FFFFFF;
+  --status-v2-outline-border: #E4E4E7;
+  --status-v2-outline-text: #71717A;
+
+  /* Success (green) */
+  --status-v2-success-bg: #F0FDF4;
+  --status-v2-success-border: #BBF7D0;
+  --status-v2-success-text: #166534;
+
+  /* Error (red) */
+  --status-v2-error-bg: #FEF2F2;
+  --status-v2-error-border: #FECACA;
+  --status-v2-error-text: #991B1B;
+
+  /* Warning (amber) */
+  --status-v2-warning-bg: #FFFBEB;
+  --status-v2-warning-border: #FDE68A;
+  --status-v2-warning-text: #92400E;
+
+  /* Info (blue) */
+  --status-v2-info-bg: #EFF6FF;
+  --status-v2-info-border: #BFDBFE;
+  --status-v2-info-text: #1E40AF;
+
+  /* Purple (violet — categorical) */
+  --status-v2-purple-bg: #EDE9FE;
+  --status-v2-purple-border: #DDD6FE;
+  --status-v2-purple-text: #6D28D9;
+
+  /* Teal (matches Tag `teczka`) */
+  --status-v2-teal-bg: #CCFBF1;
+  --status-v2-teal-border: #99F6E4;
+  --status-v2-teal-text: #0F766E;
+
+  /* Orange */
+  --status-v2-orange-bg: #FFEDD5;
+  --status-v2-orange-border: #FED7AA;
+  --status-v2-orange-text: #C2410C;
+
+  /* Sky (lighter blue, distinct from `info`) */
+  --status-v2-sky-bg: #E0F2FE;
+  --status-v2-sky-border: #BAE6FD;
+  --status-v2-sky-text: #0369A1;
+
+  /* Rose (pink-red, distinct from `error`) */
+  --status-v2-rose-bg: #FFE4E6;
+  --status-v2-rose-border: #FECDD3;
+  --status-v2-rose-text: #BE123C;
+
+  /* Sidebar / nav surfaces
+     Bar fill is Figma slate/100. NavItem text is slate/600 in default
+     and hover states, blue/700 when active, slate/500 when disabled.
+     The active row is a white pill + shadow; hover row is slate/200.
+     The count badge inside NavItem is a solid blue pill (blue/500).
+     See spec `.ai/specs/2026-05-25-sidebar-redesign.md`. */
+  --sidebar-v2: #F1F5F9;
+  --sidebar-v2-border: #E4E4E7;
+  --sidebar-v2-foreground: #0F172A;        /* shell + header title text (Figma slate/900) */
+  --sidebar-v2-muted: #64748B;             /* group LABEL headers + secondary icons (Figma slate/500) */
+  --sidebar-v2-item-foreground: #475569;   /* NavItem default + hover text (Figma slate/600) */
+  --sidebar-v2-item-disabled: #64748B;     /* NavItem disabled text (Figma slate/500) */
+  --sidebar-v2-accent: #E2E8F0;            /* hover pill (Figma slate/200) */
+  --sidebar-v2-accent-active: #FFFFFF;     /* active row pill */
+  --sidebar-v2-accent-foreground: #1D4ED8; /* active text + icon (Figma blue/700) */
+  --sidebar-v2-badge-bg: #3B82F6;          /* count badge fill (Figma blue/500) */
+  --sidebar-v2-badge-foreground: #FFFFFF;  /* count badge text */
+
+  /* Tab active-state underline (Figma blue/500 — same hex as the
+     sidebar count badge, but kept as its own token so the Tab pattern
+     can drift independently of the sidebar). */
+  --tab-v2-indicator: #3B82F6;
+
+  /* Selected-row highlight (light indigo wash — used by row buttons
+     inside selection lists like the issue-invoice modal's product
+     picker). Distinct from `--status-v2-info-bg` (#EFF6FF), which is
+     reserved for the info status badge palette. */
+  --row-v2-selected-bg: #EEF2FF;
+
+  /* Backend page-surface tint (light gray behind detail pages that
+     mix white cards on a non-white canvas). Consumed by
+     `BackendPageSurface` as its default tint when no prop is passed. */
+  --page-surface-v2-tint: #F4F5F7;
+
+  /* Topbar / app header (Figma Topbar 781:13633 — slate palette).
+       bg           slate/100  #F1F5F9  (same as the sidebar bar)
+       border       slate/200  #E2E8F0  (bottom divider, home-btn border, avatar fill)
+       title        slate/900  #0F172A  (current breadcrumb)
+       icon         slate/500  #64748B  (ghost action icons + ⌘K text)
+       field-bg     white      #FFFFFF  (search + org select)
+       field-border slate/300  #CBD5E1
+       placeholder  slate/400  #94A3B8
+       avatar-text  slate/500  #64748B */
+  --topbar-v2-bg: #F1F5F9;
+  --topbar-v2-border: #E2E8F0;
+  --topbar-v2-title: #0F172A;
+  --topbar-v2-icon: #64748B;
+  --topbar-v2-field-bg: #FFFFFF;
+  --topbar-v2-field-border: #CBD5E1;
+  --topbar-v2-field-placeholder: #94A3B8;
+  --topbar-v2-avatar-bg: #E2E8F0;
+  --topbar-v2-avatar-text: #64748B;
+}
+
+.dark {
+  /* Figma-derived dark mode. Source: FMS UI Design node 1107:3305
+     ("00-invoicing" dark frame). The palette is Tailwind **slate**
+     (#020617 → #F8FAFC) for chrome/text + standard blue for interaction
+     + the standard chromatic ramps for status. Extraction matrix:
+     `.ai/figma-snapshots/dark-mode/ANALYSIS-1107-3305.md`.
+     Surfaces stack: slate-950 canvas → slate-900 cards/chrome →
+     slate-800 raised. Only the row-tint / accent / destructive tokens
+     below are derived (not shown in the frame) and flagged inline. */
+
+  /* Neutral surfaces & text (slate ramp) */
+  --background-v2: #0F172A;          /* slate-900 — card / component surface */
+  --foreground-v2: #F8FAFC;          /* slate-50 — primary text */
+  --foreground-v2-muted: #94A3B8;    /* slate-400 — secondary text */
+  --muted-v2-foreground: #64748B;    /* slate-500 — tertiary / placeholder */
+
+  /* Borders (subtle → default → strong); contrast increases off the bg */
+  --border-v2-subtle: #1E293B;       /* slate-800 — chrome outlines, row dividers */
+  --border-v2: #334155;              /* slate-700 — field borders, grid lines */
+  --border-v2-strong: #475569;       /* slate-600 */
+
+  --row-v2-hover: #1E293B;           /* slate-800 — row hover */
+  --row-v2-selected: #1B324F;        /* derived dark-blue mirror of light #DBEAFE */
+  --row-v2-new: #14233A;             /* derived dark-blue mirror of light #EFF6FF —
+                                        keeps the focused/new cell from glaring light. */
+  --range-v2-fill: #24456E;          /* multi-cell (Excel range) selection fill, DARK.
+                                        Deliberately NOT --row-v2-new (#14233A): against the #020617 table
+                                        well that fill lands within a couple of steps of the #1E293B row
+                                        hover/stripe, so a selected block read as banding rather than as a
+                                        selection (ledger row 1.28). #24456E is a clear step above both the
+                                        hover and the #1B324F selected-ROW fill, so "these cells are
+                                        selected" survives on a dense dark grid, while staying well below
+                                        the #3B82F6 accent that draws the outline on top of it. */
+  --selection-v2: #3B82F6;           /* blue-500 — same as the Tab underline (Figma) */
+
+  /* Selected-row highlight (selection lists) — derived mirror of light #EEF2FF. */
+  --row-v2-selected-bg: #1E293B;
+
+  /* Backend page-surface tint — the app canvas behind list pages. Matches the
+     slate-900 chrome base (sidebar / topbar / cards) so the area above the table
+     and the table body read as one continuous surface instead of a lighter card
+     floating on a darker well. Figma's slate-950 (#020617) is only the recessed
+     table-frame, not the page canvas. */
+  --page-surface-v2-tint: #0F172A;   /* slate-900 — same as --background-v2 */
+
+  /* DynamicTable v2 slate surfaces (Figma table header/cell/divider). */
+  --table-v2-header-bg: #1E293B;     /* slate-800 — header bar */
+  --table-v2-divider: #334155;       /* slate-700 — header + cell dividers */
+  --table-v2-header-text: #94A3B8;   /* slate-400 — header labels */
+  --table-v2-row-stripe: #16203A;    /* derived — subtle zebra over the slate-900 row */
+  --table-v2-row-warning: #450A0A;   /* red-950 — overdue / warning row (status error bg) */
+  --table-v2-control-border: #475569; /* slate-600 */
+  --table-v2-body-bg: #040A11;       /* grid body — a recessed dark well below the
+                                        slate-900 toolbar/page, so the table reads as
+                                        a distinct surface (header bar stays slate-800). */
+
+  /* Primary (Figma `btn-new`) */
+  --primary-v2: #1A5A9E;
+  --primary-v2-hover: #164C86;       /* derived: ~12% darker */
+  --primary-v2-foreground: #FFFFFF;
+
+  /* Secondary — subtle raised slate fill (the Figma secondary *button* is an
+     outline on slate-900; this token also backs general chip/fill use, so it
+     sits one step above the bg to stay visible). */
+  --secondary-v2: #1E293B;           /* slate-800 */
+  --secondary-v2-hover: #334155;     /* slate-700 */
+  --secondary-v2-foreground: #F1F5F9; /* slate-100 — Figma secondary label */
+
+  /* Destructive solid button — kept red-600/700 (no destructive button in frame). */
+  --destructive-v2: #DC2626;
+  --destructive-v2-hover: #B91C1C;
+  --destructive-v2-foreground: #FFFFFF;
+
+  /* Accent (teal) — unchanged; no checked checkbox/toggle in the frame. */
+  --accent-v2: #2DD4BF;
+  --accent-v2-hover: #14B8A6;
+  --accent-v2-foreground: #042F2E;
+  --accent-v2-bright: #5EEAD4;
+
+  --surface-v2: #020617;             /* slate-950 — canvas tint behind components */
+
+  /* Extra neutral surface steps (mirrors of the light values above).
+     slate-700 / slate-800 / a derived step above slate-800, so the
+     m3 container ladder keeps five distinguishable steps in dark. */
+  --surface-v2-bright: #334155;      /* slate-700 — brightest neutral surface */
+  --surface-v2-raised: #1E293B;      /* slate-800 — same step as the table header bar */
+  --surface-v2-highest: #293449;     /* derived — one step above slate-800 */
+
+  /* Ink ON the blue container fills — pale, because the dark container
+     tints (#14233A / #1B324F) are themselves dark. */
+  --on-container-v2-primary: #DBEAFE;   /* blue-100 on --row-v2-new */
+  --on-container-v2-selected: #E2E8F0;  /* slate-200 on --row-v2-selected */
+
+  /* ═══ Status palette (dark) ════════════════════════════════════
+     Figma convention: bg = Tailwind -950, border = -800, text = -200.
+     The five variants the frame renders (primary/info, error, warning,
+     purple, teal) match Tailwind exactly; the rest apply the same ramp.
+     neutral/outline stay quiet on slate rather than going to zinc-950. */
+
+  /* Neutral (slate — kept quiet) */
+  --status-v2-neutral-bg: #1E293B;
+  --status-v2-neutral-border: #334155;
+  --status-v2-neutral-text: #94A3B8;
+
+  /* Primary (blue-950/800/200 — Figma "Kosztowa" / "KSeF") */
+  --status-v2-primary-bg: #172554;
+  --status-v2-primary-border: #1E40AF;
+  --status-v2-primary-text: #BFDBFE;
+
+  /* Outline (transparent-ish pill on slate) */
+  --status-v2-outline-bg: #0F172A;
+  --status-v2-outline-border: #334155;
+  --status-v2-outline-text: #94A3B8;
+
+  /* Success (green-950/800/200 — derived) */
+  --status-v2-success-bg: #052E16;
+  --status-v2-success-border: #166534;
+  --status-v2-success-text: #BBF7D0;
+
+  /* Error (red-950/800/200 — Figma "Nie") */
+  --status-v2-error-bg: #450A0A;
+  --status-v2-error-border: #991B1B;
+  --status-v2-error-text: #FECACA;
+
+  /* Warning (amber-950/800/200 — Figma "Niezaksięgowana") */
+  --status-v2-warning-bg: #451A03;
+  --status-v2-warning-border: #92400E;
+  --status-v2-warning-text: #FDE68A;
+
+  /* Info (blue-950/800/200 — Figma) */
+  --status-v2-info-bg: #172554;
+  --status-v2-info-border: #1E40AF;
+  --status-v2-info-text: #BFDBFE;
+
+  /* Purple (violet-950/800/200 — Figma "PDF") */
+  --status-v2-purple-bg: #2E1065;
+  --status-v2-purple-border: #5B21B6;
+  --status-v2-purple-text: #DDD6FE;
+
+  /* Teal (teal-950/800/200 — Figma "Zaksięgowana" / "Tak") */
+  --status-v2-teal-bg: #042F2E;
+  --status-v2-teal-border: #115E59;
+  --status-v2-teal-text: #99F6E4;
+
+  /* Orange (orange-950/800/200 — derived) */
+  --status-v2-orange-bg: #431407;
+  --status-v2-orange-border: #9A3412;
+  --status-v2-orange-text: #FED7AA;
+
+  /* Sky (sky-950/800/200 — derived) */
+  --status-v2-sky-bg: #082F49;
+  --status-v2-sky-border: #075985;
+  --status-v2-sky-text: #BAE6FD;
+
+  /* Rose (rose-950/800/200 — derived) */
+  --status-v2-rose-bg: #4C0519;
+  --status-v2-rose-border: #9F1239;
+  --status-v2-rose-text: #FECDD3;
+
+  /* Sidebar / nav surfaces (Figma slate). Bar is slate-900 chrome; active
+     NavItem is a slate-800 pill with blue-300 text + a blue-400 count badge
+     (black count text). LABEL headers slate-400, default items slate-300. */
+  --sidebar-v2: #0F172A;                   /* slate-900 — bar bg */
+  --sidebar-v2-border: #1E293B;            /* slate-800 */
+  --sidebar-v2-foreground: #F8FAFC;        /* shell + header title text (slate-50) */
+  --sidebar-v2-muted: #94A3B8;             /* group LABEL headers + secondary icons (slate-400) */
+  --sidebar-v2-item-foreground: #CBD5E1;   /* NavItem default + hover text (slate-300) */
+  --sidebar-v2-item-disabled: #64748B;     /* NavItem disabled text (slate-500) */
+  --sidebar-v2-accent: #1E293B;            /* hover pill (slate-800) */
+  --sidebar-v2-accent-active: #1E293B;     /* active row pill (slate-800) */
+  --sidebar-v2-accent-foreground: #93C5FD; /* active text + icon (blue-300) */
+  --sidebar-v2-badge-bg: #60A5FA;          /* count badge fill (blue-400) */
+  --sidebar-v2-badge-foreground: #000000;  /* count badge text (Figma uses black on blue-400) */
+
+  /* Topbar (Figma slate). Search/select fields are slate-900 with slate-700
+     borders; the avatar deliberately stays light (slate-200). */
+  --topbar-v2-bg: #0F172A;                 /* slate-900 */
+  --topbar-v2-border: #1E293B;             /* slate-800 */
+  --topbar-v2-title: #F8FAFC;              /* slate-50 */
+  --topbar-v2-icon: #94A3B8;               /* slate-400 */
+  --topbar-v2-field-bg: #0F172A;           /* slate-900 */
+  --topbar-v2-field-border: #334155;       /* slate-700 */
+  --topbar-v2-field-placeholder: #64748B;  /* slate-500 */
+  --topbar-v2-avatar-bg: #E2E8F0;          /* slate-200 — avatar stays light (Figma) */
+  --topbar-v2-avatar-text: #94A3B8;        /* slate-400 */
+}

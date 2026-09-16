@@ -1,0 +1,3659 @@
+/* DynamicTable CSS — structure and layout for the grid. */
+
+/* ============================================
+   COLOUR LIVES IN m3.css — NOT HERE.
+
+   This file used to open with `--hot-*` alias blocks (:root and .dark here,
+   a third in DynamicTable.v2.css) — 119 declarations for 58 slots, in which
+   .dark was 39 of 40 lines identical to :root because the M3 layer already
+   resolves per theme. Three names, one colour.
+
+   Every rule below now names the `--m3-*` role it wants directly, so a colour
+   is decided in exactly one place and called by exactly one name. Add new
+   roles to packages/ui/src/theme/m3.css; do not reintroduce an alias layer
+   here, and do not write a hex literal in this file.
+   ============================================ */
+
+/* ============================================
+   CONTAINER STYLES
+   ============================================ */
+.hot-container {
+    overflow: hidden;
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-lg);
+    display: flex;
+    flex-direction: column;
+    background: var(--m3-surface-container-lowest);
+}
+
+.hot-container.hot-borderless {
+    border: none;
+    border-radius: 0;
+}
+
+.hot-container.hot-borderless .hot-toolbar {
+    border: none;
+    border-radius: 0;
+}
+
+.hot-container.hot-borderless .hot-tabs-row {
+    border-left: none;
+    border-right: none;
+}
+
+.hot-virtual-container {
+    flex: 1;
+    overflow: auto;
+}
+
+.hot-headers-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--m3-surface-container-lowest);
+}
+
+.hot-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: var(--m3-on-surface);
+}
+
+.hot-table th,
+.hot-table td {
+    border: 1px solid var(--m3-outline-faint);
+    padding: 4px 8px;
+    text-align: left;
+    box-sizing: border-box;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hot-col-header {
+    background: var(--m3-surface-container);
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    cursor: pointer;
+    color: var(--m3-on-surface);
+    font-size: 13px;
+}
+
+.hot-row-header {
+    background: var(--m3-surface-container);
+    font-weight: 400;
+    text-align: center;
+    color: var(--m3-on-surface-variant);
+    min-width: 32px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.hot-cell {
+    background: var(--m3-surface-container-lowest);
+    cursor: cell;
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 4px 8px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.hot-cell > .cell-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* Read-only cell styles - controlled by data-readonly-style on container */
+
+/* Default 'muted' style - gray background */
+.hot-cell.read-only {
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface-variant);
+}
+
+/* 'normal' style - same as editable cells, no visual difference */
+[data-readonly-style="normal"] .hot-cell.read-only {
+    background: var(--m3-surface-container-lowest);
+    color: var(--m3-on-surface);
+}
+
+/* 'subtle' style - very subtle background tint */
+[data-readonly-style="subtle"] .hot-cell.read-only {
+    background: color-mix(in srgb, var(--m3-surface-container) 30%, var(--m3-surface-container-lowest));
+    color: var(--m3-on-surface);
+}
+
+.hot-cell:hover:not([data-save-state]) {
+    background: var(--m3-row-hover);
+}
+
+/* Sticky columns carry no shadow: DynamicTable.v2.css zeroes it and paints a
+   1px `::after` divider on the pinned edge instead. The two blur rules that
+   used to live here were pure overdraw on every pinned cell of every row. */
+
+/* New row styles */
+tr[data-is-new="true"] td {
+    background: var(--m3-primary-container) !important;
+}
+
+tr[data-is-new="true"] td:hover:not([data-save-state]):not([data-row-save-state]) {
+    background: color-mix(in srgb, var(--m3-on-primary-container) 8%, var(--m3-primary-container)) !important;
+}
+
+/* Error state on new rows - override yellow with red */
+tr[data-is-new="true"] td[data-row-save-state="error"] {
+    background: var(--m3-error-container) !important;
+}
+
+/* Cancel button in row header */
+.hot-row-cancel-btn-header {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: color-mix(in srgb, var(--m3-error) 10%, transparent);
+    color: var(--m3-error);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--m3-transition-state);
+}
+
+.hot-row-cancel-btn-header:hover {
+    background: var(--m3-error);
+    color: var(--m3-on-primary);
+}
+
+/* Actions column cell */
+.hot-actions-cell {
+    background: var(--m3-surface-container-lowest);
+    padding: 2px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+tr[data-is-new="true"] .hot-actions-cell {
+    background: var(--m3-primary-container) !important;
+}
+
+.hot-row-save-btn {
+    width: 100%;
+    height: 100%;
+    min-height: 24px;
+    border: none;
+    border-radius: var(--m3-shape-sm);
+    background: var(--m3-primary);
+    color: var(--m3-on-primary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--m3-transition-state), transform var(--m3-duration-short2) var(--m3-ease-standard);
+}
+
+.hot-row-save-btn:hover {
+    background: var(--m3-primary-hover);
+    transform: scale(1.05);
+}
+
+.hot-row-save-btn:active {
+    background: var(--m3-primary);
+    transform: scale(0.98);
+}
+
+/* ============================================
+   SELECTION STYLES
+   ============================================ */
+
+/* Selected cell - blue border */
+td[data-cell-selected="true"] {
+    box-shadow: inset 0 0 0 2px var(--m3-accent) !important;
+    z-index: 1;
+}
+
+/* Selected row - blue background with top/bottom inset shadows */
+tr[data-row-selected="true"] td {
+    background: var(--m3-secondary-container) !important;
+    box-shadow:
+        inset 0 2px 0 0 var(--m3-accent),
+        inset 0 -2px 0 0 var(--m3-accent);
+}
+
+/* Selected row's row header - includes left edge */
+tr[data-row-selected="true"] .hot-row-header {
+    background: var(--m3-accent) !important;
+    color: var(--m3-on-primary);
+    box-shadow:
+        inset 2px 0 0 0 var(--m3-accent),
+        inset 0 2px 0 0 var(--m3-accent),
+        inset 0 -2px 0 0 var(--m3-accent);
+}
+
+/* Last cell in selected row - add right edge */
+tr[data-row-selected="true"] td:last-child {
+    box-shadow:
+        inset 0 2px 0 0 var(--m3-accent),
+        inset 0 -2px 0 0 var(--m3-accent),
+        inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Selected column - blue background with left/right inset shadows */
+td[data-col-selected="true"] {
+    background: var(--m3-secondary-container) !important;
+    box-shadow:
+        inset 2px 0 0 0 var(--m3-accent),
+        inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Last row in selected column - add bottom shadow */
+tbody tr:last-child td[data-col-selected="true"] {
+    box-shadow:
+        inset 2px 0 0 0 var(--m3-accent),
+        inset -2px 0 0 0 var(--m3-accent),
+        inset 0 -2px 0 0 var(--m3-accent);
+}
+
+/* Selected column header - includes top shadow */
+th[data-col-selected="true"] {
+    background: var(--m3-accent) !important;
+    color: var(--m3-on-primary);
+    box-shadow:
+        inset 2px 0 0 0 var(--m3-accent),
+        inset -2px 0 0 0 var(--m3-accent),
+        inset 0 2px 0 0 var(--m3-accent);
+}
+
+/* Darker row header when cell in that row is selected */
+.hot-row-header[data-has-selected-cell="true"] {
+    background: var(--m3-outline-faint) !important;
+    color: var(--m3-on-surface);
+}
+
+/* Darker column header when cell in that column is selected */
+th[data-has-selected-cell="true"] {
+    background: var(--m3-outline-faint) !important;
+    color: var(--m3-on-surface);
+}
+
+/* ============================================
+   RANGE SELECTION STYLES
+   ============================================ */
+
+/* Cells in range - blue background */
+td[data-in-range="true"] {
+    background: var(--m3-secondary-container) !important;
+}
+
+/* Range borders - only apply to cells in range, not to single selected cells */
+/* Top edge only */
+td[data-in-range="true"][data-range-top="true"]:not([data-range-bottom="true"]):not([data-range-left="true"]):not([data-range-right="true"]) {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent);
+}
+
+/* Bottom edge only */
+td[data-in-range="true"][data-range-bottom="true"]:not([data-range-top="true"]):not([data-range-left="true"]):not([data-range-right="true"]) {
+    box-shadow: inset 0 -2px 0 0 var(--m3-accent);
+}
+
+/* Left edge only */
+td[data-in-range="true"][data-range-left="true"]:not([data-range-top="true"]):not([data-range-bottom="true"]):not([data-range-right="true"]) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent);
+}
+
+/* Right edge only */
+td[data-in-range="true"][data-range-right="true"]:not([data-range-top="true"]):not([data-range-bottom="true"]):not([data-range-left="true"]) {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Top + Bottom */
+td[data-in-range="true"][data-range-top="true"][data-range-bottom="true"]:not([data-range-left="true"]):not([data-range-right="true"]) {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent);
+}
+
+/* Left + Right */
+td[data-in-range="true"][data-range-left="true"][data-range-right="true"]:not([data-range-top="true"]):not([data-range-bottom="true"]) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Top + Left */
+td[data-in-range="true"][data-range-top="true"][data-range-left="true"]:not([data-range-bottom="true"]):not([data-range-right="true"]) {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset 2px 0 0 0 var(--m3-accent);
+}
+
+/* Top + Right */
+td[data-in-range="true"][data-range-top="true"][data-range-right="true"]:not([data-range-bottom="true"]):not([data-range-left="true"]) {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Bottom + Left */
+td[data-in-range="true"][data-range-bottom="true"][data-range-left="true"]:not([data-range-top="true"]):not([data-range-right="true"]) {
+    box-shadow: inset 0 -2px 0 0 var(--m3-accent), inset 2px 0 0 0 var(--m3-accent);
+}
+
+/* Bottom + Right */
+td[data-in-range="true"][data-range-bottom="true"][data-range-right="true"]:not([data-range-top="true"]):not([data-range-left="true"]) {
+    box-shadow: inset 0 -2px 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Top + Left + Right */
+td[data-in-range="true"][data-range-top="true"][data-range-left="true"][data-range-right="true"]:not([data-range-bottom="true"]) {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Bottom + Left + Right */
+td[data-in-range="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"]:not([data-range-top="true"]) {
+    box-shadow: inset 0 -2px 0 0 var(--m3-accent), inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Top + Bottom + Left */
+td[data-in-range="true"][data-range-top="true"][data-range-bottom="true"][data-range-left="true"]:not([data-range-right="true"]) {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent), inset 2px 0 0 0 var(--m3-accent);
+}
+
+/* Top + Bottom + Right */
+td[data-in-range="true"][data-range-top="true"][data-range-bottom="true"][data-range-right="true"]:not([data-range-left="true"]) {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* All four edges (complete rectangle) */
+td[data-in-range="true"][data-range-top="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"] {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent), inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* ============================================
+   ROW RANGE SELECTION STYLES
+   ============================================ */
+
+/* Cells in row range */
+td[data-in-row-range="true"] {
+    background: var(--m3-secondary-container) !important;
+}
+
+/* Row header in row range */
+.hot-row-header[data-in-row-range="true"] {
+    background: var(--m3-accent) !important;
+    color: var(--m3-on-primary);
+}
+
+/* Top border for all cells in top row */
+td[data-in-row-range="true"][data-row-range-top="true"] {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent);
+}
+
+/* Bottom border for all cells in bottom row */
+td[data-in-row-range="true"][data-row-range-bottom="true"] {
+    box-shadow: inset 0 -2px 0 0 var(--m3-accent);
+}
+
+/* Both borders for single row */
+td[data-in-row-range="true"][data-row-range-top="true"][data-row-range-bottom="true"] {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent);
+}
+
+/* Add left border to first cell (after row header) */
+tbody tr td[data-in-row-range="true"]:nth-child(2) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent) !important;
+}
+
+tbody tr td[data-in-row-range="true"]:nth-child(2)[data-row-range-top="true"]:not([data-row-range-bottom="true"]) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr td[data-in-row-range="true"]:nth-child(2)[data-row-range-bottom="true"]:not([data-row-range-top="true"]) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr td[data-in-row-range="true"]:nth-child(2)[data-row-range-top="true"][data-row-range-bottom="true"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+/* Add right border to last cell */
+tbody tr td[data-in-row-range="true"]:last-child {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent) !important;
+}
+
+tbody tr td[data-in-row-range="true"]:last-child[data-row-range-top="true"]:not([data-row-range-bottom="true"]) {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr td[data-in-row-range="true"]:last-child[data-row-range-bottom="true"]:not([data-row-range-top="true"]) {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr td[data-in-row-range="true"]:last-child[data-row-range-top="true"][data-row-range-bottom="true"] {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+/* ============================================
+   COLUMN RANGE SELECTION STYLES
+   ============================================ */
+
+/* Cells in column range */
+td[data-in-col-range="true"] {
+    background: var(--m3-secondary-container) !important;
+}
+
+/* Column header in column range */
+th[data-in-col-range="true"] {
+    background: var(--m3-accent) !important;
+    color: var(--m3-on-primary);
+}
+
+/* Left border for all cells in left column */
+td[data-in-col-range="true"][data-col-range-left="true"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent);
+}
+
+/* Right border for all cells in right column */
+td[data-in-col-range="true"][data-col-range-right="true"] {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Both borders for single column */
+td[data-in-col-range="true"][data-col-range-left="true"][data-col-range-right="true"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent);
+}
+
+/* Add top border to first row cells */
+tbody tr:first-child td[data-in-col-range="true"] {
+    box-shadow: inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr:first-child td[data-in-col-range="true"][data-col-range-left="true"]:not([data-col-range-right="true"]) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr:first-child td[data-in-col-range="true"][data-col-range-right="true"]:not([data-col-range-left="true"]) {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr:first-child td[data-in-col-range="true"][data-col-range-left="true"][data-col-range-right="true"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+/* Add bottom border to last row cells */
+tbody tr:last-child td[data-in-col-range="true"] {
+    box-shadow: inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr:last-child td[data-in-col-range="true"][data-col-range-left="true"]:not([data-col-range-right="true"]) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr:last-child td[data-in-col-range="true"][data-col-range-right="true"]:not([data-col-range-left="true"]) {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+tbody tr:last-child td[data-in-col-range="true"][data-col-range-left="true"][data-col-range-right="true"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent), inset 0 -2px 0 0 var(--m3-accent) !important;
+}
+
+/* Column header range edges */
+th[data-in-col-range="true"][data-col-range-left="true"]:not([data-col-range-right="true"]) {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+th[data-in-col-range="true"][data-col-range-right="true"]:not([data-col-range-left="true"]) {
+    box-shadow: inset -2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+th[data-in-col-range="true"][data-col-range-left="true"][data-col-range-right="true"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-accent), inset -2px 0 0 0 var(--m3-accent), inset 0 2px 0 0 var(--m3-accent) !important;
+}
+
+/* Flex layout for virtualized rows */
+tr[style*="display: flex"] td {
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+
+/* ============================================
+   CELL EDITOR STYLES
+   ============================================ */
+
+/* Cell editor - Base styles */
+.hot-cell-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: inherit;
+    resize: none;
+    background: var(--m3-surface-container-lowest);
+    color: var(--m3-on-surface);
+    box-shadow: var(--m3-focus-ring-inset);
+    z-index: 10;
+}
+
+/* Numeric Editor */
+.hot-numeric-editor {
+    text-align: right;
+}
+
+/* Date Editor */
+.hot-date-editor {
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* Dropdown Editor */
+.hot-dropdown-editor {
+    cursor: pointer;
+    padding-right: 24px;
+}
+
+/* Boolean Editor */
+.hot-boolean-editor-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--m3-surface-container-lowest);
+    box-shadow: var(--m3-focus-ring-inset);
+    z-index: 10;
+}
+
+.hot-boolean-editor {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* ============================================
+   EDITOR POPUPS
+   ============================================ */
+
+.hot-editor-popup {
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-md);
+    box-shadow: var(--m3-elevation-2);
+    z-index: 10000;
+}
+
+/* Calendar Popup */
+.hot-calendar-popup {
+    padding: 0;
+    pointer-events: auto;
+    background: var(--m3-surface-container);
+}
+
+.hot-calendar-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px solid var(--m3-outline-faint);
+    padding: 8px 12px;
+}
+
+.hot-calendar-footer-btn {
+    font-size: 13px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.hot-calendar-footer-btn:hover {
+    text-decoration: underline;
+}
+
+.hot-calendar-clear-btn {
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-calendar-clear-btn:hover {
+    color: var(--m3-on-surface);
+}
+
+.hot-calendar-today-btn {
+    color: var(--m3-on-surface);
+    margin-left: auto;
+}
+
+/* DateTime Popup — ensure calendar has room for nav arrows */
+.hot-datetime-popup {
+    width: 300px;
+}
+
+/* Dropdown Popup */
+.hot-dropdown-popup {
+    max-height: 250px;
+    overflow-y: auto;
+    background: var(--m3-surface-container);
+    min-width: 150px;
+    pointer-events: auto;
+}
+
+.hot-dropdown-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color var(--m3-duration-short3) var(--m3-ease-standard);
+    border-bottom: 1px solid var(--m3-outline-faint);
+    white-space: nowrap;
+    color: var(--m3-on-surface);
+}
+
+.hot-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.hot-dropdown-option:hover,
+.hot-dropdown-option.highlighted {
+    background-color: var(--m3-state-layer-hover);
+}
+
+.hot-dropdown-option:active {
+    background-color: var(--m3-state-layer-pressed);
+}
+
+/* Scrollbar for dropdown */
+.hot-dropdown-popup::-webkit-scrollbar {
+    width: 6px;
+}
+
+.hot-dropdown-popup::-webkit-scrollbar-track {
+    background: var(--m3-surface-container);
+}
+
+.hot-dropdown-popup::-webkit-scrollbar-thumb {
+    background: var(--m3-outline-faint);
+    border-radius: var(--m3-shape-full);
+}
+
+.hot-dropdown-popup::-webkit-scrollbar-thumb:hover {
+    background: var(--m3-on-surface-variant);
+}
+
+/* ============================================
+   MULTI-SELECT EDITOR STYLES
+   ============================================ */
+
+.hot-multiselect-editor {
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 4px;
+    cursor: pointer;
+}
+
+.hot-multiselect-popup {
+    max-height: 250px;
+    overflow-y: auto;
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-md);
+    box-shadow: var(--m3-elevation-2);
+    min-width: 160px;
+    pointer-events: auto;
+}
+
+.hot-multiselect-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color var(--m3-duration-short3) var(--m3-ease-standard);
+    border-bottom: 1px solid var(--m3-outline-faint);
+    color: var(--m3-on-surface);
+}
+
+.hot-multiselect-option:last-child {
+    border-bottom: none;
+}
+
+.hot-multiselect-option:hover,
+.hot-multiselect-option.highlighted {
+    background-color: var(--m3-state-layer-hover);
+}
+
+.hot-multiselect-option.selected {
+    background-color: var(--m3-secondary-container);
+}
+
+.hot-multiselect-option.selected.highlighted {
+    background-color: var(--m3-row-selected-hover);
+}
+
+/* Scrollbar for multiselect popup */
+.hot-multiselect-popup::-webkit-scrollbar {
+    width: 6px;
+}
+
+.hot-multiselect-popup::-webkit-scrollbar-track {
+    background: var(--m3-surface-container);
+}
+
+.hot-multiselect-popup::-webkit-scrollbar-thumb {
+    background: var(--m3-outline-faint);
+    border-radius: var(--m3-shape-full);
+}
+
+.hot-multiselect-popup::-webkit-scrollbar-thumb:hover {
+    background: var(--m3-on-surface-variant);
+}
+
+/* ============================================
+   SAVE STATE STYLES
+   ============================================ */
+
+td[data-save-state="saving"] {
+    position: relative;
+    overflow: hidden;
+    background: var(--m3-primary-container) !important;
+}
+
+td[data-save-state="saving"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--m3-skeleton-shimmer) 50%,
+            transparent 100%);
+    animation: pulse-skeleton 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes pulse-skeleton {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+td[data-save-state="success"] {
+    background: var(--m3-success-container) !important;
+    box-shadow: inset 0 0 0 2px var(--m3-on-success-container);
+    animation: fade-success 2s ease-out forwards;
+}
+
+@keyframes fade-success {
+    0% {
+        background: var(--m3-success-container) !important;
+        box-shadow: inset 0 0 0 2px var(--m3-on-success-container);
+    }
+
+    70% {
+        background: var(--m3-success-container) !important;
+        box-shadow: inset 0 0 0 2px var(--m3-on-success-container);
+    }
+
+    100% {
+        background: var(--m3-surface-container-lowest) !important;
+        box-shadow: none;
+    }
+}
+
+td[data-save-state="error"] {
+    background: var(--m3-error-container) !important;
+    box-shadow: inset 0 0 0 2px var(--m3-error) !important;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+/* ============================================
+   ROW SAVE STATE STYLES
+   ============================================ */
+
+td[data-row-save-state="saving"] {
+    position: relative;
+    overflow: hidden;
+    background: var(--m3-primary-container) !important;
+}
+
+td[data-row-save-state="saving"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--m3-skeleton-shimmer) 50%,
+            transparent 100%);
+    animation: pulse-skeleton 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+td[data-row-save-state="success"] {
+    background: var(--m3-success-container) !important;
+    animation: fade-row-success 2s ease-out forwards;
+}
+
+/* Success row border - first cell (including row header) */
+tr td:first-child[data-row-save-state="success"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-on-success-container), inset 0 2px 0 0 var(--m3-on-success-container), inset 0 -2px 0 0 var(--m3-on-success-container) !important;
+}
+
+/* Success row border - middle cells */
+tr td[data-row-save-state="success"]:not(:first-child):not(:last-child) {
+    box-shadow: inset 0 2px 0 0 var(--m3-on-success-container), inset 0 -2px 0 0 var(--m3-on-success-container) !important;
+}
+
+/* Success row border - last cell */
+tr td:last-child[data-row-save-state="success"] {
+    box-shadow: inset -2px 0 0 0 var(--m3-on-success-container), inset 0 2px 0 0 var(--m3-on-success-container), inset 0 -2px 0 0 var(--m3-on-success-container) !important;
+}
+
+td[data-row-save-state="error"] {
+    background: var(--m3-error-container) !important;
+    animation: shake-row 0.5s ease-in-out, fade-row-error 3s ease-out forwards;
+}
+
+/* Error row border - first cell */
+tr td:first-child[data-row-save-state="error"] {
+    box-shadow: inset 2px 0 0 0 var(--m3-error), inset 0 2px 0 0 var(--m3-error), inset 0 -2px 0 0 var(--m3-error) !important;
+}
+
+/* Error row border - middle cells */
+tr td[data-row-save-state="error"]:not(:first-child):not(:last-child) {
+    box-shadow: inset 0 2px 0 0 var(--m3-error), inset 0 -2px 0 0 var(--m3-error) !important;
+}
+
+/* Error row border - last cell */
+tr td:last-child[data-row-save-state="error"] {
+    box-shadow: inset -2px 0 0 0 var(--m3-error), inset 0 2px 0 0 var(--m3-error), inset 0 -2px 0 0 var(--m3-error) !important;
+}
+
+@keyframes fade-row-success {
+    0% {
+        background: var(--m3-success-container) !important;
+    }
+
+    70% {
+        background: var(--m3-success-container) !important;
+    }
+
+    100% {
+        background: var(--m3-surface-container-lowest) !important;
+    }
+}
+
+@keyframes fade-row-error {
+    0% {
+        background: var(--m3-error-container) !important;
+    }
+
+    85% {
+        background: var(--m3-error-container) !important;
+    }
+
+    100% {
+        background: var(--m3-surface-container-lowest) !important;
+    }
+}
+
+@keyframes shake-row {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+/* Override new row background during save states */
+tr[data-is-new="false"] td[data-row-save-state="success"],
+tr[data-is-new="false"] td[data-row-save-state="error"],
+tr[data-is-new="false"] td[data-row-save-state="saving"] {
+    /* Let the data attribute styles apply */
+}
+
+/* Ensure save state styles override selection styles when needed */
+td[data-save-state="saving"],
+td[data-save-state="success"],
+td[data-save-state="error"],
+td[data-row-save-state="saving"],
+td[data-row-save-state="success"],
+td[data-row-save-state="error"] {
+    z-index: 2;
+}
+
+/* ============================================
+   TABLE SKELETON STYLES
+   ============================================ */
+
+.table-skeleton {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ── v2 skeleton: mirrors the loaded DynamicTable (toolbar → tabs → header bar
+   → rows) and stretches full width so there is no narrow grid or layout jump
+   when data arrives. ─────────────────────────────────────────────────────── */
+.dt-skel {
+    background: var(--background-v2);
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.dt-skel-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px 16px;
+}
+
+.dt-skel-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 12px;
+}
+
+.dt-skel-header {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    border-radius: var(--m3-shape-sm);
+    background: var(--table-v2-header-bg);
+}
+
+/* Rows match the real table: no borders — separation comes from zebra striping
+   (odd rows white, even rows slate-50) — plus rounded corners on the stripe. */
+.dt-skel-row {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    border-radius: var(--m3-shape-sm);
+}
+
+.dt-skel-row:nth-child(even) {
+    background-color: var(--table-v2-row-stripe);
+}
+
+.dt-skel-cell {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0 8px;
+    overflow: hidden;
+}
+
+.dt-skel-cell--fixed { flex-grow: 0; flex-shrink: 0; }
+.dt-skel-cell--center { justify-content: center; }
+
+/* Placeholder bar in the real table's slate divider tone (`--table-v2-divider`)
+   so the loading state matches the loaded table's palette. Every bar shimmers. */
+.dt-skel-bar {
+    position: relative;
+    overflow: hidden;
+    background: var(--table-v2-divider);
+}
+
+.dt-skel-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--m3-skeleton-shimmer) 50%,
+            transparent 100%);
+    animation: pulse-skeleton 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Skeleton specific overrides */
+.table-skeleton .hot-cell:hover {
+    background: var(--m3-surface-container) !important;
+    cursor: default;
+}
+
+.table-skeleton .hot-row-header {
+    background: var(--m3-outline-variant) !important;
+}
+
+.table-skeleton .hot-col-header {
+    background: var(--m3-outline-variant) !important;
+}
+
+/* Remove borders for cleaner skeleton look */
+.table-skeleton .hot-cell,
+.table-skeleton .hot-row-header,
+.table-skeleton .hot-col-header {
+    border-color: var(--m3-outline-faint);
+}
+
+/* ============================================
+   COLUMN RESIZE HANDLE
+   ============================================ */
+
+.hot-col-resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 10;
+}
+
+.hot-col-resize-handle:hover {
+    background-color: color-mix(in srgb, var(--m3-primary) 30%, transparent);
+}
+
+.hot-col-resize-handle:active {
+    background-color: color-mix(in srgb, var(--m3-primary) 50%, transparent);
+}
+
+
+.hot-col-sort-btn:hover {
+    color: var(--m3-primary) !important;
+    background-color: color-mix(in srgb, var(--m3-primary) 10%, transparent);
+    border-radius: var(--m3-shape-xs);
+}
+
+.hot-col-header {
+    position: relative;
+    user-select: none;
+}
+
+.hot-col-header>div {
+    padding: 0 4px;
+}
+
+/* ============================================
+   DRAG AND DROP STYLES
+   ============================================ */
+
+/* The one non-disabled opacity left in this file, on purpose: a drag GHOST is
+   the whole element deliberately faded while its copy follows the pointer —
+   M3's `dragged` state. It is not a text dimmer; muted text uses
+   `--m3-on-surface-variant`. */
+.dragging {
+    opacity: 0.5;
+    background: var(--m3-surface-container);
+}
+
+.drag-over {
+    background: var(--m3-secondary-container);
+    border-top: 2px solid var(--m3-primary);
+}
+
+/* ============================================
+   FULLSCREEN OVERLAY STYLES
+   ============================================ */
+
+.dynamic-table-fullscreen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--m3-surface-container-lowest);
+    display: flex;
+    flex-direction: column;
+    animation: fullscreen-fade-in 0.2s ease-out;
+}
+
+@keyframes fullscreen-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.dynamic-table-fullscreen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+    background: var(--m3-surface-container-lowest);
+    flex-shrink: 0;
+}
+
+.dynamic-table-fullscreen-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+}
+
+.dynamic-table-fullscreen-badge {
+    padding: 4px 10px;
+    background: var(--m3-surface-container);
+    border-radius: var(--m3-shape-full);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--m3-on-surface-variant);
+}
+
+.dynamic-table-fullscreen-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--m3-outline-faint);
+    border-radius: var(--m3-shape-full);
+    background: var(--m3-surface-container-lowest);
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    transition: var(--m3-transition-state);
+}
+
+.dynamic-table-fullscreen-close:hover {
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface);
+    border-color: var(--m3-on-surface-variant);
+}
+
+.dynamic-table-fullscreen-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 24px;
+}
+
+.dynamic-table-fullscreen-content .hot-container {
+    height: 100%;
+    border-radius: var(--m3-shape-lg);
+}
+
+.dynamic-table-fullscreen-content .hot-virtual-container {
+    height: calc(100% - 90px) !important;
+}
+
+/* Fullscreen toggle button */
+.fullscreen-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--m3-shape-full);
+    background: transparent;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    transition: var(--m3-transition-state);
+}
+
+.fullscreen-toggle-btn:hover {
+    background-color: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.fullscreen-toggle-btn:active {
+    background-color: var(--m3-state-layer-pressed);
+}
+
+.fullscreen-toggle-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+/* ============================================
+   CONDITIONAL CELL STYLING CLASSES
+   Use with cellClassName prop on ColumnDef
+
+   A documented public API (see README) — consumers return these from
+   `cellClassName`, so they are restyled, never removed.
+
+   They used to be 24 hardcoded hex literals plus a mirrored `.dark` set. They
+   now resolve through the semantic status roles in m3.css, which already carry
+   their own per-theme values — so the `.dark` duplicates are gone and there is
+   one declaration per state instead of two.
+   ============================================ */
+
+.cell-green  { background-color: var(--m3-success-container) !important; color: var(--m3-on-success-container); }
+.cell-yellow { background-color: var(--m3-warning-container) !important; color: var(--m3-on-warning-container); }
+.cell-red    { background-color: var(--m3-error-container)   !important; color: var(--m3-on-error-container); }
+
+/* Hover deepens the container with the M3 hover state layer rather than
+   jumping to a hand-picked second hex. */
+.cell-green:hover:not([data-save-state]) {
+    background-color: color-mix(in srgb, var(--m3-on-success-container) 8%, var(--m3-success-container)) !important;
+}
+.cell-yellow:hover:not([data-save-state]) {
+    background-color: color-mix(in srgb, var(--m3-on-warning-container) 8%, var(--m3-warning-container)) !important;
+}
+.cell-red:hover:not([data-save-state]) {
+    background-color: color-mix(in srgb, var(--m3-on-error-container) 8%, var(--m3-error-container)) !important;
+}
+
+/* `-subtle` = the same hue washed back over the grid surface; `-bold` = the
+   full-strength container. Both derive from the one role above. */
+.cell-green-subtle  { background-color: color-mix(in srgb, var(--m3-success-container) 45%, var(--m3-surface-container-lowest)) !important; color: var(--m3-on-success-container); }
+.cell-yellow-subtle { background-color: color-mix(in srgb, var(--m3-warning-container) 45%, var(--m3-surface-container-lowest)) !important; color: var(--m3-on-warning-container); }
+.cell-red-subtle    { background-color: color-mix(in srgb, var(--m3-error-container)   45%, var(--m3-surface-container-lowest)) !important; color: var(--m3-on-error-container); }
+
+.cell-green-bold  { background-color: var(--m3-success) !important; color: var(--m3-on-primary); }
+.cell-yellow-bold { background-color: var(--m3-warning) !important; color: var(--m3-on-primary); }
+.cell-red-bold    { background-color: var(--m3-error)   !important; color: var(--m3-on-primary); }
+
+/* ============================================
+   TABLE TOOLBAR STYLES
+   ============================================ */
+
+.hot-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+    background: var(--m3-surface-container-lowest);
+    gap: 12px;
+}
+
+.hot-toolbar-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--m3-on-surface);
+    white-space: nowrap;
+}
+
+.hot-toolbar-spacer {
+    flex: 1;
+}
+
+.hot-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hot-add-row-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--m3-shape-full);
+    border: none;
+    background: transparent;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: var(--m3-transition-state);
+}
+
+.hot-add-row-btn:hover {
+    background-color: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.hot-add-row-btn:active {
+    background-color: var(--m3-state-layer-pressed);
+}
+
+.hot-add-row-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+.hot-empty-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    font-size: 14px;
+    color: var(--m3-on-surface-variant);
+}
+
+/* Ledger 2.20 — the zero-result state.
+   Sticky-left so the panel stays centred in the VIEWPORT of a horizontally
+   scrolled 57-column grid instead of sitting off-screen at x=4000, and pinned
+   to the viewport width for the same reason. */
+/* A band, not a strip: the panel sits in the middle of a generous block under
+   the headers instead of clinging to them with 700px of void underneath. Capped
+   at half the viewport so a short window still shows it without scrolling. */
+.hot-empty-message:has(.hot-empty-state) {
+    min-height: min(360px, 50vh);
+}
+
+.hot-empty-state {
+    position: sticky;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    padding: 24px 16px;
+    text-align: center;
+}
+
+.hot-empty-state-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 4px;
+    color: var(--m3-on-surface-variant);
+
+}
+
+.hot-empty-state-title {
+    margin: 0;
+    color: var(--m3-on-surface);
+}
+
+.hot-empty-state-detail {
+    margin: 0;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-empty-state-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* HEDGE-119 — the failed-load state.
+   Same geometry as the empty state (it occupies the same slot under the
+   headers), different COLOUR, because the one thing that must never happen
+   again is these two reading as the same thing at a glance. */
+.hot-load-error-state {
+    max-width: 480px;
+}
+
+.hot-load-error-icon {
+    color: var(--m3-error, #b3261e);
+}
+
+/* ============================================
+   EDITOR DROPDOWN STYLES (autocomplete, search)
+   ============================================ */
+
+.hot-editor-dropdown {
+    position: absolute;
+    z-index: 10001;
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-md);
+    box-shadow: var(--m3-elevation-2);
+    min-width: 200px;
+    max-height: 300px;
+    overflow: auto;
+}
+
+.hot-editor-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--m3-on-surface);
+    transition: background-color var(--m3-duration-short3) var(--m3-ease-standard);
+}
+
+.hot-editor-dropdown-item:hover,
+.hot-editor-dropdown-item.highlighted {
+    background: var(--m3-row-hover);
+}
+
+.hot-editor-dropdown-item.selected {
+    background: var(--m3-secondary-container);
+    color: var(--m3-primary);
+}
+
+.hot-editor-dropdown-empty {
+    padding: 12px;
+    font-size: 13px;
+    color: var(--m3-on-surface-variant);
+    text-align: center;
+}
+
+.hot-editor-dropdown-item-primary {
+    font-weight: 500;
+    color: var(--m3-on-surface);
+}
+
+.hot-editor-dropdown-item-secondary {
+    font-size: 12px;
+    color: var(--m3-on-surface-variant);
+    margin-top: 2px;
+}
+
+/* ============================================
+   GROUP HEADER ROW
+   ============================================ */
+
+.hot-group-header-row {
+    display: flex;
+    align-items: center;
+    background: var(--m3-surface-container);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--m3-outline-faint);
+}
+
+.hot-group-header-row:hover {
+    background: color-mix(in srgb, var(--m3-surface-container) 70%, var(--m3-secondary-container) 30%);
+}
+
+.hot-group-header-cell {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    height: 40px;
+}
+
+/* Zero-width sticky cell holding the group label. It takes no horizontal space
+   in the flex row (the label overflows to the right over the band-fill cell) so
+   the band keeps aligning with the data rows, while `position: sticky` (set
+   inline) keeps the label pinned to the left edge during horizontal scroll.
+   The `.hot-container` prefix out-specifies `.hot-container .hot-table td`
+   (overflow:hidden + 12px padding), which would otherwise clip the overflowing
+   label to the chevron and leave a 24px gap that pushes the band to the right. */
+.hot-container .hot-table td.hot-group-header-label-cell,
+.hot-container .hot-table td.hot-group-summary-label-cell {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    flex: 0 0 0px;
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    overflow: visible;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+/* Keep the label at its natural width and let it overflow the zero-width cell
+   (don't let the flex parent shrink it to fit the 0px basis). */
+.hot-group-header-label-cell > .hot-group-header-content,
+.hot-group-summary-label-cell > .hot-group-summary-label {
+    flex-shrink: 0;
+}
+
+.hot-group-header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 12px;
+    font-size: 13px;
+}
+
+.hot-group-header-chevron {
+    width: 14px;
+    height: 14px;
+    color: var(--m3-on-surface-variant);
+    flex-shrink: 0;
+}
+
+.hot-group-header-field {
+    color: var(--m3-on-surface-variant);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.hot-group-header-value {
+    color: var(--m3-on-surface);
+    font-weight: 600;
+}
+
+.hot-group-header-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--m3-shape-full);
+    background: var(--m3-outline-faint);
+    color: var(--m3-on-surface-variant);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* ============================================
+   GROUP SUMMARY (SUBTOTAL) ROW
+   ============================================ */
+
+.hot-group-summary-row {
+    display: flex;
+    align-items: center;
+    background: var(--m3-surface-container);
+    border-top: 1px solid var(--m3-outline-faint);
+    cursor: default;
+}
+
+/* The subtotal row is read-only — drop the spreadsheet `cursor: cell` (+) from
+   its cells, and the `pointer` the label cell + row-header spacer inherit from
+   the group header / selectable row header. */
+.hot-group-summary-cell {
+    cursor: default;
+}
+.hot-container .hot-table td.hot-group-summary-label-cell,
+.hot-group-summary-rowheader {
+    cursor: default;
+}
+
+/* No interactive hover on a read-only subtotal row — keep cells flush with the
+   row band instead of flashing the cell-hover tint. */
+.hot-group-summary-row .hot-cell:hover:not([data-save-state]) {
+    background: transparent;
+}
+
+.hot-group-summary-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-group-summary-sigma {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.hot-group-summary-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Numbers read right-aligned and a touch heavier so the subtotal stands out. */
+.hot-group-summary-value {
+    width: 100%;
+    text-align: right;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+}
+
+/* ============================================
+   CLICKABLE ROW MODE
+   Pure CSS hover - no JS state needed
+   ============================================ */
+
+/* Clickable rows - cursor on both row and cells */
+[data-clickable-rows="true"] tr[data-row],
+[data-clickable-rows="true"] tr[data-row] td {
+    cursor: pointer;
+}
+
+/* Smooth transition for hover effect */
+[data-clickable-rows="true"] tr[data-row] td {
+    transition: background-color var(--m3-duration-short2) var(--m3-ease-standard);
+}
+
+/* Hover state - default style (light blue) */
+[data-row-hover-style="default"] tr[data-row]:hover td {
+    background-color: var(--m3-row-hover) !important;
+}
+
+/* Hover state - subtle style (light gray) */
+[data-row-hover-style="subtle"] tr[data-row]:hover td {
+    background-color: var(--m3-row-hover) !important;
+}
+
+/* Hover state - accent style (theme accent) */
+[data-row-hover-style="accent"] tr[data-row]:hover td {
+    background-color: var(--m3-surface-container) !important;
+}
+
+/* Don't apply hover to new rows (keep yellow) */
+[data-clickable-rows="true"] tr[data-row][data-is-new="true"]:hover td {
+    background-color: color-mix(in srgb, var(--m3-on-primary-container) 8%, var(--m3-primary-container)) !important;
+}
+
+/* Keep selection border visible when hovering selected cell */
+[data-clickable-rows="true"] tr[data-row]:hover td[data-cell-selected="true"] {
+    box-shadow: inset 0 0 0 2px var(--m3-accent) !important;
+}
+
+/* ============================================
+   EXTERNALLY HIGHLIGHTED ROW
+   Same styling as hover, for syncing selection
+   with external components (e.g., 3D visualization)
+   ============================================ */
+
+/* Highlighted row - default style (light blue) */
+[data-row-hover-style="default"] tr[data-row-highlighted="true"] td,
+[data-clickable-rows="true"]:not([data-row-hover-style]) tr[data-row-highlighted="true"] td {
+    background-color: var(--m3-row-hover) !important;
+}
+
+/* Highlighted row - subtle style (light gray) */
+[data-row-hover-style="subtle"] tr[data-row-highlighted="true"] td {
+    background-color: var(--m3-row-hover) !important;
+}
+
+/* Highlighted row - accent style (theme accent) */
+[data-row-hover-style="accent"] tr[data-row-highlighted="true"] td {
+    background-color: var(--m3-surface-container) !important;
+}
+
+/* Don't apply highlight to new rows (keep yellow) */
+tr[data-row-highlighted="true"][data-is-new="true"] td {
+    background-color: color-mix(in srgb, var(--m3-on-primary-container) 8%, var(--m3-primary-container)) !important;
+}
+
+/* Keep selection border visible on highlighted row */
+tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
+    box-shadow: inset 0 0 0 2px var(--m3-accent) !important;
+}
+
+/* ============================================
+   MODERN LAYOUT - TABS ROW
+   ============================================ */
+
+.hot-tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+    background: var(--m3-surface-container-lowest);
+    min-height: 36px;
+}
+
+.hot-tabs-row-spacer {
+    flex: 1;
+}
+
+/* Top Tabs Variant */
+.hot-top-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.hot-top-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.hot-top-tab {
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--m3-on-surface-variant);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--m3-transition-state);
+    border-radius: var(--m3-shape-full);
+}
+
+.hot-top-tab:hover {
+    background-color: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.hot-top-tab:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+/* Selected = a tinted container, not an underline. The transparent 2px bottom
+   border above is kept purely for geometry (the tab row height is frozen); the
+   colour on it is retired so the pill is the only indicator. */
+.hot-top-tab.active {
+    background-color: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+    border-bottom-color: transparent;
+}
+
+.hot-top-tab-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.hot-top-tab-close {
+    display: none;
+    position: absolute;
+    right: -2px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    color: var(--m3-on-surface-variant);
+    background: var(--m3-surface-container);
+    border: none;
+    border-radius: var(--m3-shape-full);
+    cursor: pointer;
+}
+
+.hot-top-tab-wrapper:hover .hot-top-tab-close {
+    display: block;
+}
+
+.hot-top-tab-close:hover {
+    color: var(--m3-on-error-container);
+    background: var(--m3-error-container);
+}
+
+.hot-top-tab-add {
+    color: var(--m3-on-surface-variant);
+    font-size: 16px;
+    padding: 4px 8px;
+}
+
+.hot-top-tab-add:hover {
+    background-color: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.hot-top-tab-input {
+    padding: 2px 8px;
+    font-size: 13px;
+    border: 1px solid var(--m3-focus-ring-color);
+    border-radius: var(--m3-shape-sm);
+    outline: none;
+    background: var(--m3-surface-container-lowest);
+    color: var(--m3-on-surface);
+}
+
+/* ============================================
+   MODERN LAYOUT - COLUMN HEADER MENU
+   ============================================ */
+
+.hot-col-header-modern {
+    cursor: pointer;
+}
+
+.hot-col-header-modern:hover {
+    background: var(--m3-row-hover) !important;
+}
+
+.hot-col-sort-indicator {
+    font-size: 12px;
+    color: var(--m3-accent);
+    padding: 0 4px;
+    flex-shrink: 0;
+}
+
+.hot-col-menu {
+    min-width: 180px;
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-md);
+    box-shadow: var(--m3-elevation-2);
+    padding: 4px;
+    z-index: 9999;
+}
+
+.hot-col-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--m3-on-surface);
+    background: transparent;
+    border: none;
+    border-radius: var(--m3-shape-sm);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color var(--m3-duration-short2) var(--m3-ease-standard);
+}
+
+.hot-col-menu-item:hover:not(:disabled) {
+    background: var(--m3-state-layer-hover);
+}
+
+.hot-col-menu-item:disabled {
+    opacity: var(--m3-disabled-content-opacity);
+    cursor: default;
+}
+
+.hot-col-menu-item svg {
+    flex-shrink: 0;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-col-menu-divider {
+    height: 1px;
+    background: var(--m3-outline-faint);
+    margin: 4px 0;
+}
+
+/* ============================================
+   MODERN LAYOUT - CONFIGURE VIEW PANEL
+   ============================================ */
+
+/* ============================================
+   CONFIGURE VIEW PANEL
+   ============================================ */
+
+/* Overlay: dark scrim, no blur */
+.hot-config-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--m3-scrim) !important;
+}
+
+/* Panel: override Sheet's p-6, max-w-md */
+.hot-config-panel {
+    max-width: 480px !important;
+    padding: 0 !important;
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+.hot-config-panel-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Header */
+.hot-config-panel-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+}
+
+.hot-config-panel-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.hot-config-panel-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.hot-config-panel-close {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    border-radius: var(--m3-shape-full);
+    flex-shrink: 0;
+}
+
+.hot-config-panel-close:hover {
+    background-color: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.hot-config-panel-close:active {
+    background-color: var(--m3-state-layer-pressed);
+}
+
+.hot-config-panel-close:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+.hot-config-panel-subtitle {
+    font-size: 14px;
+    color: var(--m3-on-surface-variant);
+    margin: 2px 0 0;
+    line-height: 1.4;
+}
+
+/* Body */
+.hot-config-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px 0;
+}
+
+/* Collapsible Sections */
+.hot-config-section {
+    border: 1px solid var(--m3-outline-faint);
+    border-radius: var(--m3-shape-md);
+    overflow: hidden;
+}
+
+.hot-config-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.hot-config-section-header:hover {
+    background: var(--m3-surface-container);
+}
+
+.hot-config-section-header svg {
+    flex-shrink: 0;
+    color: var(--m3-on-surface-variant);
+}
+
+/* Ledger 10.5 — the chevrons were ragged: eight section rows, eight different
+   chevron positions (x = 1421, 1427, 1434, 1472, 1474, 1494, 1525 … and 1869).
+   Cause: the title was `flex: 0 0 auto` and only the BADGE carried
+   `margin-left: auto`, so a row WITH a badge pushed its chevron flush right
+   while a row WITHOUT one left the chevron hugging the end of its own label —
+   a different x for every label length.
+
+   Letting the TITLE take the free space fixes both cases with one declaration:
+   the chevron is now the last item on a full-width row, so it lands on the same
+   x in every section, and a badge still sits immediately to its left. */
+.hot-config-section-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hot-config-section-badge {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-config-section-chevron {
+    flex-shrink: 0;
+    color: var(--m3-on-surface-variant);
+}
+
+/* Fields Section */
+.hot-config-fields {
+    padding: 0 14px 12px;
+}
+
+.hot-config-fields-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 2px 0 8px;
+}
+
+.hot-config-fields-toolbar-spacer {
+    flex: 1;
+}
+
+.hot-config-fields-bulk-btn {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--m3-on-surface-variant);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.hot-config-fields-bulk-btn:hover {
+    color: var(--m3-on-surface);
+}
+
+.hot-config-fields-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.hot-config-fields-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    border: 1px solid var(--m3-outline-faint);
+    margin-top: -1px;
+}
+
+.hot-config-fields-item:first-child {
+    margin-top: 0;
+    border-radius: var(--m3-shape-sm) var(--m3-shape-sm) 0 0;
+}
+
+.hot-config-fields-item:last-child {
+    border-radius: 0 0 var(--m3-shape-sm) var(--m3-shape-sm);
+}
+
+.hot-config-fields-item:first-child:last-child {
+    border-radius: var(--m3-shape-sm);
+}
+
+.hot-config-fields-item:hover {
+    background: var(--m3-surface-container);
+}
+
+/* Drag ghost — see the note on `.dragging`. */
+.hot-config-fields-item.is-dragging {
+    opacity: 0.5;
+    background: var(--m3-surface-container);
+}
+
+.hot-config-fields-item.is-drag-over {
+    background: var(--m3-secondary-container);
+    border-top-color: var(--m3-primary);
+}
+
+.hot-config-fields-grip {
+    color: var(--m3-on-surface-variant);
+    flex-shrink: 0;
+    cursor: grab;
+}
+
+.hot-config-fields-item.is-dragging .hot-config-fields-grip {
+    cursor: grabbing;
+}
+
+/* No `accent-color` here on purpose. Exactly ONE rule owns the checked-checkbox
+   colour for this control — `.hot-appearance-v2 .hot-config-fields-checkbox` in
+   DynamicTable.v2.css, which paints it TEAL (`--m3-focus-ring-color`) to match
+   every other checked control in the app. `hot-appearance-v2` is applied
+   unconditionally (DynamicTable.tsx and ConfigureViewPanel.tsx), so there is no
+   unstyled path; a second declaration here could only ever contradict it. */
+.hot-config-fields-checkbox {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.hot-config-fields-label {
+    color: var(--m3-on-surface);
+}
+
+.hot-config-fields-label.is-hidden {
+    color: var(--m3-on-surface-variant);
+}
+
+/* Filters Section */
+.hot-config-filters {
+    padding: 8px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* The generic collapsible-section body. It was referenced by four call sites
+   (the Date format dropdown, Calculated columns, and both Summarised-columns
+   placeholder states) and defined by none — and `.hot-config-section` carries
+   no padding of its own, so all four rendered flush against the section
+   border while every sibling section was inset by 14px. Padding and gap are
+   copied from `.hot-config-filters` directly above so the sections line up
+   rather than merely look similar. */
+.hot-config-section-body {
+    padding: 8px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hot-config-filters-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--m3-on-surface);
+}
+
+.hot-config-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* The rollup picker's three-step row: [source][field][function][remove].
+   As a plain flex row the selects were content-sized, so two stacked rows
+   measured 96/150/73 and 96/126/101 — three ragged columns where the whole
+   point of the row is that step 2 of one rule sits under step 2 of the next.
+   A grid pins the tracks instead. The field track gets the extra weight
+   because it holds the longest labels ("Number of records", "Estimated
+   cost"); `minmax(0, …)` lets `.hot-select-trigger-label` ellipsize rather
+   than force the track wider, which is what would reintroduce the ragging. */
+[data-rollup-editor] .hot-config-filter-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+}
+
+/* `var(--m3-surface-container)`, NOT the bare literal. The fill was hard-coded
+   `rgb(243,243,245)` while the label used `var(--m3-on-surface)`, so in dark mode the
+   whole Configure View filter/sort builder rendered #f8fafc text on a #f3f3f5
+   pill — a 1.04:1 contrast ratio, i.e. invisible. Same class of bug the
+   `--hot-dropdown-hover` comment further down already records for the menu
+   hover; the controls themselves were missed. Light mode is unchanged
+   (`--secondary-v2` is #F4F4F5). */
+.hot-config-filter-select {
+    padding: 6px 28px 6px 10px;
+    font-size: 13px;
+    border: none;
+    border-radius: var(--m3-shape-sm);
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface);
+    min-width: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    /* No background-image chevron: these classes land on `SelectMenu`, which
+       renders its own <ChevronDown>. The data-URI drew a second one, and its
+       stroke was a baked-in #6b7280 that never followed the theme. */
+}
+
+.hot-config-filter-operator {
+    flex-shrink: 0;
+}
+
+/* The colour picker in a Highlighting rule. Without this it is the control the
+   flex row chooses to crush: a rule on a long column name ("Cost lines ·
+   Average of Estimated cost") squeezed it to a literal "R…", i.e. a colour
+   picker that does not show which colour is picked. The FIELD select keeps
+   min-width:0 and absorbs the truncation instead, which is the right one to
+   shorten — its full text is still readable in the open menu. */
+.hot-config-cf-style {
+    flex-shrink: 0;
+}
+
+.hot-config-filter-remove {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    border-radius: var(--m3-shape-full);
+    flex-shrink: 0;
+}
+
+.hot-config-filter-remove:hover {
+    background-color: var(--m3-state-layer-error-hover);
+    color: var(--m3-error);
+}
+
+.hot-config-filter-remove:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+.hot-config-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    font-size: 13px;
+    background: var(--m3-secondary-container);
+    color: var(--m3-primary);
+    border-radius: var(--m3-shape-full);
+}
+
+.hot-config-filter-pill-remove {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0 2px;
+    font-size: 12px;
+}
+
+.hot-config-filter-input {
+    flex: 1;
+    min-width: 70px;
+    padding: 6px 8px;
+    font-size: 13px;
+    border: none;
+    border-radius: var(--m3-shape-sm);
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface);
+    outline: none;
+}
+
+.hot-config-filter-input:focus {
+    box-shadow: var(--m3-focus-halo);
+    outline: 1px solid var(--m3-focus-ring-color);
+}
+
+/* Relative date count (is_in_next / is_in_last): narrow numeric box sitting
+   next to the unit select, instead of the flex-stretched value input. */
+.hot-config-filter-relative-count {
+    flex: 0 0 auto;
+    width: 64px;
+    min-width: 64px;
+}
+
+/* Date trigger button — looks like the filter input but renders a calendar
+   popover anchored to it (FilterDatePicker). Reuses .hot-config-filter-input
+   for sizing/colors then layers in the trigger affordances. */
+.hot-config-filter-date-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.hot-config-filter-date-placeholder {
+    color: var(--m3-on-surface-variant);
+}
+
+/* Sort Section */
+.hot-config-sorting {
+    padding: 8px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hot-config-sorting-empty {
+    font-size: 14px;
+    color: var(--m3-on-surface-variant);
+    padding: 4px 0;
+}
+
+.hot-config-sorting-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hot-config-sorting-header-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--m3-on-surface);
+}
+
+.hot-config-sort-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hot-config-sort-index {
+    width: 24px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--m3-on-surface-variant);
+    background: var(--m3-surface-container);
+    border-radius: var(--m3-shape-full);
+    flex-shrink: 0;
+}
+
+.hot-config-sort-select {
+    flex: 1;
+    padding: 6px 28px 6px 10px;
+    font-size: 13px;
+    border: none;
+    border-radius: var(--m3-shape-sm);
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface);
+    min-width: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    /* No background-image chevron: these classes land on `SelectMenu`, which
+       renders its own <ChevronDown>. The data-URI drew a second one, and its
+       stroke was a baked-in #6b7280 that never followed the theme. */
+}
+
+.hot-config-sort-direction-select {
+    padding: 6px 28px 6px 10px;
+    font-size: 13px;
+    border: none;
+    border-radius: var(--m3-shape-sm);
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    /* No background-image chevron: these classes land on `SelectMenu`, which
+       renders its own <ChevronDown>. The data-URI drew a second one, and its
+       stroke was a baked-in #6b7280 that never followed the theme. */
+}
+
+.hot-config-sort-remove {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    border-radius: var(--m3-shape-full);
+    flex-shrink: 0;
+}
+
+.hot-config-sort-remove:hover {
+    background-color: var(--m3-state-layer-error-hover);
+    color: var(--m3-error);
+}
+
+.hot-config-sort-remove:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+/* Shared Buttons */
+.hot-config-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--m3-accent);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.hot-config-add-btn:hover:not(:disabled) {
+    background-color: var(--m3-state-layer-accent-hover);
+}
+
+.hot-config-add-btn:disabled {
+    opacity: var(--m3-disabled-content-opacity);
+    cursor: default;
+}
+
+.hot-config-clear-btn {
+    padding: 4px 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--m3-on-surface-variant);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.hot-config-clear-btn:hover {
+    color: var(--m3-error);
+}
+
+/* Footer */
+.hot-config-panel-footer {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--m3-outline-faint);
+    margin-top: auto;
+}
+
+/* When save section is shown, footer shares the gray bg */
+.hot-config-panel-save + .hot-config-panel-footer {
+    border-top: none;
+    padding-top: 8px;
+    background: var(--m3-surface-container);
+}
+
+.hot-config-cancel-btn {
+    flex: 1;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--m3-surface-container-lowest);
+    color: var(--m3-on-surface);
+    border: 1px solid var(--m3-outline-faint);
+    border-radius: var(--m3-shape-full);
+    cursor: pointer;
+}
+
+.hot-config-cancel-btn:hover {
+    background: var(--m3-surface-container);
+}
+
+.hot-config-save-btn {
+    flex: 1;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--m3-primary);
+    color: var(--m3-on-primary);
+    border: none;
+    border-radius: var(--m3-shape-full);
+    cursor: pointer;
+    transition: background-color var(--m3-duration-short3) var(--m3-ease-standard);
+}
+
+.hot-config-save-btn:hover:not(:disabled) {
+    background: var(--m3-primary-hover);
+}
+
+.hot-config-save-btn:disabled {
+    opacity: var(--m3-disabled-content-opacity);
+    cursor: default;
+}
+
+/* Save section: name + color */
+.hot-config-panel-save {
+    border-top: 1px solid var(--m3-outline-faint);
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--m3-surface-container);
+}
+
+.hot-config-save-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+}
+
+.hot-config-save-input {
+    padding: 6px 10px;
+    font-size: 13px;
+    border: 1px solid var(--m3-outline-faint);
+    border-radius: var(--m3-shape-sm);
+    background: var(--m3-surface-container-lowest);
+    color: var(--m3-on-surface);
+    outline: none;
+    margin-bottom: 4px;
+}
+
+.hot-config-save-input:focus {
+    border-color: var(--m3-focus-ring-color);
+    box-shadow: var(--m3-focus-halo);
+}
+
+.hot-config-save-colors {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hot-config-save-color-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--m3-shape-full);
+    border: 2px solid var(--m3-outline-variant);
+    cursor: pointer;
+    transition: border-color var(--m3-duration-short3) var(--m3-ease-standard), transform var(--m3-duration-short2) var(--m3-ease-standard);
+}
+
+.hot-config-save-color-btn:hover {
+    transform: scale(1.1);
+}
+
+.hot-config-save-color-btn.selected {
+    border-color: var(--m3-on-surface);
+}
+
+/* ============================================
+   CELL ANNOTATION COLORS
+   ============================================ */
+
+.hot-cell.cell-color-gray { background-color: var(--m3-annotation-gray);}
+.hot-cell.cell-color-pink { background-color: var(--m3-annotation-pink);}
+.hot-cell.cell-color-orange { background-color: var(--m3-annotation-orange);}
+.hot-cell.cell-color-yellow { background-color: var(--m3-annotation-yellow);}
+.hot-cell.cell-color-green { background-color: var(--m3-annotation-green);}
+.hot-cell.cell-color-blue { background-color: var(--m3-annotation-blue);}
+.hot-cell.cell-color-purple { background-color: var(--m3-annotation-purple);}
+
+/* Comment indicator icon. Interactive: hover shows a read-only thread preview,
+   click opens the full comment dialog (handled by DynamicTable). */
+.cell-comment-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--m3-primary);
+    pointer-events: auto;
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.cell-comment-indicator:hover {
+    color: var(--m3-primary);
+}
+
+/* ============================================
+   CELL COMMENT HOVER PREVIEW (read-only)
+   ============================================ */
+.hot-comment-hover-popup {
+    z-index: 10000;
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-lg);
+    box-shadow: var(--m3-elevation-3);
+    padding: 8px 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.hot-comment-hover-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 12px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--m3-on-surface-variant);
+    border-bottom: 1px solid var(--m3-outline-faint);
+}
+.hot-comment-hover-count {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--m3-primary);
+}
+.hot-comment-hover-list {
+    max-height: 240px;
+    overflow-y: auto;
+    padding-top: 6px;
+}
+.hot-comment-hover-item {
+    padding: 6px 12px;
+}
+.hot-comment-hover-item + .hot-comment-hover-item {
+    border-top: 1px solid var(--m3-outline-faint);
+}
+.hot-comment-hover-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+.hot-comment-hover-author {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+}
+.hot-comment-hover-time {
+    font-size: 11px;
+    color: var(--m3-on-surface-variant);
+}
+.hot-comment-hover-body {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--m3-on-surface);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ============================================
+   CELL COMMENT POPOVER
+   ============================================ */
+
+.hot-comment-popover {
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-xl);
+    box-shadow: var(--m3-elevation-3);
+    display: flex;
+    flex-direction: column;
+    max-height: 520px;
+    overflow: hidden;
+}
+
+.hot-comment-popover-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+}
+
+.hot-comment-popover-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.hot-comment-popover-subtitle {
+    font-size: 12px;
+    color: var(--m3-on-surface-variant);
+    font-weight: 400;
+}
+
+.hot-comment-popover-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hot-comment-popover-close {
+    background: none;
+    border: none;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--m3-shape-full);
+    margin-top: 2px;
+}
+
+.hot-comment-popover-close:hover {
+    color: var(--m3-on-surface);
+    background-color: var(--m3-state-layer-hover);
+}
+
+.hot-comment-colors {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    margin-top: 10px;
+}
+
+/* B8c — audience picker. A two-segment control, sized and spaced off the colour
+   row directly below it so the input area reads as one stack of choices.
+   Deliberately not a <select>: which of the two a note is has to be legible
+   while it is being typed. */
+.hot-comment-audience {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    padding: 2px;
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-full);
+    width: fit-content;
+}
+
+.hot-comment-audience-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px;
+    border: none;
+    border-radius: var(--m3-shape-full);
+    background: transparent;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    transition: var(--m3-transition-state);
+}
+
+.hot-comment-audience-option:hover {
+    color: var(--m3-on-surface);
+}
+
+.hot-comment-audience-option[data-selected] {
+    background: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+    font-weight: 600;
+}
+
+/* The badge on an existing carrier-facing comment in the thread. */
+.hot-comment-audience-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: var(--m3-shape-full);
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-faint);
+    font-size: 11px;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-comment-colors-label {
+    font-size: 13px;
+    color: var(--m3-on-surface-variant);
+    margin-right: 4px;
+}
+
+.hot-comment-color-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--m3-shape-full);
+    border: 2px solid var(--m3-outline-variant);
+    cursor: pointer;
+    transition: transform var(--m3-duration-short2) var(--m3-ease-standard), border-color var(--m3-duration-short3) var(--m3-ease-standard);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hot-comment-color-btn:hover {
+    transform: scale(1.15);
+}
+
+.hot-comment-color-btn.selected {
+    border-color: var(--m3-on-surface);
+    border-width: 2.5px;
+}
+
+/* Dark-mode annotation swatches — the buttons carry the light fill as an inline
+   style, so override with !important to the same dark tints used for the cells
+   (color-mix of the hue into the dark surface). Lighten the ring so the circle
+   reads on the dark popover. The "none" swatch keeps its inline dashed border. */
+
+.hot-comment-thread {
+    max-height: 240px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 16px;
+    min-height: 40px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+}
+
+/* Bulk-mode "delete all comments" action (between the thread and the input). */
+.hot-comment-bulk-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+    flex-shrink: 0;
+}
+.hot-comment-delete-all {
+    background: none;
+    border: none;
+    color: var(--m3-error);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: var(--m3-shape-full);
+}
+.hot-comment-delete-all:hover {
+    background-color: var(--m3-state-layer-error-hover);
+}
+
+.hot-comment-loading,
+.hot-comment-empty {
+    text-align: center;
+    color: var(--m3-on-surface-variant);
+    font-size: 13px;
+    padding: 24px 0;
+}
+
+.hot-comment-item {
+    padding: 10px 0;
+}
+
+.hot-comment-item + .hot-comment-item {
+    border-top: 1px solid var(--m3-outline-faint);
+}
+
+.hot-comment-item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.hot-comment-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.hot-comment-item-header {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.hot-comment-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--m3-shape-full);
+    background: var(--m3-primary-container);
+    color: var(--m3-on-primary-container);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.hot-comment-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--m3-on-surface);
+}
+
+.hot-comment-action {
+    font-size: 12px;
+    color: var(--m3-on-surface-variant);
+    font-weight: 400;
+}
+
+.hot-comment-time {
+    font-size: 12px;
+    color: var(--m3-on-surface-variant);
+    font-weight: 400;
+}
+
+.hot-comment-delete {
+    background: none;
+    border: none;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--m3-shape-full);
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity var(--m3-duration-short3) var(--m3-ease-standard), color var(--m3-duration-short3) var(--m3-ease-standard);
+}
+
+.hot-comment-item:hover .hot-comment-delete {
+    opacity: 1;
+}
+
+.hot-comment-delete:hover {
+    color: var(--m3-error);
+    background-color: var(--m3-state-layer-error-hover);
+}
+
+.hot-comment-content {
+    font-size: 13px;
+    color: var(--m3-on-surface);
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.hot-comment-input-area {
+    padding: 12px 16px 14px;
+}
+
+.hot-comment-textarea {
+    width: 100%;
+    resize: none;
+    border: 1px solid var(--m3-outline-faint);
+    border-radius: var(--m3-shape-md);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--m3-surface-container);
+    color: var(--m3-on-surface);
+    outline: none;
+    transition: border-color var(--m3-duration-short3) var(--m3-ease-standard);
+}
+
+.hot-comment-textarea::placeholder {
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-comment-textarea:focus {
+    border-color: var(--m3-focus-ring-color);
+    background: var(--m3-surface-container-lowest);
+    box-shadow: var(--m3-focus-halo);
+}
+
+.hot-comment-input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.hot-comment-hint {
+    font-size: 12px;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-comment-hint kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    font-size: 11px;
+    font-family: inherit;
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-faint);
+    border-radius: var(--m3-shape-xs);
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-comment-send-btn {
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--m3-primary);
+    color: var(--m3-on-primary);
+    border: none;
+    border-radius: var(--m3-shape-full);
+    cursor: pointer;
+    transition: var(--m3-transition-state);
+}
+
+.hot-comment-send-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--m3-on-primary) 8%, var(--m3-primary));
+}
+
+.hot-comment-send-btn:active:not(:disabled) {
+    background: color-mix(in srgb, var(--m3-on-primary) 16%, var(--m3-primary));
+}
+
+.hot-comment-send-btn:disabled {
+    opacity: var(--m3-disabled-content-opacity);
+    cursor: default;
+}
+
+/* ============================================
+   MENTION POPUP & MENTION STYLES
+   ============================================ */
+
+.hot-comment-mention {
+    color: var(--m3-primary);
+    font-weight: 600;
+}
+
+.hot-mention-popup {
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-md);
+    box-shadow: var(--m3-elevation-2);
+    min-width: 240px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10002;
+}
+
+.hot-mention-popup-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.hot-mention-popup-item:hover,
+.hot-mention-popup-item.highlighted {
+    background: var(--m3-row-hover);
+}
+
+.hot-mention-popup-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--m3-shape-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+    color: white;
+    flex-shrink: 0;
+}
+
+/* ============================================================================
+   PORTAL DROPDOWNS  (SelectMenu / FilterValueInput)
+   ----------------------------------------------------------------------------
+   This product uses no native <select> anywhere: the Configure View drawer is a
+   Sheet with its own stacking context, so an OS menu paints against the page
+   instead of the panel and cannot carry the v2 type tokens. Both menus render
+   into document.body and are positioned from the trigger's bounding rect, so
+   the sizing below must not assume a parent.
+   ========================================================================== */
+
+/* Trigger — deliberately inherits whatever class the old <select> carried
+   (.hot-config-filter-select and friends) so spacing, radius and fill are
+   unchanged; this only lays out the label + chevron inside it. */
+.hot-select-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    text-align: left;
+    /* The chevron is a real element now, not a background image. */
+    background-image: none;
+    padding-right: 8px;
+}
+
+.hot-select-trigger:disabled {
+    opacity: var(--m3-disabled-content-opacity);
+    cursor: default;
+}
+
+.hot-select-trigger-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hot-select-trigger-placeholder {
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-select-trigger-chevron {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    color: var(--m3-on-surface-variant);
+}
+
+/* ============================================================================
+   PORTALLED POPUPS — POINTER-EVENTS RESTORE  (blocker 10.1)
+   ----------------------------------------------------------------------------
+   Every menu in this grid renders through `createPortal(…, document.body)`, so
+   each one is a DIRECT CHILD OF <body>.
+
+   Radix's `DismissableLayer` — used by every Sheet and Dialog in the app,
+   including the Configure View drawer — sets `document.body.style.pointerEvents
+   = 'none'` for as long as it is open, and re-enables it only on its own layer
+   node. Our portals are SIBLINGS of that layer, not descendants, so they
+   inherited `none`: the menu painted correctly on top and then swallowed every
+   click. That made rollups, formulas, conditional formatting, filters, sorting
+   and grouping keyboard-only inside the drawer.
+
+   `pointer-events` is an inherited property, so declaring `auto` on each portal
+   ROOT is enough for its whole subtree, and it is declared — not inherited —
+   so it beats the value coming down from <body>.
+
+   Chosen over the two alternatives deliberately:
+   - Mounting the portals inside the Sheet's content node would put them back
+     inside its `overflow` and stacking context, which is precisely what the
+     portals exist to escape (a menu near the drawer's bottom edge would clip).
+   - A Radix-sanctioned portal container has the same problem, and would couple
+     the grid to whichever dialog implementation happens to host it.
+
+   Outside-click dismissal, Escape and z-order are untouched: dismissal is a
+   `mousedown` listener on `document`, and the Sheet's own overlay/content keep
+   their own `pointer-events: auto` from Radix.
+
+   Making the menus clickable does NOT make them dismiss the dialog they were
+   opened from: Radix decides "outside" from the REACT tree, and a portal's
+   content still belongs to the React subtree that rendered it. Verified in a
+   browser — committing an option leaves the Configure View drawer open, while a
+   click on the page outside it still dismisses it.
+   ========================================================================== */
+.hot-select-menu,
+.hot-filter-suggestions,
+.hot-quick-filter,
+.hot-col-menu,
+.hot-editor-popup,
+.hot-cell-editor,
+.hot-editor-dropdown,
+.hot-mention-popup,
+.hot-comment-popover,
+.hot-comment-hover-popup,
+.context-menu {
+    pointer-events: auto;
+}
+
+.hot-select-menu,
+.hot-filter-suggestions {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-md);
+    box-shadow: var(--m3-elevation-3);
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 280px;
+}
+
+/* `flex-shrink: 0` is load-bearing, not defensive. The menu is a flex column
+   with `max-height: 280px`, so once the list is longer than that its children
+   are SQUASHED to fit instead of the container scrolling: the 15-option date
+   operator list rendered at 18px per row against a 20px line-height, so every
+   label was vertically clipped and overlapped its neighbour. Worst on the two
+   longest menus in the panel — the operator list and the 48-column field
+   picker, i.e. exactly the controls a filter is built from. */
+.hot-select-menu-option,
+.hot-filter-suggestion {
+    display: block;
+    width: 100%;
+    flex-shrink: 0;
+    padding: 6px 8px;
+    border: none;
+    border-radius: var(--m3-shape-sm);
+    background: transparent;
+    color: var(--m3-on-surface);
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* `--hot-dropdown-hover`, NOT a hard-coded light gray: this menu renders in
+   both themes, and a literal `rgb(243,243,245)` paints a near-white band under
+   near-white text in dark mode — the option becomes unreadable exactly while it
+   is being pointed at. */
+.hot-select-menu-option[data-active],
+.hot-filter-suggestion[data-active] {
+    background: var(--m3-state-layer-hover);
+}
+
+.hot-select-menu-option[data-selected] {
+    font-weight: 600;
+}
+
+/* Loading / empty / error are three DIFFERENT strings on purpose. A silently
+   empty dropdown is what made the missing suggestion loader invisible. */
+.hot-filter-suggestion-note {
+    flex-shrink: 0;
+    padding: 8px;
+    color: var(--m3-on-surface-variant);
+    white-space: nowrap;
+}
+
+/* ============================================================================
+   COLUMN QUICK FILTER  (Excel AutoFilter — A1)
+   ----------------------------------------------------------------------------
+   Chrome deliberately COPIED from `.hot-select-menu` above (same border, radius,
+   shadow and 4px gutter) so the funnel dropdown reads as the same family as
+   every other portal menu in the grid. Only the internal sections are new.
+   ========================================================================== */
+.hot-quick-filter {
+    display: flex;
+    flex-direction: column;
+    background: var(--m3-surface-container);
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-md);
+    box-shadow: var(--m3-elevation-3);
+    overflow: hidden;
+}
+
+.hot-quick-filter-search {
+    padding: 8px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+}
+
+.hot-quick-filter-list {
+    display: flex;
+    flex-direction: column;
+    /* Same 4px gutter the select menu uses, so an option's hover fill inset
+       matches the one in the sort/field dropdowns exactly. */
+    padding: 4px;
+    max-height: 232px;
+    /* The flexible section. The popover carries a viewport-derived max-height
+       (utils/anchoredPosition); `min-height: 0` is what lets flexbox shrink
+       this list past its content so the search box, the transient footnote and
+       the Apply button always survive a short viewport. Without it the list
+       refuses to shrink and the footer is what gets clipped. */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.hot-quick-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--m3-shape-sm);
+    cursor: pointer;
+    color: var(--m3-on-surface);
+    /* A tick list is dragged over, not read as prose — a stray text selection
+       under the pointer looks like a broken row. */
+    user-select: none;
+}
+
+.hot-quick-filter-option:hover {
+    background: var(--m3-state-layer-hover);
+}
+
+/* "Select all" sits above the values with a hairline, the way Excel separates
+   it — it acts on the VISIBLE list, so it belongs with the search box. */
+.hot-quick-filter-select-all {
+    margin-bottom: 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--m3-outline-faint);
+    border-radius: var(--m3-shape-sm) var(--m3-shape-sm) 0 0;
+}
+
+.hot-quick-filter-option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hot-quick-filter-note {
+    padding: 12px 8px;
+    color: var(--m3-on-surface-variant);
+}
+
+/* ── Date body (workshop A14) ────────────────────────────────────────────────
+   A date column gets an operator + its editor instead of a tick list. Stacked
+   rather than the drawer's single inline row, because the popover is 268px
+   wide: two side-by-side date triggers there are ~110px each, which truncates
+   "10 sie 2026" to nothing readable. Label above control also means the two
+   ends of a range are unmistakable — which is the whole of Agnieszka's
+   "szybciej mi jest operować na zakresie dat". */
+.hot-quick-filter-date {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    /* The flexible section, mirroring .hot-quick-filter-list: a short viewport
+       scrolls the form rather than clipping the Apply button off the bottom. */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.hot-quick-filter-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.hot-quick-filter-date-label {
+    color: var(--m3-on-surface-variant);
+}
+
+/* The controls are the Configure View drawer's, so the two filter surfaces read
+   as one family — but the drawer hard-codes 13px, which is not one of the named
+   type tokens. Re-declare from the token's own custom properties (higher
+   specificity, so it wins over `.hot-config-filter-*`) instead of leaving a
+   stray magic number inside a v2 surface. */
+.hot-quick-filter-date .hot-quick-filter-control {
+    width: 100%;
+    font-size: var(--text-body-regular-sm);
+    line-height: var(--text-body-regular-sm--line-height);
+    font-weight: var(--text-body-regular-sm--font-weight);
+}
+
+/* Count + unit share a row: "next | 7 | days" is one phrase, not two fields. */
+.hot-quick-filter-relative-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.hot-quick-filter-date .hot-quick-filter-count {
+    flex: 0 0 auto;
+    width: 72px;
+    min-width: 72px;
+}
+
+.hot-quick-filter-date .hot-quick-filter-relative-row .hot-select-trigger {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}
+
+/* A2/D6 made visible: a header filter is TEMPORARY. The user rejected saving
+   these herself — the UI has to say which kind of filter this is, in words. */
+.hot-quick-filter-transient {
+    margin: 0;
+    padding: 6px 10px;
+    color: var(--m3-on-surface-variant);
+    background: var(--m3-state-layer-hover);
+    border-top: 1px solid var(--m3-outline-faint);
+}
+
+.hot-quick-filter-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px;
+    border-top: 1px solid var(--m3-outline-faint);
+}
+
+/* Toolbar "Clear all filters (n)". A borderless M3 text button: the dashed
+   outline that used to carry the "this filter is transient" semantics is gone —
+   that distinction now lives in the outlined filter chips rendered beside it,
+   and a dashed border next to pill chrome read as an unfinished control. Height
+   stays 32px. */
+.hot-clear-filters-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border: none;
+    border-radius: var(--m3-shape-full);
+    background: transparent;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--m3-transition-state);
+}
+
+.hot-clear-filters-btn:hover {
+    background-color: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.hot-clear-filters-btn:active {
+    background-color: var(--m3-state-layer-pressed);
+}
+
+.hot-clear-filters-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+/* Group-subtotal scope note — "(this page only)" beside the Σ label. */
+.hot-group-summary-scope {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+    color: var(--m3-on-surface-variant);
+}
+
+/* ============================================================================
+   PINNED TOTALS ROW
+   ----------------------------------------------------------------------------
+   Sticky to the BOTTOM of the scroll container, mirroring .hot-headers-sticky
+   at the top. Rendered outside the virtualiser, so it needs its own fill: it
+   sits over scrolling rows.
+   ========================================================================== */
+.hot-footer-totals-row {
+    align-items: center;
+    min-height: 32px;
+}
+
+/* The label's clip box (ledger 3.3).
+   -----------------------------------------------------------------------------
+   `.hot-footer-totals-label-cell` is deliberately zero-width and the label
+   overflows out of it, over the leading columns that render nothing. Nothing
+   used to stop that overflow, so on a view whose FIRST column carries an
+   aggregate the caption was painted straight over the number.
+   `max-width` is set inline from the MEASURED width of that blank run; this
+   rule is what turns the overflow into an ellipsis instead of a collision. The
+   full string stays reachable via the element's `title`. */
+.hot-footer-totals-label-clip {
+    /* `width: max-content` is load-bearing, not tidying. The clip box lives
+       inside a ZERO-width cell, and a block box takes the width of its
+       containing block — so without this it resolves to 0 and `max-width`
+       clamps nothing, collapsing the label to just the Σ glyph. Measured in a
+       browser: 12px wide instead of 220. `max-content` sizes it to the label,
+       and the inline `max-width` (the measured blank lead) then clips it. */
+    width: max-content;
+    max-width: 0;
+    overflow: hidden;
+}
+
+.hot-footer-totals-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--m3-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Stacked layout: used only when EVERY column from the first one carries a
+   value, so there is no blank run to borrow. The caption gets its own line
+   rather than overlapping a number — the scope statement is normative and
+   cannot be dropped. */
+.hot-footer-totals-caption {
+    padding: 4px 0 2px;
+}
+
+.hot-footer-totals-scope {
+
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-footer-totals-sigma {
+    flex-shrink: 0;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-footer-totals-cell,
+.hot-footer-totals-rowheader,
+.hot-footer-totals-actions {
+    display: flex;
+    align-items: center;
+    background: var(--m3-surface-container);
+}
+
+.hot-footer-totals-value {
+    color: var(--m3-on-surface);
+}
+
+/* ============================================
+   DIMENSIONED AGGREGATES (per-currency totals)
+
+   A sum partitioned by a dimension is several figures, not one, so the cell
+   stacks one labelled line per slice. Each line keeps its label GLUED to its
+   number (`white-space: nowrap`) — a currency code that wraps away from its
+   amount recreates the unlabelled total this feature exists to remove
+   (HEDGE-147).
+
+   The row heights are driven by content here rather than fixed: two currencies
+   need two lines, and clipping the second one would hide money.
+   ============================================ */
+.hot-aggregate-breakdown {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    line-height: 1.25;
+    width: 100%;
+}
+
+.hot-aggregate-breakdown-line {
+    white-space: nowrap;
+}
+
+.hot-aggregate-breakdown-key {
+    color: var(--m3-on-surface-variant);
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+/* The stacked lines must be able to make their row taller. */
+.hot-footer-totals-cell:has(.hot-aggregate-breakdown),
+.hot-group-summary-cell:has(.hot-aggregate-breakdown) {
+    height: auto;
+    align-items: center;
+}
+
+.hot-footer-totals:has(.hot-aggregate-breakdown),
+.hot-group-summary-row:has(.hot-aggregate-breakdown) {
+    height: auto;
+    min-height: 0;
+}
+
+/* ============================================
+   REDUCED MOTION
+   The transition tokens self-collapse (see the @media block in
+   packages/ui/src/theme/m3.css); these are the keyframe animations,
+   which have to be named explicitly.
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    /* Looping shimmer — purely decorative. */
+    td[data-save-state="saving"]::after,
+    td[data-row-save-state="saving"]::after,
+    .dt-skel-bar::after {
+        animation: none;
+    }
+
+    /* The save-state shake is pure translation. Drop the shake on the cell;
+       on the row, keep the fade — it is what clears the error fill. */
+    td[data-save-state="error"] {
+        animation: none;
+    }
+
+    td[data-row-save-state="error"] {
+        animation: fade-row-error 3s var(--m3-ease-standard) forwards;
+    }
+}
+
+/* ============================================
+   VIEW MODE SWITCH (list / grid)
+
+   M3 segmented button. The container carries the outline and the pill radius;
+   the segments are transparent until selected, when they take the
+   secondary-container / on-secondary-container PAIR. Hover and press are 8%
+   state layers of the content colour, never a background swap — a hover that
+   replaces the fill would erase the selected/unselected distinction for as
+   long as the cursor is over it.
+   ============================================ */
+
+.hot-viewmode-switch {
+    display: inline-flex;
+    align-items: center;
+    /* 1px gap so the two segments' focus rings never touch. */
+    gap: 1px;
+    padding: 2px;
+    border: 1px solid var(--m3-outline-variant);
+    border-radius: var(--m3-shape-full);
+    background: transparent;
+}
+
+.hot-viewmode-segment {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 28px;
+    border: none;
+    border-radius: var(--m3-shape-full);
+    background: transparent;
+    color: var(--m3-on-surface-variant);
+    cursor: pointer;
+    transition: var(--m3-transition-state);
+}
+
+/* 48dp minimum touch target, grown OUTWARD from a 32x28 visual so the toolbar
+   stays dense. `pointer-events` stays on the button; this pseudo-element only
+   enlarges what the pointer can hit. */
+.hot-viewmode-segment::after {
+    content: '';
+    position: absolute;
+    inset: -10px -8px;
+    border-radius: inherit;
+}
+
+.hot-viewmode-segment:hover {
+    background-color: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.hot-viewmode-segment:active {
+    background-color: var(--m3-state-layer-pressed);
+}
+
+.hot-viewmode-segment:focus-visible {
+    outline: none;
+    box-shadow: var(--m3-focus-ring-inset);
+}
+
+/* The selected segment. Background and foreground land together — a
+   background without its `on-` partner is the single most common way a
+   Material palette becomes unreadable in the other theme. */
+.hot-viewmode-segment[data-selected='true'] {
+    background-color: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+}
+
+.hot-viewmode-segment[data-selected='true']:hover {
+    /* The state layer composites OVER the container tint rather than replacing
+       it, so the selected segment still reads as selected under the cursor. */
+    background-image: linear-gradient(
+        var(--m3-state-layer-hover),
+        var(--m3-state-layer-hover)
+    );
+}

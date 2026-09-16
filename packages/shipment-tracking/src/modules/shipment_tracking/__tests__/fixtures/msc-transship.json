@@ -1,0 +1,409 @@
+[
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "transportCall": {
+      "transportCallID": "PLGDNGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA602W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "description": "Estimated Time of Arrival",
+    "eventId": "EST2026-03-13T08:15:00:00+01:00",
+    "eventDateTime": "2026-03-13T08:15:00+01:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-02-17T13:06:26+00:00",
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "transportCall": {
+      "transportCallID": "CNNGBGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNNGB",
+      "facilityCode": "BLGAN",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "description": "Vessel Departure",
+    "eventId": "ACT2026-01-25T14:06:00:00+08:00",
+    "eventDateTime": "2026-01-25T14:06:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-25T14:06:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000036",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNNGBGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNNGB",
+      "facilityCode": "BLGAN",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "NINGBO",
+      "unLocationCode": "CNNGB",
+      "facilityCode": "BLGAN",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43937324",
+        "sealSource": "CAR"
+      }
+    ],
+    "description": "Full Transshipment Loaded",
+    "eventId": "1738307319",
+    "eventDateTime": "2026-01-25T11:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-25T11:00:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MSCU1000036",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNNGBQS550R",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "QS550R",
+      "unLocationCode": "CNNGB",
+      "facilityCode": "BLGAN",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000003",
+        "vesselName": "EXAMPLE VESSEL 03",
+        "vesselFlag": "PA",
+        "vesselCallSignNumber": "7WXY8"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "NINGBO",
+      "unLocationCode": "CNNGB",
+      "facilityCode": "BLGAN",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43937324",
+        "sealSource": "CAR"
+      }
+    ],
+    "description": "Full Transshipment Discharged",
+    "eventId": "1733643968",
+    "eventDateTime": "2026-01-18T09:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-18T09:00:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "transportCall": {
+      "transportCallID": "CNNGBQS550R",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "QS550R",
+      "unLocationCode": "CNNGB",
+      "facilityCode": "BLGAN",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000003",
+        "vesselName": "EXAMPLE VESSEL 03",
+        "vesselFlag": "PA",
+        "vesselCallSignNumber": "7WXY8"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "description": "Vessel Arrival",
+    "eventId": "ACT2026-01-17T23:54:00:00+08:00",
+    "eventDateTime": "2026-01-17T23:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-17T23:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "transportCall": {
+      "transportCallID": "CNTAOGL602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GL602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNTAO",
+      "facilityCode": "QQCTX",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000003",
+        "vesselName": "EXAMPLE VESSEL 03",
+        "vesselFlag": "PA",
+        "vesselCallSignNumber": "7WXY8"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "description": "Vessel Departure",
+    "eventId": "ACT2026-01-11T18:06:00:00+08:00",
+    "eventDateTime": "2026-01-11T18:06:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-11T18:06:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000036",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNTAOGL602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GL602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNTAO",
+      "facilityCode": "QQCTX",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000003",
+        "vesselName": "EXAMPLE VESSEL 03",
+        "vesselFlag": "PA",
+        "vesselCallSignNumber": "7WXY8"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "QINGDAO",
+      "unLocationCode": "CNTAO",
+      "facilityCode": "QQCTX",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43937324",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1729122314",
+    "eventDateTime": "2026-01-11T14:12:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-11T14:12:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000036",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNTAOTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNTAO",
+      "facilityCode": "QQCTX",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "QINGDAO",
+      "unLocationCode": "CNTAO",
+      "facilityCode": "QQCTX",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43937324",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1728267876",
+    "eventDateTime": "2026-01-09T21:02:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-09T21:02:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000036",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNTAOTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNTAO",
+      "facilityCode": "CNTAOZNML",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA0002V"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000001"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "QINGDAO",
+      "unLocationCode": "CNTAO",
+      "facilityCode": "CNTAOZNML",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43937324",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1724974341",
+    "eventDateTime": "2026-01-05T08:04:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-05T08:04:00+08:00",
+    "references": []
+  }
+]

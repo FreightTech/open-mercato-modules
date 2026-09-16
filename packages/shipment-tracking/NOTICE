@@ -1,0 +1,25 @@
+@freighttech/shipment-tracking
+Copyright (c) 2026 FreightTech
+
+This product is licensed under the MIT License (see LICENSE).
+
+--------------------------------------------------------------------------------
+Third-party trademarks
+--------------------------------------------------------------------------------
+
+The carrier logo image files under
+  src/modules/shipment_tracking/assets/carriers/
+(e.g. maersk.png, msc.png, cma_cgm.png, hapag_lloyd.png, cosco.png, one.png,
+oocl.png, evergreen.png, yang_ming.png, zim.png)
+are the registered trademarks and property of their respective owners
+(A.P. Moller - Maersk, MSC Mediterranean Shipping Company, CMA CGM,
+Hapag-Lloyd, COSCO Shipping, Ocean Network Express (ONE), OOCL, Evergreen
+Marine, Yang Ming, ZIM, and others).
+
+They are included solely to identify the corresponding ocean carrier in the
+user interface (nominative/referential use). Their inclusion does not imply
+any affiliation with, sponsorship by, or endorsement from the trademark
+owners. The MIT license above covers only the source code of this package,
+not these trademarks. If you redistribute or use this package, you are
+responsible for your own trademark compliance; remove or replace these assets
+if that use is not appropriate for your deployment.

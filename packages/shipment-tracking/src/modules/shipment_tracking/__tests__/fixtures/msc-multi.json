@@ -1,0 +1,4846 @@
+[
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "transportCall": {
+      "transportCallID": "PLGDNGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA602W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "description": "Estimated Time of Arrival",
+    "eventId": "EST2026-03-13T08:15:00:00+01:00",
+    "eventDateTime": "2026-03-13T08:15:00+01:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-02-17T13:06:27+00:00",
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "description": "Vessel Departure",
+    "eventId": "ACT2026-01-16T17:48:00:00+08:00",
+    "eventDateTime": "2026-01-16T17:48:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T17:48:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000002",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919131",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786181",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000003",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919134",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786986",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000004",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919135",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787193",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000005",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919133",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787002",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000006",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919132",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787003",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000007",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919140",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786988",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000008",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919137",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787188",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000009",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919138",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787004",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000010",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919182",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787001",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000011",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919139",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786984",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000012",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919136",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787197",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000013",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919184",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786975",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000014",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919183",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787198",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000015",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919185",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787199",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000016",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919186",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786990",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000017",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919181",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786998",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000018",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919187",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786978",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000019",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919190",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786977",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000020",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919188",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786983",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000021",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919189",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786994",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000022",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919243",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786993",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000023",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919241",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786997",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000024",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919248",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786973",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000025",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919244",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786976",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000026",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919247",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786992",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000027",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919246",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786987",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000028",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919245",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787186",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000029",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43900644",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732787201",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000030",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919250",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786995",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000031",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919242",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786953",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000032",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919249",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786974",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MSCU1000033",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCGA602W",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": "GA602W",
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000004",
+        "vesselName": "EXAMPLE VESSEL 04",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "0ZBC1"
+      }
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43900645",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export Loaded on Vessel",
+    "eventId": "1732786967",
+    "eventDateTime": "2026-01-16T16:55:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T16:55:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000012",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919136",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729676929",
+    "eventDateTime": "2026-01-12T15:18:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T15:18:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000003",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919134",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729676920",
+    "eventDateTime": "2026-01-12T15:12:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T15:12:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000004",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919135",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729676917",
+    "eventDateTime": "2026-01-12T15:11:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T15:11:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000002",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919131",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635082",
+    "eventDateTime": "2026-01-12T14:52:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:52:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000009",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919138",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635080",
+    "eventDateTime": "2026-01-12T14:51:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:51:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000011",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919139",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635077",
+    "eventDateTime": "2026-01-12T14:49:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:49:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000010",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919182",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635073",
+    "eventDateTime": "2026-01-12T14:46:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:46:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000014",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919183",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635070",
+    "eventDateTime": "2026-01-12T14:45:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:45:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000017",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919181",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635066",
+    "eventDateTime": "2026-01-12T14:42:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:42:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000013",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919184",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635055",
+    "eventDateTime": "2026-01-12T14:31:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:31:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000007",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919140",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635047",
+    "eventDateTime": "2026-01-12T14:18:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:18:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000005",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919133",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635038",
+    "eventDateTime": "2026-01-12T14:16:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:16:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000008",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919137",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635039",
+    "eventDateTime": "2026-01-12T14:16:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:16:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000006",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919132",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729635037",
+    "eventDateTime": "2026-01-12T14:13:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T14:13:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000021",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919189",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729603966",
+    "eventDateTime": "2026-01-12T13:06:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T13:06:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000025",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919244",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729603953",
+    "eventDateTime": "2026-01-12T13:02:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T13:02:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000028",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919245",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729603951",
+    "eventDateTime": "2026-01-12T13:02:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T13:02:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000024",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919248",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729603948",
+    "eventDateTime": "2026-01-12T13:01:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T13:01:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000026",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919247",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729603942",
+    "eventDateTime": "2026-01-12T12:59:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:59:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000030",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919250",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729603937",
+    "eventDateTime": "2026-01-12T12:57:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:57:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000032",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919249",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729603939",
+    "eventDateTime": "2026-01-12T12:57:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:57:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000029",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43900644",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572108",
+    "eventDateTime": "2026-01-12T12:53:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:53:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000033",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43900645",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572101",
+    "eventDateTime": "2026-01-12T12:51:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:51:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000015",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919185",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572070",
+    "eventDateTime": "2026-01-12T12:35:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:35:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000016",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919186",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572062",
+    "eventDateTime": "2026-01-12T12:34:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:34:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000018",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919187",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572068",
+    "eventDateTime": "2026-01-12T12:34:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:34:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000020",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919188",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572067",
+    "eventDateTime": "2026-01-12T12:34:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:34:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000019",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919190",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572051",
+    "eventDateTime": "2026-01-12T12:29:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:29:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000031",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919242",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572050",
+    "eventDateTime": "2026-01-12T12:28:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:28:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000023",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919241",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729572035",
+    "eventDateTime": "2026-01-12T12:20:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T12:20:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000022",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919243",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729550205",
+    "eventDateTime": "2026-01-12T11:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T11:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MSCU1000027",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "DPCT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919246",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Export received at CY",
+    "eventId": "1729550194",
+    "eventDateTime": "2026-01-12T11:48:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-12T11:48:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000002",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919131",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173499",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000003",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919134",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173501",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000004",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919135",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173502",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000005",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919133",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173503",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000006",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919132",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173504",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000007",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919140",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173505",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000008",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919137",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173509",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000009",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919138",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173506",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000010",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919182",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173507",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000011",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919139",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173508",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000012",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919136",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173510",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000013",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919184",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173511",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000014",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919183",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173512",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000015",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919185",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173513",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000016",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919186",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173515",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000017",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919181",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173514",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000018",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919187",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173516",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000019",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919190",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173517",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000020",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919188",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173518",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000021",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919189",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173520",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000022",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919243",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173522",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000023",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919241",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173521",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000024",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919248",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173523",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000025",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919244",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173525",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000026",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919247",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173526",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000027",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919246",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173527",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000028",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919245",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173529",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000029",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43900644",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173530",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000030",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919250",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173531",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000031",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919242",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173519",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000032",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43919249",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173524",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MSCU1000033",
+    "ISOEquipmentCode": "2210",
+    "emptyIndicatorCode": "EMPTY",
+    "transportCall": {
+      "transportCallID": "CNDLCTRB",
+      "carrierServiceCode": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null,
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "DEPO",
+      "otherFacility": null,
+      "modeOfTransport": "TRUCK",
+      "vessel": null
+    },
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "100AAAAAA00003"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "MEDUAA000002"
+      }
+    ],
+    "eventLocation": {
+      "locationName": "DALIAN",
+      "unLocationCode": "CNDLC",
+      "facilityCode": "CNDLCHKHA",
+      "facilityCodeListProvider": "BIC"
+    },
+    "seals": [
+      {
+        "sealNumber": "FX43900645",
+        "sealSource": "TER"
+      }
+    ],
+    "description": "Empty to Shipper",
+    "eventId": "1727173528",
+    "eventDateTime": "2026-01-08T09:54:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-08T09:54:00+08:00",
+    "references": []
+  }
+]

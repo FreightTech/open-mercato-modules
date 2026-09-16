@@ -1,0 +1,558 @@
+[
+  {
+    "eventID": "21f27ab9-5145-4d39-9c88-77f538734afaD1",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-04T07:53:00+08:00",
+    "eventCreatedDateTime": "2026-02-18T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "DEPA",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "601S",
+      "carrierVoyageNumber": "601S",
+      "facilityCode": "TPCT1",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "Tianjin PAC Intl Cntr Terminal",
+        "latitude": "38.562000",
+        "longitude": "117.560000"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Tianjin PAC Intl Cntr Terminal No. 3889 America Road, Tianjin East Xingang China 300463",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000010",
+        "vesselName": "EXAMPLE VESSEL 10",
+        "vesselFlag": "PT",
+        "vesselCallSignNumber": "WX8901"
+      },
+      "UNLocationCode": "CNTXG"
+    }
+  },
+  {
+    "eventID": "21f27ab9-5145-4d39-9c88-77f538734afaA1",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-12T19:48:00+08:00",
+    "eventCreatedDateTime": "2026-02-18T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "ARRI",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "601S",
+      "carrierVoyageNumber": "601S",
+      "facilityCode": "PTP",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "Pelabuhan Tanjung Pelepas Terminal",
+        "latitude": "1.405100",
+        "longitude": "103.593000"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Pelabuhan Tanjung Pelepas Terminal Jalan Pelabuhan Tanjung Pelepas Gelang Patah JOHOR Block A Wisma PTP Tanjung Pelepas Malaysia 81560",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000010",
+        "vesselName": "EXAMPLE VESSEL 10",
+        "vesselFlag": "PT",
+        "vesselCallSignNumber": "WX8901"
+      },
+      "UNLocationCode": "MYTPP"
+    }
+  },
+  {
+    "eventID": "21f27ab9-5145-4d39-9c88-77f538734afaD2",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-01-25T06:02:00+08:00",
+    "eventCreatedDateTime": "2026-02-18T00:00:00Z",
+    "eventClassifierCode": "ACT",
+    "transportEventTypeCode": "DEPA",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "602W",
+      "carrierVoyageNumber": "602W",
+      "facilityCode": "PTP",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "Pelabuhan Tanjung Pelepas Terminal",
+        "latitude": "1.405100",
+        "longitude": "103.593000"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Pelabuhan Tanjung Pelepas Terminal Jalan Pelabuhan Tanjung Pelepas Gelang Patah JOHOR Block A Wisma PTP Tanjung Pelepas Malaysia 81560",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000009",
+        "vesselName": "EXAMPLE VESSEL 09",
+        "vesselFlag": "DE",
+        "vesselCallSignNumber": "TUVW"
+      },
+      "UNLocationCode": "MYTPP"
+    }
+  },
+  {
+    "eventID": "21f27ab9-5145-4d39-9c88-77f538734afaA2",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-02-25T17:00:00+01:00",
+    "eventCreatedDateTime": "2026-02-18T00:00:00Z",
+    "eventClassifierCode": "EST",
+    "transportEventTypeCode": "ARRI",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "602W",
+      "carrierVoyageNumber": "602W",
+      "facilityCode": "EGW",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "Wilhelmshaven Eurogate CT",
+        "latitude": "53.584488",
+        "longitude": "8.145788"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Wilhelmshaven Eurogate CT OZEAN-PIER 1 Wilhelmshaven Germany 26388",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000009",
+        "vesselName": "EXAMPLE VESSEL 09",
+        "vesselFlag": "DE",
+        "vesselCallSignNumber": "TUVW"
+      },
+      "UNLocationCode": "DEWVN"
+    }
+  },
+  {
+    "eventID": "21f27ab9-5145-4d39-9c88-77f538734afaD3",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-02-28T22:00:00+01:00",
+    "eventCreatedDateTime": "2026-02-18T00:00:00Z",
+    "eventClassifierCode": "EST",
+    "transportEventTypeCode": "DEPA",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "609N",
+      "carrierVoyageNumber": "609N",
+      "facilityCode": "EGW",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "Wilhelmshaven Eurogate CT",
+        "latitude": "53.584488",
+        "longitude": "8.145788"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Wilhelmshaven Eurogate CT OZEAN-PIER 1 Wilhelmshaven Germany 26388",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000011",
+        "vesselName": "EXAMPLE VESSEL 11",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "1Z2345"
+      },
+      "UNLocationCode": "DEWVN"
+    }
+  },
+  {
+    "eventID": "21f27ab9-5145-4d39-9c88-77f538734afaA3",
+    "eventType": "TRANSPORT",
+    "eventDateTime": "2026-03-03T18:00:00+01:00",
+    "eventCreatedDateTime": "2026-02-18T00:00:00Z",
+    "eventClassifierCode": "EST",
+    "transportEventTypeCode": "ARRI",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "609N",
+      "carrierVoyageNumber": "609N",
+      "facilityCode": "DCT",
+      "transportCallSequenceNumber": 3,
+      "location": {
+        "locationName": "Gdansk Baltic HUB Terminal",
+        "latitude": "54.381628",
+        "longitude": "18.712876"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Gdansk Baltic HUB Terminal 7 Kontenerowa 7 Gdansk Poland 80-601",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000011",
+        "vesselName": "EXAMPLE VESSEL 11",
+        "vesselFlag": "SG",
+        "vesselCallSignNumber": "1Z2345"
+      },
+      "UNLocationCode": "PLGDN"
+    }
+  },
+  {
+    "eventID": "14160426820",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-31T01:52:43Z",
+    "eventCreatedDateTime": "2025-12-31T01:52:43Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "RECE",
+    "documentTypeCode": "SHI",
+    "documentID": "900000001",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000003"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ]
+  },
+  {
+    "eventID": "14160427217",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2025-12-31T01:53:01Z",
+    "eventCreatedDateTime": "2025-12-31T01:53:01Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "DRFT",
+    "documentTypeCode": "TRD",
+    "documentID": "900000001",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000003"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ]
+  },
+  {
+    "eventID": "14170161374",
+    "eventType": "SHIPMENT",
+    "eventDateTime": "2026-01-02T20:24:35Z",
+    "eventCreatedDateTime": "2026-01-02T20:24:35Z",
+    "eventClassifierCode": "ACT",
+    "shipmentEventTypeCode": "ISSU",
+    "documentTypeCode": "TRD",
+    "documentID": "900000001",
+    "references": [
+      {
+        "referenceType": "EQ",
+        "referenceValue": "MAEU1000003"
+      },
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ]
+  },
+  {
+    "eventID": "14154426860",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2025-12-30T07:07:00+08:00",
+    "eventCreatedDateTime": "2025-12-30T00:51:39Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "MAEU1000003",
+    "emptyIndicatorCode": "EMPTY",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "transportCallSequenceNumber": 0,
+      "location": {
+        "locationName": "EXAMPLE LOGISTICS DEPOT",
+        "latitude": "39.709614",
+        "longitude": "117.446125"
+      },
+      "facilityTypeCode": "DEPO",
+      "otherFacility": "EXAMPLE LOGISTICS DEPOT, EXAMPLE INDUSTRIAL AREA, EXAMPLE DISTRICT, CN 000000",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "CNTXG"
+    },
+    "seals": [],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ],
+    "ISOEquipmentCode": "45G1"
+  },
+  {
+    "eventID": "14164624915",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-01T04:36:00+08:00",
+    "eventCreatedDateTime": "2025-12-31T22:03:00Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "MAEU1000003",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "facilityCode": "TPCT1",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "Tianjin PAC Intl Cntr Terminal",
+        "latitude": "38.562000",
+        "longitude": "117.560000"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Tianjin PAC Intl Cntr Terminal No. 3889 America Road, Tianjin East Xingang China 300463",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "CNTXG"
+    },
+    "seals": [
+      {
+        "sealNumber": "CN4293798",
+        "sealSource": "CAR",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ],
+    "ISOEquipmentCode": "45G1"
+  },
+  {
+    "eventID": "14170251200",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-03T04:18:00+08:00",
+    "eventCreatedDateTime": "2026-01-02T21:18:38Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000003",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "601S",
+      "carrierVoyageNumber": "601S",
+      "facilityCode": "TPCT1",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "Tianjin PAC Intl Cntr Terminal",
+        "latitude": "38.562000",
+        "longitude": "117.560000"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Tianjin PAC Intl Cntr Terminal No. 3889 America Road, Tianjin East Xingang China 300463",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000010",
+        "vesselName": "EXAMPLE VESSEL 10",
+        "vesselFlag": "PT",
+        "vesselCallSignNumber": "WX8901"
+      },
+      "UNLocationCode": "CNTXG"
+    },
+    "seals": [
+      {
+        "sealNumber": "CN4293798",
+        "sealSource": "CAR",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ],
+    "ISOEquipmentCode": "45G1"
+  },
+  {
+    "eventID": "14211692618",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-12T23:22:00+08:00",
+    "eventCreatedDateTime": "2026-01-12T17:01:02Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "MAEU1000003",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "601S",
+      "carrierVoyageNumber": "601S",
+      "facilityCode": "PTP",
+      "transportCallSequenceNumber": 1,
+      "location": {
+        "locationName": "Pelabuhan Tanjung Pelepas Terminal",
+        "latitude": "1.405100",
+        "longitude": "103.593000"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Pelabuhan Tanjung Pelepas Terminal Jalan Pelabuhan Tanjung Pelepas Gelang Patah JOHOR Block A Wisma PTP Tanjung Pelepas Malaysia 81560",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000010",
+        "vesselName": "EXAMPLE VESSEL 10",
+        "vesselFlag": "PT",
+        "vesselCallSignNumber": "WX8901"
+      },
+      "UNLocationCode": "MYTPP"
+    },
+    "seals": [
+      {
+        "sealNumber": "CN4293798",
+        "sealSource": "CAR",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ],
+    "ISOEquipmentCode": "45G1"
+  },
+  {
+    "eventID": "14270792572",
+    "eventType": "EQUIPMENT",
+    "eventDateTime": "2026-01-24T09:46:00+08:00",
+    "eventCreatedDateTime": "2026-01-24T04:06:21Z",
+    "eventClassifierCode": "ACT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "MAEU1000003",
+    "emptyIndicatorCode": "LADEN",
+    "documentReferences": [
+      {
+        "documentReferenceType": "BKG",
+        "documentReferenceValue": "900000001"
+      },
+      {
+        "documentReferenceType": "TRD",
+        "documentReferenceValue": "900000001"
+      }
+    ],
+    "transportCall": {
+      "exportVoyageNumber": "602W",
+      "carrierVoyageNumber": "602W",
+      "facilityCode": "PTP",
+      "transportCallSequenceNumber": 2,
+      "location": {
+        "locationName": "Pelabuhan Tanjung Pelepas Terminal",
+        "latitude": "1.405100",
+        "longitude": "103.593000"
+      },
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "otherFacility": "Pelabuhan Tanjung Pelepas Terminal Jalan Pelabuhan Tanjung Pelepas Gelang Patah JOHOR Block A Wisma PTP Tanjung Pelepas Malaysia 81560",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "8000009",
+        "vesselName": "EXAMPLE VESSEL 09",
+        "vesselFlag": "DE",
+        "vesselCallSignNumber": "TUVW"
+      },
+      "UNLocationCode": "MYTPP"
+    },
+    "seals": [
+      {
+        "sealNumber": "CN4293798",
+        "sealSource": "CAR",
+        "sealType": "BLT"
+      }
+    ],
+    "references": [
+      {
+        "referenceType": "CR",
+        "referenceValue": "900000001"
+      }
+    ],
+    "ISOEquipmentCode": "45G1"
+  }
+]

@@ -1,0 +1,288 @@
+[
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "eventId": "EST-DEPA-001",
+    "eventDateTime": "2026-01-15T10:00:00+08:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-01-05T09:00:00+08:00",
+    "description": "Estimated Time of Departure",
+    "transportCall": {
+      "transportCallID": "CNYTN-GA551W",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": "GA551W",
+      "importVoyageNumber": null
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "eventId": "EST-ARRI-001",
+    "eventDateTime": "2026-02-20T06:00:00+01:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-01-05T09:00:00+01:00",
+    "description": "Estimated Time of Arrival",
+    "transportCall": {
+      "transportCallID": "PLGDN-GA551W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA551W"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "eventId": "EQP-GTIN-001",
+    "eventDateTime": "2026-01-10T08:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-10T08:00:00+08:00",
+    "description": "Export received at CY",
+    "equipmentReference": "TEST1234567",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNYTNTRB",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "TRUCK",
+      "vessel": null,
+      "exportVoyageNumber": null,
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "YANTIAN",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL002", "sealSource": "CAR" }],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "eventId": "EST-ARRI-002",
+    "eventDateTime": "2026-02-25T08:00:00+01:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-01-12T14:00:00+01:00",
+    "description": "Estimated Time of Arrival",
+    "transportCall": {
+      "transportCallID": "PLGDN-GA551W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA551W"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "eventId": "EQP-LOAD-001",
+    "eventDateTime": "2026-01-16T06:00:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T06:00:00+08:00",
+    "description": "Export Loaded on Vessel",
+    "equipmentReference": "TEST1234567",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "CNYTN-GA551W",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": "GA551W",
+      "importVoyageNumber": null
+    },
+    "eventLocation": {
+      "locationName": "YANTIAN",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL002", "sealSource": "CAR" }],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "DEPA",
+    "eventId": "ACT-DEPA-001",
+    "eventDateTime": "2026-01-16T10:30:00+08:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-01-16T10:30:00+08:00",
+    "description": "Vessel Departure",
+    "transportCall": {
+      "transportCallID": "CNYTN-GA551W",
+      "unLocationCode": "CNYTN",
+      "facilityCode": "YICT",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": "GA551W",
+      "importVoyageNumber": null
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "eventId": "EST-ARRI-003",
+    "eventDateTime": "2026-02-22T14:00:00+01:00",
+    "eventClassifierCode": "EST",
+    "eventCreatedDateTime": "2026-01-20T08:00:00+01:00",
+    "description": "Estimated Time of Arrival",
+    "transportCall": {
+      "transportCallID": "PLGDN-GA551W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA551W"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "TRANSPORT",
+    "transportEventTypeCode": "ARRI",
+    "eventId": "ACT-ARRI-001",
+    "eventDateTime": "2026-02-21T18:30:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-02-21T18:30:00+01:00",
+    "description": "Vessel Arrival",
+    "transportCall": {
+      "transportCallID": "PLGDN-GA551W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA551W"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "references": []
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "eventId": "EQP-DISC-001",
+    "eventDateTime": "2026-02-22T04:00:00+01:00",
+    "eventClassifierCode": "ACT",
+    "eventCreatedDateTime": "2026-02-22T04:00:00+01:00",
+    "description": "Import Discharged from Vessel",
+    "equipmentReference": "TEST1234567",
+    "ISOEquipmentCode": "4510",
+    "emptyIndicatorCode": "LADEN",
+    "transportCall": {
+      "transportCallID": "PLGDN-GA551W",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG",
+      "facilityTypeCode": "POTE",
+      "modeOfTransport": "VESSEL",
+      "vessel": {
+        "vesselIMONumber": "9461441",
+        "vesselName": "MSC BARI",
+        "vesselFlag": "LR",
+        "vesselCallSignNumber": "A8YD3"
+      },
+      "exportVoyageNumber": null,
+      "importVoyageNumber": "GA551W"
+    },
+    "eventLocation": {
+      "locationName": "GDANSK",
+      "unLocationCode": "PLGDN",
+      "facilityCode": "PLGDA",
+      "facilityCodeListProvider": "SMDG"
+    },
+    "documentReferences": [
+      { "documentReferenceType": "BKG", "documentReferenceValue": "TEST-ETA-001" }
+    ],
+    "seals": [{ "sealNumber": "TESTSEAL002", "sealSource": "CAR" }],
+    "references": []
+  }
+]

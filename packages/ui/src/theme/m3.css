@@ -1,0 +1,622 @@
+/*
+  FMS Material 3 system tokens (shape · elevation · state layers · motion · surface roles).
+
+  WHY THIS FILE EXISTS
+  --------------------
+  `tokens.v2.css` is a COLOR-ONLY layer. Before this file the codebase had
+  zero radius tokens, zero shadow tokens, zero motion tokens and zero
+  state-layer tokens — ~147 hardcoded `border-radius` literals, 20 distinct
+  hand-written `box-shadow`s and 10 different transition durations were
+  spread across the DynamicTable stylesheets. This file is the missing
+  half of the design system, authored against Material 3.
+
+  WHAT IS ADOPTED FROM MATERIAL 3, AND WHAT IS REJECTED
+  -----------------------------------------------------
+  ADOPTED: shape (the corner ladder), colour ROLES (surface containers,
+  on-surface inks, outline, primary/secondary containers), state layers,
+  elevation (the two-shadow key + ambient model) and motion (the easing
+  and duration sets).
+
+  REJECTED — deliberately, and permanently: M3's touch-first GEOMETRY.
+  M3 specifies a 56dp search bar, 40dp buttons, 48dp list rows and 52dp
+  data-table rows. FMS runs 32 / 26 / 20px rows because logistics
+  dispatchers need the maximum number of shipments on one screen; density
+  is the product requirement, not a preference. So there is deliberately
+  NO spacing scale, NO height scale and NO touch-target scale in this
+  file. Consumers keep their existing dimensions — every `--dt-*` density
+  variable, every row height, every cell padding and all 20 typography
+  tokens are frozen — and take only shape, colour, elevation, state and
+  motion from here. If you find yourself reaching for an M3 size, stop:
+  that is the one part of the spec this system does not implement.
+
+  RELATIONSHIP TO tokens.v2.css
+  -----------------------------
+  Additive, never a replacement. Every colour role here is DERIVED from an
+  existing `-v2` token (or from the same slate/navy/blue ramps the Figma
+  redesign already uses) so the app keeps its identity: the navy
+  `--primary-v2`, the blue `--selection-v2`, the teal `--accent-v2`, the
+  slate table chrome. No new hue is introduced, and this file holds NO raw
+  hex literals — the six it once carried now live in `tokens.v2.css` as
+  `-v2` tokens (`--surface-v2-bright`, `--surface-v2-raised`,
+  `--surface-v2-highest`, `--on-container-v2-primary`,
+  `--on-container-v2-selected`) with their own `.dark` values. Nothing in
+  tokens.v2.css is overridden.
+
+  SHAPE — soft and round, with ONE density floor
+  ----------------------------------------------
+  The ladder is M3's own: 4 / 8 / 12 / 16 / 24 / full. Where a judgement
+  call exists between two radii, take the LARGER one: container corners
+  cost zero vertical space, so density is never an argument against them.
+
+    xs   4px  in-cell chrome, checkboxes, the smallest affordances
+    sm   8px  dense-row elements, inline badges, cell editors, row pills
+    md  12px  menus, popovers, dropdowns, tooltips, context menus
+    lg  16px  pane cards, `.hot-card`, the empty slot, the config panel
+    xl  24px  dialogs, sheets, drawers, large overlays
+    full      everything pill-able: search field, filter chips, status
+              badges, toolbar buttons, the selection action bar,
+              segmented groups, pagination pills, icon buttons (circles)
+
+  DENSITY FLOOR — the one hard limit: anything INSIDE a table row or the
+  header bar stays at `sm` (8px) or `xs` (4px). A 20px dense row cannot
+  carry a 12px corner; it eats the row box and reads as broken, not soft.
+  Rows and header cells are the single exception to "take the larger
+  radius".
+
+  `--m3-shape-full` is `9999px`, not M3-Expressive's `50cqmin`: the
+  container-query form needs a containment context on every pill, which we
+  will not pay for inside a virtualized grid.
+
+  Softness is not only radius. Prefer a tinted `surface-container` step
+  over a hard 1px outline wherever both would read; when an outline IS
+  needed use `--m3-outline-variant`, never the harder `--m3-outline`. Use
+  the two-shadow elevations on overlays, never Tailwind's `shadow-*`. Ease
+  every hover/selected change with `--m3-transition-state` so states ease
+  rather than snap.
+
+  STATE LAYERS
+  ------------
+  M3 defines exactly four state opacities — hover .08, focus .10,
+  pressed .10, dragged .16 — and NO "selected" opacity: selection swaps
+  the CONTAINER colour, then the normal layers composite on top of the new
+  container with the new ink. Both forms are provided:
+    * `--m3-state-layer-*`   → translucent overlays (unknown ground).
+      Use on icon buttons, menu items, chips, toolbar controls.
+    * `--m3-row-*` / `--m3-surface-*` / `--m3-container-*`
+      → PRE-COMPOSITED opaque fills. Use on grid rows and cells.
+  The grid keeps opaque fills on purpose: verification-ledger row 1.28
+  records a real dark-mode defect where translucent row states collapsed
+  into banding against the recessed dark table well. Do not "simplify"
+  grid rows to translucent layers.
+
+  SELECTION IS BLUE, FOCUS IS TEAL
+  --------------------------------
+  `--m3-secondary-container` is the FMS blue (`--row-v2-selected`), not
+  Google's #c2e7ff — selected rows, chips, menu items and segments all use
+  that one role so selection reads identically everywhere. Focus rings are
+  a different signal and use `--accent-v2` (teal), which tokens.v2.css
+  already documents as "the FMS interaction-affirmative colour: focus
+  rings, checked checkboxes, toggled switches". The grid must not focus
+  blue while every primitives-v2 control focuses teal.
+
+  LIGHT / DARK
+  ------------
+  `:root` is light, `.dark` is dark — the same contract as tokens.v2.css,
+  and `.dark` is written LAST so it wins the equal-specificity tie.
+  `.dark` restates every role whose value differs, including the
+  composited fills and state layers whose declaration text is identical,
+  so the block also works when `.dark` sits on a SUBTREE rather than on
+  `<html>`. Keep the two blocks in sync when editing.
+
+  TAILWIND
+  --------
+  Registered through `@theme inline` using namespaces Tailwind v4 already
+  understands, all `m3`-prefixed so nothing collides with the legacy
+  `--radius-*` scale in apps/web/globals.css:
+    --radius-m3-*  → rounded-m3-md, rounded-m3-full
+    --shadow-m3-*  → shadow-m3-2
+    --color-m3-*   → bg-m3-surface-container, border-m3-outline-variant
+    --ease-m3-*    → ease-m3-emphasized
+  Duration tokens are var()-only (Tailwind v4 has no duration namespace);
+  reference them as `transition: … var(--m3-duration-short4)`.
+  `--m3-elevation-0` is deliberately NOT registered as `--shadow-m3-0`:
+  Tailwind v4 emits an invalid declaration for a `none` shadow. Use the
+  built-in `shadow-none` utility, or `var(--m3-elevation-0)` in raw CSS.
+  The following groups are likewise var()-only BY DESIGN, because no
+  Tailwind namespace models them: `--m3-focus-*` and `--m3-transition-*`
+  (multi-part `box-shadow` / `transition` strings), `--m3-shape-*-top` /
+  `-start` / `-end` (four-corner `border-radius` strings),
+  `--m3-duration-*`, the raw ratios `--m3-state-*` and
+  `--m3-disabled-*-opacity`, and the shadow inputs `--m3-shadow-key*` /
+  `--m3-shadow-ambient*`. Everything else in `:root` IS registered — if
+  you add a colour, radius, shadow or easing role, register it too.
+
+  TRAP (repeated from tokens.v2.css): a token added to `:root`/`.dark`
+  but NOT to the `@theme inline` block has no utility class and works
+  only through raw `var()`. Four v2 tokens already have that bug — do not
+  add a fifth here.
+
+  Consumers:
+    - `apps/web/src/app/globals.css` (imported directly after tokens.v2.css)
+    - `packages/ui/.storybook/preview.css`
+*/
+
+@theme inline {
+  /* ---- Shape ---- */
+  --radius-m3-none: var(--m3-shape-none);
+  --radius-m3-2xs: var(--m3-shape-2xs);
+  --radius-m3-xs: var(--m3-shape-xs);
+  --radius-m3-sm: var(--m3-shape-sm);
+  --radius-m3-md: var(--m3-shape-md);
+  --radius-m3-lg: var(--m3-shape-lg);
+  --radius-m3-xl: var(--m3-shape-xl);
+  --radius-m3-full: var(--m3-shape-full);
+
+  /* ---- Elevation (level 0 is `shadow-none`; see the header) ---- */
+  --shadow-m3-1: var(--m3-elevation-1);
+  --shadow-m3-2: var(--m3-elevation-2);
+  --shadow-m3-3: var(--m3-elevation-3);
+  --shadow-m3-4: var(--m3-elevation-4);
+  --shadow-m3-5: var(--m3-elevation-5);
+
+  /* ---- Surface roles ---- */
+  --color-m3-surface: var(--m3-surface);
+  --color-m3-surface-dim: var(--m3-surface-dim);
+  --color-m3-surface-bright: var(--m3-surface-bright);
+  --color-m3-surface-container-lowest: var(--m3-surface-container-lowest);
+  --color-m3-surface-container-low: var(--m3-surface-container-low);
+  --color-m3-surface-container: var(--m3-surface-container);
+  --color-m3-surface-container-high: var(--m3-surface-container-high);
+  --color-m3-surface-container-highest: var(--m3-surface-container-highest);
+  --color-m3-on-surface: var(--m3-on-surface);
+  --color-m3-on-surface-variant: var(--m3-on-surface-variant);
+  --color-m3-outline: var(--m3-outline);
+  --color-m3-outline-variant: var(--m3-outline-variant);
+  --color-m3-outline-faint: var(--m3-outline-faint);
+  --color-m3-scrim: var(--m3-scrim);
+
+  /* ---- Accent / selection roles ---- */
+  --color-m3-primary: var(--m3-primary);
+  --color-m3-on-primary: var(--m3-on-primary);
+  --color-m3-primary-container: var(--m3-primary-container);
+  --color-m3-on-primary-container: var(--m3-on-primary-container);
+  --color-m3-secondary-container: var(--m3-secondary-container);
+  --color-m3-on-secondary-container: var(--m3-on-secondary-container);
+  --color-m3-accent: var(--m3-accent);
+  --color-m3-error: var(--m3-error);
+  --color-m3-error-container: var(--m3-error-container);
+  --color-m3-on-error-container: var(--m3-on-error-container);
+  /* ---- The two roles M3 does not ship, and the reason they are here ----
+
+     `--m3-warning*` and `--m3-success*` are defined below in the same
+     container/on-container shape as `error`. They were NEVER registered in
+     this map, and a custom property that is not registered has no utility
+     class — so `bg-m3-warning-container` and `text-m3-on-warning-container`
+     compiled to NOTHING, silently, in every app.
+
+     What that looked like in practice: the documents drawer's warnings rail
+     paints each row with exactly that pair. With neither class emitting, a
+     warning row had no background and no foreground of its own and inherited
+     whatever the rail happened to be — reported, correctly, as "the warnings
+     are not readable". Nothing in the build says a class went missing, which
+     is what let it stand. */
+  --color-m3-warning: var(--m3-warning);
+  --color-m3-warning-container: var(--m3-warning-container);
+  --color-m3-on-warning-container: var(--m3-on-warning-container);
+  --color-m3-success: var(--m3-success);
+  --color-m3-success-container: var(--m3-success-container);
+  --color-m3-on-success-container: var(--m3-on-success-container);
+  --color-m3-focus-ring-color: var(--m3-focus-ring-color);
+
+  /* ---- Composited state fills ---- */
+  --color-m3-surface-hover: var(--m3-surface-hover);
+  --color-m3-surface-pressed: var(--m3-surface-pressed);
+  --color-m3-container-hover: var(--m3-container-hover);
+  --color-m3-container-pressed: var(--m3-container-pressed);
+  --color-m3-row-hover: var(--m3-row-hover);
+  --color-m3-row-pressed: var(--m3-row-pressed);
+  --color-m3-row-selected: var(--m3-row-selected);
+  --color-m3-row-selected-hover: var(--m3-row-selected-hover);
+  --color-m3-row-selected-pressed: var(--m3-row-selected-pressed);
+
+  /* ---- Translucent state layers ---- */
+  --color-m3-state-layer-hover: var(--m3-state-layer-hover);
+  --color-m3-state-layer-focus: var(--m3-state-layer-focus);
+  --color-m3-state-layer-pressed: var(--m3-state-layer-pressed);
+  --color-m3-state-layer-dragged: var(--m3-state-layer-dragged);
+  --color-m3-state-layer-accent-hover: var(--m3-state-layer-accent-hover);
+  --color-m3-state-layer-accent-pressed: var(--m3-state-layer-accent-pressed);
+  --color-m3-state-layer-accent-selected: var(--m3-state-layer-accent-selected);
+  --color-m3-state-layer-error-hover: var(--m3-state-layer-error-hover);
+  --color-m3-state-layer-on-primary-hover: var(--m3-state-layer-on-primary-hover);
+  --color-m3-state-layer-on-primary-pressed: var(--m3-state-layer-on-primary-pressed);
+
+  /* ---- Motion easing ---- */
+  --ease-m3-standard: var(--m3-ease-standard);
+  --ease-m3-standard-decelerate: var(--m3-ease-standard-decelerate);
+  --ease-m3-standard-accelerate: var(--m3-ease-standard-accelerate);
+  --ease-m3-emphasized: var(--m3-ease-emphasized);
+  --ease-m3-emphasized-decelerate: var(--m3-ease-emphasized-decelerate);
+  --ease-m3-emphasized-accelerate: var(--m3-ease-emphasized-accelerate);
+  --ease-m3-linear: var(--m3-ease-linear);
+}
+
+:root {
+  /* ============================================================
+     SHAPE — M3's ladder, applied with a bias toward the larger
+     corner. The ONE limit is the density floor: inside a table row
+     or the header bar, never above `sm`.
+     ============================================================ */
+  --m3-shape-none: 0px;
+  --m3-shape-xs: 4px;      /* in-cell chrome, checkboxes, the smallest affordances */
+  --m3-shape-sm: 8px;      /* dense-row elements, row pills, inline badges, cell editors */
+  --m3-shape-md: 12px;     /* menus, popovers, dropdowns, tooltips, context menus */
+  --m3-shape-lg: 16px;     /* pane cards, .hot-card, the empty slot, the config panel */
+  --m3-shape-xl: 24px;     /* dialogs, sheets, drawers, large overlays */
+  --m3-shape-full: 9999px; /* search field, chips, badges, segments, icon buttons */
+
+  /* Compatibility alias only. The ladder above is the design authority
+     and has no sub-4px step; anything that still asks for `2xs` lands on
+     the 4px floor rather than on a hairline corner. Do not introduce new
+     uses — delete this once nothing references it. */
+  --m3-shape-2xs: var(--m3-shape-xs);
+
+  /* Directional variants (docked surfaces round only their free edge).
+     Derived, so they follow the ladder automatically. */
+  --m3-shape-lg-top: var(--m3-shape-lg) var(--m3-shape-lg) 0 0;
+  --m3-shape-lg-start: var(--m3-shape-lg) 0 0 var(--m3-shape-lg);
+  --m3-shape-lg-end: 0 var(--m3-shape-lg) var(--m3-shape-lg) 0;
+  --m3-shape-xl-top: var(--m3-shape-xl) var(--m3-shape-xl) 0 0;
+
+  /* ============================================================
+     ELEVATION — M3's two-shadow model (key .30 + ambient .15),
+     collapsed into a single box-shadow string per level.
+     Levels map to dp 0 / 1 / 3 / 6 / 8 / 12.
+     RULE: in-flow chrome steps the surface-container ROLE and stays
+     at level 0. Only true overlays (menus, popovers, dialogs, drag
+     previews, the floating selection bar) carry a shadow.
+     ============================================================ */
+  --m3-shadow-key: 0 0 0;      /* rgb triplet — themable */
+  --m3-shadow-ambient: 0 0 0;
+  --m3-shadow-key-alpha: 0.30;
+  --m3-shadow-ambient-alpha: 0.15;
+
+  --m3-elevation-0: none;
+  --m3-elevation-1:
+    0 1px 2px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 1px 3px 1px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-2:
+    0 1px 2px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 2px 6px 2px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-3:
+    0 1px 3px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 4px 8px 3px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-4:
+    0 2px 3px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 6px 10px 4px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-5:
+    0 4px 4px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 8px 12px 6px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+
+  /* ============================================================
+     SURFACE ROLES — derived from the existing v2 slate ramp.
+     lowest = the grid body (white); the ladder climbs toward chrome.
+     ============================================================ */
+  --m3-surface: var(--page-surface-v2-tint);          /* #F4F5F7 page ground */
+  --m3-surface-dim: var(--border-v2);                 /* #E4E4E7 */
+  --m3-surface-bright: var(--surface-v2-bright);      /* #FFFFFF */
+
+  --m3-surface-container-lowest: var(--background-v2);    /* #FFFFFF — grid body, cards */
+  --m3-surface-container-low: var(--table-v2-row-stripe); /* #F8FAFC — zebra, toolbars */
+  --m3-surface-container: var(--table-v2-header-bg);      /* #F1F5F9 — header bar, menus */
+  --m3-surface-container-high: var(--surface-v2-raised);  /* #E9EEF5 — search field, dialogs */
+  --m3-surface-container-highest: var(--surface-v2-highest); /* #E2E8F0 — neutral selection */
+
+  --m3-on-surface: var(--foreground-v2);              /* #18181A */
+  --m3-on-surface-variant: var(--foreground-v2-muted);/* #71717A — headers, meta, icons */
+  --m3-outline: var(--border-v2-strong);              /* #D4D4D8 — input/segment borders */
+  --m3-outline-variant: var(--border-v2);             /* #E4E4E7 — card + pane outlines */
+  --m3-outline-faint: var(--border-v2-subtle);        /* #EEEEF0 — internal grid lines */
+
+  /* ---- Accent / selection ---- */
+  --m3-primary: var(--primary-v2);                    /* #0E3762 navy */
+  --m3-on-primary: var(--primary-v2-foreground);
+  --m3-primary-container: var(--row-v2-new);          /* #EFF6FF */
+  --m3-on-primary-container: var(--on-container-v2-primary);    /* #0E3762 navy ink */
+  --m3-secondary-container: var(--row-v2-selected);   /* #DBEAFE — THE selection tint */
+  --m3-on-secondary-container: var(--on-container-v2-selected); /* #0E3762 navy on the blue tint */
+  --m3-accent: var(--selection-v2);                   /* #3B82F6 */
+  --m3-error: var(--destructive-v2);
+  --m3-error-container: var(--table-v2-row-warning);    /* #FEF2F2 — same hex as the status error bg */
+  --m3-on-error-container: var(--status-v2-error-text); /* #991B1B */
+
+  --m3-scrim: rgb(0 0 0 / 0.32);                      /* M3 scrim = on-surface @ 32% */
+
+  /* ============================================================
+     STATE LAYERS — the only four opacities M3 defines.
+     There is NO selected opacity: selection swaps the container.
+     ============================================================ */
+  --m3-state-hover: 0.08;
+  --m3-state-focus: 0.10;
+  --m3-state-pressed: 0.10;
+  --m3-state-dragged: 0.16;
+
+  /* Translucent overlays — for controls sitting on an unknown ground. */
+  --m3-state-layer-hover: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+  --m3-state-layer-focus: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --m3-state-layer-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --m3-state-layer-dragged: color-mix(in srgb, var(--m3-on-surface) 16%, transparent);
+  --m3-state-layer-accent-hover: color-mix(in srgb, var(--m3-accent) 8%, transparent);
+  --m3-state-layer-accent-pressed: color-mix(in srgb, var(--m3-accent) 10%, transparent);
+  --m3-state-layer-accent-selected: color-mix(in srgb, var(--m3-accent) 12%, transparent);
+  --m3-state-layer-error-hover: color-mix(in srgb, var(--m3-error) 8%, transparent);
+  --m3-state-layer-on-primary-hover: color-mix(in srgb, var(--m3-on-primary) 8%, transparent);
+  --m3-state-layer-on-primary-pressed: color-mix(in srgb, var(--m3-on-primary) 16%, transparent);
+
+  /* Pre-composited OPAQUE fills — for the grid body, where a translucent
+     layer collapses into banding on the dark recessed well. */
+  --m3-surface-hover: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface));
+  --m3-surface-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, var(--m3-surface-hover));
+  --m3-container-hover: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface-container));
+  --m3-container-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, var(--m3-container-hover));
+
+  /* Grid rows keep the tuned v2 fills as their base — those values were
+     measured against the dense dark grid and must not drift. */
+  --m3-row-hover: var(--row-v2-hover);
+  --m3-row-pressed: color-mix(in srgb, var(--m3-on-surface) 6%, var(--row-v2-hover));
+  --m3-row-selected: var(--m3-secondary-container);
+  --m3-row-selected-hover:
+    color-mix(in srgb, var(--m3-on-secondary-container) 8%, var(--m3-row-selected));
+  --m3-row-selected-pressed:
+    color-mix(in srgb, var(--m3-on-secondary-container) 10%, var(--m3-row-selected-hover));
+
+  /* Focus. M3's ring is 3px at +2px offset; inside a dense grid an
+     outward ring is clipped by the next cell, so the inset form is the
+     default there and costs zero layout. Outward halos only on controls
+     with clearance (the search field, the LayoutsMenu input).
+     The colour is TEAL — focus is a different signal from selection. */
+  --m3-focus-ring-color: var(--accent-v2);
+  --m3-focus-ring-ground: var(--m3-surface-container-lowest); /* the spacer band's ground */
+  --m3-focus-ring: 0 0 0 2px var(--m3-focus-ring-ground), 0 0 0 4px var(--m3-focus-ring-color);
+  --m3-focus-ring-inset: inset 0 0 0 2px var(--m3-focus-ring-color);
+  --m3-focus-halo: 0 0 0 3px color-mix(in srgb, var(--m3-focus-ring-color) 16%, transparent);
+
+  /* Disabled — opacities on the element, not overlays. This is the ONLY
+     legitimate use of opacity in this system: never dim text with it. */
+  --m3-disabled-content-opacity: 0.38;
+  --m3-disabled-container-opacity: 0.12;
+
+  /* ============================================================
+     MOTION
+     `standard` and `emphasized` share a bezier in the M3 token set —
+     the distinction is carried by DURATION, not by the curve.
+     Pairing for this app:
+       row/cell hover, chip select, icon button  → short2 / short4 + standard
+       menu + popover ENTER                      → medium1 + emphasized-decelerate
+       menu + popover EXIT                       → short4  + emphasized-accelerate
+       drawer / side sheet ENTER                 → long1   + emphasized-decelerate
+       drawer / side sheet EXIT                  → medium2 + emphasized-accelerate
+     Exit is ALWAYS shorter than its enter. extra-long is not defined:
+     it has no place in a dense operations tool.
+     ============================================================ */
+  --m3-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --m3-ease-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+  --m3-ease-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --m3-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --m3-ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --m3-ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --m3-ease-linear: cubic-bezier(0, 0, 1, 1);
+
+  --m3-duration-short1: 50ms;
+  --m3-duration-short2: 100ms;
+  --m3-duration-short3: 150ms;
+  --m3-duration-short4: 200ms;
+  --m3-duration-medium1: 250ms;
+  --m3-duration-medium2: 300ms;
+  --m3-duration-medium3: 350ms;
+  --m3-duration-medium4: 400ms;
+  --m3-duration-long1: 450ms;
+  --m3-duration-long2: 500ms;
+
+  /* Canonical transitions — use these instead of `transition: all`. */
+  --m3-transition-state:
+    background-color var(--m3-duration-short2) var(--m3-ease-standard),
+    color var(--m3-duration-short2) var(--m3-ease-standard),
+    border-color var(--m3-duration-short2) var(--m3-ease-standard);
+  --m3-transition-elevation: box-shadow var(--m3-duration-short4) var(--m3-ease-standard);
+
+  /* ── Semantic status ──────────────────────────────────────────────────
+     M3 ships only `error` as a semantic role. A freight desk needs success
+     and warning too — a shipment is delivered, delayed or blocked — so these
+     extend the role set in M3's own container/on-container shape rather than
+     letting the grid reach into the raw `--status-v2-*` palette, which is
+     what it used to do from a handful of scattered rules. */
+  --m3-primary-hover: var(--primary-v2-hover);
+  --m3-success: var(--status-v2-success-text);
+  --m3-success-container: var(--status-v2-success-bg);
+  --m3-on-success-container: var(--status-v2-success-text);
+  --m3-warning: var(--status-v2-warning-text);
+  --m3-warning-container: var(--status-v2-warning-bg);
+  --m3-on-warning-container: var(--status-v2-warning-text);
+
+  /* Skeleton shimmer sweep. Theme-dependent on purpose: a bright sweep that
+     reads on white is a glare on the dark well. */
+  --m3-skeleton-shimmer: rgba(255, 255, 255, 0.5);
+
+  /* ── Annotation palette ───────────────────────────────────────────────
+     User-chosen cell highlight colours. Deliberately NOT M3 roles: they carry
+     no semantic meaning, they are a person marking rows in a spreadsheet, and
+     M3 has no vocabulary for "the seven colours in the swatch picker".
+     They live here anyway so there is exactly ONE place colour is declared.
+     Light = the 100-level tint; `on-` = the ink that stays legible on it. */
+  --m3-annotation-gray: #E5E7EB;
+  --m3-annotation-pink: #FCE7F3;
+  --m3-annotation-orange: #FFEDD5;
+  --m3-annotation-yellow: #FEF9C3;
+  --m3-annotation-green: #DCFCE7;
+  --m3-annotation-blue: #DBEAFE;
+  --m3-annotation-purple: #F3E8FF;
+  --m3-annotation-teal: #CCFBF1;
+  --m3-annotation-red: #FEE2E2;
+  --m3-on-annotation: var(--m3-on-surface);
+
+  /* ── Saved-view identity colours ──────────────────────────────────────
+     The dot beside a saved view's name. A SEPARATE palette from the
+     annotation tints above, deliberately: an annotation is a wash behind
+     cell text and has to stay readable, whereas this is a 24px swatch that
+     has to be told apart from seven others at a glance. Hence full
+     saturation, and no dark variant — an identity colour should not shift
+     when the user flips the theme. Figma 220:2935. */
+  --m3-view-color-blue: #30B3FC;
+  --m3-view-color-green: #26CB7E;
+  --m3-view-color-teal: #0D9488;
+  --m3-view-color-purple: #A860F9;
+  --m3-view-color-pink: #F48BA8;
+  --m3-view-color-red: #F87171;
+  --m3-view-color-orange: #FEB581;
+  --m3-view-color-yellow: #FBE754;
+
+  /* ── Avatar fills ─────────────────────────────────────────────────────
+     Picked deterministically from a name hash, so a given person keeps one
+     colour. Ten of them, full saturation, theme-independent for the same
+     reason the view colours are: an identity should not change with the
+     theme. Used by the @mention picker. */
+  --m3-avatar-1: #3B82F6;
+  --m3-avatar-2: #EF4444;
+  --m3-avatar-3: #10B981;
+  --m3-avatar-4: #F59E0B;
+  --m3-avatar-5: #8B5CF6;
+  --m3-avatar-6: #EC4899;
+  --m3-avatar-7: #06B6D4;
+  --m3-avatar-8: #84CC16;
+  --m3-avatar-9: #F97316;
+  --m3-avatar-10: #6366F1;
+}
+
+.dark {
+  /* Surfaces — the slate ramp, mirrored. `lowest` stays the recessed
+     table well so the grid still reads as a distinct surface, and the
+     five container steps stay visibly distinct:
+     #040A11 → #0F172A → #16203A → #1E293B → #293449. */
+  --m3-surface: var(--page-surface-v2-tint);            /* #0F172A */
+  --m3-surface-dim: var(--surface-v2);                  /* #020617 */
+  --m3-surface-bright: var(--surface-v2-bright);        /* #334155 */
+
+  --m3-surface-container-lowest: var(--table-v2-body-bg);    /* #040A11 */
+  --m3-surface-container-low: var(--background-v2);          /* #0F172A */
+  --m3-surface-container: var(--table-v2-row-stripe);        /* #16203A */
+  --m3-surface-container-high: var(--surface-v2-raised);     /* #1E293B */
+  --m3-surface-container-highest: var(--surface-v2-highest); /* #293449 */
+
+  --m3-on-surface: var(--foreground-v2);                /* #F8FAFC */
+  --m3-on-surface-variant: var(--foreground-v2-muted);  /* #94A3B8 */
+  --m3-outline: var(--border-v2-strong);                /* #475569 */
+  --m3-outline-variant: var(--border-v2);               /* #334155 */
+  --m3-outline-faint: var(--border-v2-subtle);          /* #1E293B */
+
+  /* Accent / selection */
+  --m3-primary: var(--primary-v2);                  /* #1A5A9E */
+  --m3-on-primary: var(--primary-v2-foreground);
+  --m3-primary-container: var(--row-v2-new);        /* #14233A */
+  --m3-on-primary-container: var(--on-container-v2-primary);    /* #DBEAFE */
+  --m3-secondary-container: var(--row-v2-selected); /* #1B324F */
+  --m3-on-secondary-container: var(--on-container-v2-selected); /* #E2E8F0 — light ink on the dark tint */
+  --m3-accent: var(--selection-v2);                 /* #3B82F6 */
+  --m3-error: var(--destructive-v2);
+  --m3-error-container: var(--table-v2-row-warning);   /* #450A0A */
+  --m3-on-error-container: var(--status-v2-error-text);/* #FECACA */
+
+  /* Shadows barely register on a dark ground; M3 leans on the container
+     step instead. Raise the alphas so overlays still detach, and keep
+     the geometry identical. */
+  --m3-shadow-key-alpha: 0.55;
+  --m3-shadow-ambient-alpha: 0.35;
+  --m3-scrim: rgb(0 0 0 / 0.55);
+
+  --m3-elevation-1:
+    0 1px 2px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 1px 3px 1px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-2:
+    0 1px 2px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 2px 6px 2px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-3:
+    0 1px 3px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 4px 8px 3px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-4:
+    0 2px 3px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 6px 10px 4px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+  --m3-elevation-5:
+    0 4px 4px 0 rgb(var(--m3-shadow-key) / var(--m3-shadow-key-alpha)),
+    0 8px 12px 6px rgb(var(--m3-shadow-ambient) / var(--m3-shadow-ambient-alpha));
+
+  /* Focus stays teal; in dark `--accent-v2` is the brighter #2DD4BF, and
+     the ring's spacer band follows the dark grid body. */
+  --m3-focus-ring-color: var(--accent-v2);
+  --m3-focus-ring-ground: var(--m3-surface-container-lowest);
+
+  /* ---- Mirror of the derived block in `:root` ----------------------
+     Identical declaration text, restated so `.dark` also resolves when
+     it is applied to a SUBTREE rather than to <html>. Edit both. */
+  --m3-state-layer-hover: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+  --m3-state-layer-focus: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --m3-state-layer-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --m3-state-layer-dragged: color-mix(in srgb, var(--m3-on-surface) 16%, transparent);
+  --m3-state-layer-accent-hover: color-mix(in srgb, var(--m3-accent) 8%, transparent);
+  --m3-state-layer-accent-pressed: color-mix(in srgb, var(--m3-accent) 10%, transparent);
+  --m3-state-layer-accent-selected: color-mix(in srgb, var(--m3-accent) 12%, transparent);
+  --m3-state-layer-error-hover: color-mix(in srgb, var(--m3-error) 8%, transparent);
+  --m3-state-layer-on-primary-hover: color-mix(in srgb, var(--m3-on-primary) 8%, transparent);
+  --m3-state-layer-on-primary-pressed: color-mix(in srgb, var(--m3-on-primary) 16%, transparent);
+
+  --m3-surface-hover: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface));
+  --m3-surface-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, var(--m3-surface-hover));
+  --m3-container-hover: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface-container));
+  --m3-container-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, var(--m3-container-hover));
+
+  /* Row pressed: in dark the ink is light, so the mix LIGHTENS — which
+     is M3's intent. The base stays the measured v2 hover fill. */
+  --m3-row-hover: var(--row-v2-hover);
+  --m3-row-pressed: color-mix(in srgb, var(--m3-on-surface) 6%, var(--row-v2-hover));
+  --m3-row-selected: var(--m3-secondary-container);
+  --m3-row-selected-hover:
+    color-mix(in srgb, var(--m3-on-secondary-container) 8%, var(--m3-row-selected));
+  --m3-row-selected-pressed:
+    color-mix(in srgb, var(--m3-on-secondary-container) 10%, var(--m3-row-selected-hover));
+
+  --m3-focus-ring: 0 0 0 2px var(--m3-focus-ring-ground), 0 0 0 4px var(--m3-focus-ring-color);
+  --m3-focus-ring-inset: inset 0 0 0 2px var(--m3-focus-ring-color);
+  --m3-focus-halo: 0 0 0 3px color-mix(in srgb, var(--m3-focus-ring-color) 16%, transparent);
+
+  /* Status containers already carry their own dark values through the
+     `--status-v2-*` palette, so only the two theme-dependent extras and the
+     annotation fills are restated here. */
+  --m3-skeleton-shimmer: rgba(255, 255, 255, 0.1);
+
+  /* The light 100-level tints render as glaring pastel boxes on the dark well
+     and the cell's near-white ink is unreadable on them. Same hue, dark wash:
+     the 500-level colour at 25% over the page surface. */
+  --m3-annotation-gray: color-mix(in srgb, #9CA3AF 25%, var(--background-v2));
+  --m3-annotation-pink: color-mix(in srgb, #EC4899 25%, var(--background-v2));
+  --m3-annotation-orange: color-mix(in srgb, #F97316 25%, var(--background-v2));
+  --m3-annotation-yellow: color-mix(in srgb, #EAB308 25%, var(--background-v2));
+  --m3-annotation-green: color-mix(in srgb, #22C55E 25%, var(--background-v2));
+  --m3-annotation-blue: color-mix(in srgb, #3B82F6 25%, var(--background-v2));
+  --m3-annotation-purple: color-mix(in srgb, #A855F7 25%, var(--background-v2));
+  --m3-annotation-teal: color-mix(in srgb, #14B8A6 25%, var(--background-v2));
+  --m3-annotation-red: color-mix(in srgb, #EF4444 25%, var(--background-v2));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --m3-duration-short1: 1ms;
+    --m3-duration-short2: 1ms;
+    --m3-duration-short3: 1ms;
+    --m3-duration-short4: 1ms;
+    --m3-duration-medium1: 1ms;
+    --m3-duration-medium2: 1ms;
+    --m3-duration-medium3: 1ms;
+    --m3-duration-medium4: 1ms;
+    --m3-duration-long1: 1ms;
+    --m3-duration-long2: 1ms;
+  }
+}

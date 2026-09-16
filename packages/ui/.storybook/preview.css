@@ -1,0 +1,76 @@
+/*
+  Storybook runs outside Next.js, so we load Geist + Geist Mono from
+  Google Fonts. In apps/web both fonts come from `next/font/google`
+  and expose the same CSS variables. Must come before all other rules.
+*/
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400&display=swap');
+@import "tailwindcss";
+/*
+  Storybook only renders v2 components, so we load only the v2 tokens
+  here. The legacy tokens live in `apps/web/src/app/globals.css` and
+  aren't needed in the design-system Storybook.
+*/
+@import "../src/theme/tokens.v2.css";
+/* Material 3 system tokens — same position as in apps/web/globals.css
+   (immediately after tokens.v2.css, whose `-v2` tokens it resolves into). */
+@import "../src/theme/m3.css";
+@import "../src/theme/typography.css";
+
+/*
+  DynamicTable stylesheets, in the SAME order as apps/web/globals.css:
+  DynamicTable.css → DynamicTable.v2.css → density.css → dateCell.css →
+  ContextMenu.css → SearchBar.css. That order is a load-bearing cascade
+  contract (density.css overrides the v2 row box model; dateCell.css reads
+  the same [data-density-level] attribute).
+
+  Why they are listed here even though DynamicTable.tsx / ContextMenu.tsx /
+  SearchBar.tsx `import()` four of them at runtime: density.css and
+  dateCell.css are imported by NO component, so without these lines
+  Storybook renders the grid with no density scale at all, and any grid
+  chrome that moves into ContextMenu.css / SearchBar.css would silently
+  vanish from the only visual-review harness we have. The duplicate load of
+  the four component-imported files is a no-op — identical rules at
+  identical specificity.
+*/
+@import "../src/backend/dynamic-table/styles/DynamicTable.css";
+@import "../src/backend/dynamic-table/styles/DynamicTable.v2.css";
+@import "../src/backend/dynamic-table/styles/density.css";
+@import "../src/backend/dynamic-table/styles/dateCell.css";
+@import "../src/backend/dynamic-table/styles/ContextMenu.css";
+@import "../src/backend/dynamic-table/styles/SearchBar.css";
+
+/* Tailwind v4 `dark:` variant — declared here because tokens.v2.css
+   ships a `.dark { … }` block whose values should activate when an
+   ancestor toggles `class="dark"`. */
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Provide the same `--font-geist-{sans,mono}` variables that
+  apps/web's `next/font/google` would inject onto `<body>`. The
+  typography utilities (`text-heading-bold-md`, etc.) reference
+  `var(--font-sans)` indirectly via Tailwind's `--font-sans` slot,
+  so we map it to Geist here.
+*/
+:root {
+  --font-geist-sans: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-geist-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* The legacy tokens are not loaded here, but `--radius` is: without it
+     `rounded-lg` falls back to Tailwind's 0.5rem in Storybook while the
+     app resolves it to 0.625rem, so shared components looked subtly
+     tighter here than in production. Same value as globals.css. */
+  --radius: 0.625rem;
+}
+
+/* Let native chrome (scrollbars, form controls, caret) follow the theme —
+   otherwise Storybook paints light scrollbars over dark surfaces. */
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background-v2);
+  color: var(--foreground-v2);
+}

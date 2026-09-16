@@ -1,0 +1,2651 @@
+/*
+  DynamicTable — v2 appearance theme layer.
+
+  Opt-in via <DynamicTable appearance="v2" />, which adds `.hot-appearance-v2`
+  to the table root. This file ONLY remaps the grid's existing `--hot-*`
+  custom properties onto the `-v2` design-system tokens (packages/ui/src/theme/
+  tokens.v2.css) and switches the typeface to Geist. It adds no new structural
+  rules and no behavior — re-skin only.
+
+  MATERIAL 3 (2026-08) — this sheet's shape, state, elevation and motion now
+  come from `packages/ui/src/theme/m3.css`. The `--m3-*` roles are the single
+  source of truth here: every radius is a rung of the shape ladder, every
+  control hover is a translucent state layer, every overlay uses the two-shadow
+  elevation model, and every transition names an `--m3-duration-*` /
+  `--m3-ease-*` pair. GRID ROWS deliberately keep OPAQUE fills (`--m3-row-*`) —
+  translucent layers band against the recessed dark well (ledger 1.28).
+  The one hard limit is DENSITY: no row height, cell padding, header height or
+  typography token moves. Corners cost zero vertical space; sizes do not.
+
+  Rules:
+  - No hardcoded hex here. Every color is a `var(--m3-…)` role, or a `-v2`
+    token where no M3 role carries the same value in BOTH themes.
+  - Scoped under `.hot-appearance-v2` so legacy consumers are untouched (the
+    package default is appearance="legacy"). Additive / Tier-3 BC-safe.
+  - tokens.v2.css is already imported by apps/web globals.css and the Storybook
+    preview, so these vars resolve in both contexts.
+
+  Known follow-ups (later phases, NOT here):
+  - Cell-type renderers (badge/mono/number/empty)            → phase 2
+  - Selected-row left accent rail, zebra stripe, density     → phase 3
+  - Popovers/menus portaled to <body> fall outside this
+    scope; they keep legacy vars until phase 3/4 wraps them.
+*/
+
+.hot-appearance-v2 {
+  /* Typeface — Geist (sans) + Geist Mono, wired in apps/web layout.tsx and
+     aliased to --font-sans / --font-mono in globals.css.
+
+     This block used to also carry ~39 `--hot-*` aliases that overrode the
+     base ones in DynamicTable.css. Both sets are gone: rules name their
+     `--m3-*` role directly now. Where the two blocks disagreed, the value
+     that survived is the one THIS block set, because every table container
+     hardcodes `hot-appearance-v2` (DynamicTable.tsx:3291) and the
+     `appearance` prop is a documented no-op — so these were the values
+     actually rendering. */
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+
+/* No wrapper card. The DynamicTable renders flush — any surrounding card or
+   border is the consumer page's responsibility, not the component's. This
+   also strips the legacy toolbar + tabs-row chrome borders so there is no
+   stray line above the perspective tabs or above the column header. */
+.hot-appearance-v2.hot-container {
+  /* Flush (no-card) tables — the container IS the grid body, so it takes the
+     table-body surface (white in light, the recessed dark well in dark). Card
+     list pages override this to transparent below; their grid body gets the
+     same token on `.hot-virtual-container`. */
+  background: var(--m3-surface-container-lowest);
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+/* Full list pages wrap the toolbar+tabs+grid in a `.hot-card`; the container
+   itself then becomes a transparent layout shell so the page canvas shows
+   through behind the lead row (category tabs) and around the floating card. */
+.hot-appearance-v2.hot-container:has(.hot-card) {
+  background: transparent;
+}
+/* The white floating card — toolbar, perspective tabs and grid sit on it.
+   Rounded + hairline border; the lead row above stays outside it. */
+.hot-appearance-v2 .hot-card {
+  /* The whole table widget — toolbar, search, perspective tabs AND grid — sits
+     on one surface (recessed dark well in dark; white in light), distinct from
+     the page canvas around it. The toolbar/tabs stay transparent so they inherit
+     this fill, and the grid's 16px side margins reveal the same color (no gap). */
+  background: var(--m3-surface-container-lowest);
+  /* M3 OUTLINED card: an outline and NO shadow. Softness comes from the 16px
+     corner, not from a drop shadow — in-flow chrome stays at elevation 0 and
+     only true overlays (menus, the drawer, the floating selection bar) cast. */
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-lg);
+  box-shadow: var(--m3-elevation-0);
+  /* `overflow: hidden` is load-bearing: it is what clips the square grid header
+     bar to the card's radius. Do not remove it. */
+  overflow: hidden;
+}
+/* The pill radius lives on this rule, not on the base one, because this rule
+   exists specifically to out-specify the legacy toolbar chrome reset. */
+.hot-appearance-v2.hot-container .hot-toolbar {
+  border: none;
+  border-radius: var(--m3-shape-full);
+}
+.hot-appearance-v2.hot-container .hot-tabs-row {
+  position: relative;
+  display: flex;
+  align-items: flex-end;        /* tabs sit on the rail */
+  padding-right: 16px;
+  border: none;
+  margin-bottom: 8px;
+}
+/* Divider ABOVE the perspectives row, separating the title/search toolbar from
+   the tabs. Drawn as an inset ::before, NOT a full-bleed border: it spans
+   almost the full width with a small gap at each end. */
+.hot-appearance-v2.hot-container .hot-tabs-row::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 0;
+  height: 1px;
+  background: var(--table-v2-divider);
+}
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-tabs-row-spacer {
+  flex: 1;
+}
+/* The TabBar primitive draws its own short border under the tab labels; hide
+   it so only the full-width row rail shows (the active underline is a separate
+   pseudo-element, unaffected). */
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 {
+  border-bottom: none;
+}
+/* Pagination lifted off the rail (tabs are bottom-aligned). The 2px lift puts
+   the pagination's vertical center on the tab labels' center: the tabs bottom-
+   align with text center 18px above the row bottom (4px pt + 20px line-height
+   half + 8px pb), and the 32px-tall pagination center-aligned at +2px lands at
+   that same 18px. */
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-table-pagination {
+  align-self: flex-end;
+  margin-bottom: -2px;
+}
+
+/* Grouped-actions (bulk) bar — collapse animation. The bar is kept mounted and
+   the wrapper animates its height via the grid-rows 0fr↔1fr trick (animatable,
+   unlike `height: auto`), so showing/hiding the band glides instead of snapping
+   the table up/down. `.hot-bulk-bar-inner` is the clipped grid child; the band's
+   8px top/bottom margins live inside it so the breathing room collapses too. */
+.hot-bulk-bar-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--m3-duration-medium1) var(--m3-ease-emphasized);
+}
+.hot-bulk-bar-wrap.is-open {
+  grid-template-rows: 1fr;
+}
+.hot-bulk-bar-inner {
+  min-height: 0;
+  overflow: hidden;
+  /* Fade the band slightly behind the height so it doesn't pop in at 0px. */
+  opacity: 0;
+  /* Exit is always shorter than enter, and accelerates out. */
+  transition: opacity var(--m3-duration-short3) var(--m3-ease-emphasized-accelerate);
+}
+.hot-bulk-bar-wrap.is-open .hot-bulk-bar-inner {
+  opacity: 1;
+  transition: opacity var(--m3-duration-short4) var(--m3-ease-emphasized-decelerate) 60ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hot-bulk-bar-wrap,
+  .hot-bulk-bar-inner {
+    transition: none;
+  }
+}
+
+/* Grouped-actions (bulk) bar — dark navy band shown when >1 row is selected
+   (Figma 546:12289). Floats inside the card with an 8px gutter and rounded
+   corners; the 8px top/bottom margin is the requested breathing room above and
+   below the bar. */
+.hot-appearance-v2.hot-container .hot-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Match a md data row: 44px tall, and the 16px L/R margin lines the band up
+     with the grid (`.hot-virtual-container`) so its width equals the row width.
+     The 8px top/bottom is the breathing room above/below the band. */
+  height: 44px;
+  box-sizing: border-box;
+  margin: 8px 16px;
+  padding: 4px 10px;
+  /* The M3 floating selection bar: a full pill, lifted off the grid on the
+     level-2 two-shadow elevation. Height and margins are unchanged. */
+  border-radius: var(--m3-shape-full);
+  background: var(--m3-primary);
+  color: var(--m3-on-primary);
+  box-shadow: var(--m3-elevation-2);
+}
+/* Scoped under `.hot-bulk-bar` for specificity (0,3,0) so it beats the
+   later-defined `.hot-row-select { width:16px }` (0,2,0) and renders at the
+   same 13×16 as the data-row checkboxes. */
+.hot-appearance-v2 .hot-bulk-bar .hot-bulk-bar-checkbox {
+  flex-shrink: 0;
+  width: 13px;
+  height: 16px;
+  margin: 0;
+}
+/* Count + deselect text use the same body/regular/xs ramp as the grid cells. */
+.hot-appearance-v2 .hot-bulk-bar-count {
+  font-size: var(--text-caption-medium-md, 0.75rem);
+  line-height: var(--text-caption-medium-md--line-height, 1rem);
+  font-weight: var(--text-caption-medium-md--font-weight, 500);
+  white-space: nowrap;
+}
+.hot-appearance-v2 .hot-bulk-bar-spacer {
+  flex: 1;
+}
+/* xs action pill. */
+.hot-appearance-v2 .hot-bulk-bar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 10px;
+  /* M3 text button ON a primary container: no box at rest, a state layer built
+     from `on-primary` on interaction. The old `#ffffff 8%/16%` mixes were raw
+     hex and therefore invisible to any retint of the bar. */
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  border: none;
+  color: var(--m3-on-primary);
+  font-size: var(--text-caption-medium-md, 0.75rem);
+  line-height: var(--text-caption-medium-md--line-height, 1rem);
+  font-weight: var(--text-caption-medium-md--font-weight, 500);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-bulk-bar-action:hover {
+  background-color: var(--m3-state-layer-on-primary-hover);
+}
+.hot-appearance-v2 .hot-bulk-bar-action:active {
+  background-color: var(--m3-state-layer-on-primary-pressed);
+}
+.hot-appearance-v2 .hot-bulk-bar-action:disabled {
+  opacity: var(--m3-disabled-content-opacity);
+  cursor: not-allowed;
+}
+/* Export menu items live in a portaled Radix popover (outside .hot-appearance-v2),
+   so this rule is intentionally unscoped and uses theme popover tokens. */
+.hot-export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--m3-shape-sm);
+  background-color: transparent;
+  border: none;
+  color: var(--m3-on-surface);
+  font-size: var(--text-body-regular-sm, 0.875rem);
+  line-height: var(--text-body-regular-sm--line-height, 1.25rem);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-export-menu-item:hover {
+  background-color: var(--m3-state-layer-hover);
+}
+.hot-export-menu-item:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+.hot-appearance-v2 .hot-bulk-bar-clear {
+  padding: 0 10px;
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  border: none;
+  /* Full-strength `on-primary`, not a 60% alpha wash. Dimming ink with
+     transparency is the one thing this system never does; the button is
+     distinguished by having no container until you touch it. */
+  color: var(--m3-on-primary);
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  line-height: var(--text-body-regular-xs--line-height, 1rem);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-bulk-bar-clear:hover {
+  background-color: var(--m3-state-layer-on-primary-hover);
+}
+.hot-appearance-v2 .hot-bulk-bar-clear:active {
+  background-color: var(--m3-state-layer-on-primary-pressed);
+}
+.hot-appearance-v2 .hot-bulk-bar-clear:disabled {
+  opacity: var(--m3-disabled-content-opacity);
+  cursor: not-allowed;
+}
+
+/* The base sticky-shadow rules paint an always-on `box-shadow` on sticky
+   cells (and, via attribute-PRESENCE selectors, on every ="false" cell too),
+   which reads as a permanent vertical line beside the checkbox + Actions
+   columns. The v2 look is flush/borderless, so drop the shadow on all cells.
+   The selected-row inset rail uses `!important`, so it still wins. */
+.hot-appearance-v2 [data-sticky-left],
+.hot-appearance-v2 [data-sticky-right] {
+  box-shadow: none;
+}
+/* …except: when the grid can still be scrolled horizontally (there's content
+   hidden under the right-pinned Actions column), cast a soft left-edge shadow
+   on that column so it reads as floating above the scrolling content. Toggled
+   by `data-actions-scroll-shadow` on the container (set in DynamicTable from a
+   scroll/resize listener). Higher specificity than the zeroing rule above. */
+/* Sticky-column dividers (Figma) — a SINGLE continuous 1px line on the Actions
+   column's LEFT edge and the checkbox column's RIGHT edge, scroll-triggered
+   (shown only while there's hidden horizontal content, via the container's
+   data-*-scroll-shadow attrs).
+
+   Drawn as an ::after, NOT a `border`: a border miters at the corners against
+   the 2px transparent top/bottom gap borders, so each row's line falls ~4px
+   short and the column reads as dashed. The ::after instead overhangs ±4px into
+   the row gaps and carries a z-index, so the topmost overlapping cell always
+   paints its segment and adjacent segments merge into ONE unbroken line. Both
+   the header cell AND the body cells carry it, so the line runs continuously
+   from the column header through the last row. */
+/* The base `.hot-cell { overflow: hidden }` (for text ellipsis) would CLIP the
+   divider ::after's row-gap overhang back to the cell, re-segmenting the line.
+   These sticky cells hold only a checkbox / kebab (no text to clip), so let
+   their overflow escape — out-specifies the base `.hot-cell` rule. */
+.hot-appearance-v2 td.hot-actions-cell,
+.hot-appearance-v2 td.hot-row-header,
+.hot-appearance-v2 th.hot-col-header[data-actions-cell="true"],
+.hot-appearance-v2 th.hot-row-header {
+  overflow: visible;
+}
+/* The Actions column isn't an editable grid cell — drop the inherited
+   `cursor: cell` (crosshair/"+") so it reads as a normal column. */
+.hot-appearance-v2 td.hot-actions-cell {
+  cursor: default;
+}
+.hot-appearance-v2 td.hot-actions-cell::after,
+.hot-appearance-v2 th.hot-col-header[data-actions-cell="true"]::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  width: 1px;
+  background: var(--table-v2-divider);
+  pointer-events: none;
+  z-index: 1;
+}
+/* Body cells only — the checkbox HEADER already draws its right divider via the
+   header rule's always-on `border-right` (at its border-box edge). Adding an
+   ::after to the header too would sit 1px inside that border (right:0 =
+   padding-box edge, pushed in by the 1px border) → a visible double line. The
+   body cell has no border, so its ::after lands exactly on the header's
+   border-right → one clean continuous line from header through the rows. */
+.hot-appearance-v2[data-firstcol-scroll-shadow="true"] td.hot-row-header::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  right: 0;
+  width: 1px;
+  background: var(--table-v2-divider);
+  pointer-events: none;
+  z-index: 1;
+}
+/* Frozen-column right divider — the rightmost pinned column gets a SINGLE
+   continuous 1px line on its RIGHT edge, identical to the checkbox column's
+   divider (Figma), rather than a float shadow. Gated on `data-frozen-shadow`,
+   which DynamicTable sets only once the pinned block has reached its sticky point
+   (content sliding under it) — NOT while a not-yet-pinned frozen column is still
+   drifting with the scroll.
+
+   ONLY the BODY cells (`td[data-frozen-edge]`) draw the line — exactly like the
+   checkbox column. The HEADER already carries its own divider via the always-on
+   `th.hot-col-header { border-right }` column separator (rule below), so adding a
+   pseudo-line to the header too produced a 1px-offset DOUBLE line: with
+   border-box sizing the `::before` sits at the padding-box edge, 1px inside the
+   `border-right`. The body cell's `border-right` is none, so its `::before` at
+   `right:0` lands exactly on the header's `border-right` → one continuous line
+   from header through the rows.
+
+   Drawn as an overhanging pseudo-element, NOT a `border`: a border miters against
+   the 2px transparent top/bottom inter-row gap borders so each row's line falls
+   ~4px short and reads as dashed. The ::before overhangs ±4px into the row gaps
+   with a z-index, so adjacent segments merge into ONE unbroken line. `::before` —
+   not `::after` — because data cells already use `::after` for the range-selection
+   outline; the cell's `overflow:hidden` (text ellipsis) is relaxed to `visible`
+   so the overhang isn't clipped (text still ellipses via the inner `.cell-content`,
+   which keeps its own overflow). */
+.hot-appearance-v2 td[data-frozen-edge="true"] {
+  overflow: visible;
+}
+.hot-appearance-v2[data-frozen-shadow="true"] td[data-frozen-edge="true"]::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  right: 0;
+  width: 1px;
+  background: var(--table-v2-divider);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Horizontal-scroll edge overlay for TOOLBAR-LESS embedded/sub-tables (which
+   have no sticky checkbox/Actions columns, so the shadows above never show).
+   A WHITE fade (opaque at the edge → transparent toward the content) pinned to
+   whichever edge still has hidden content, so partial cut-off columns fade out
+   and signal "more this way". Driven by the same scroll-state attributes, so it
+   auto-DISAPPEARS once that edge is fully scrolled. Scoped to
+   `:not(:has(.hot-toolbar))` so it never paints over a list page's toolbar
+   (those tables use the sticky-column shadows instead). */
+.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-actions-scroll-shadow="true"]::after,
+.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-firstcol-scroll-shadow="true"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  /* Above the sticky header (z-index:10) so the fade covers the column-header
+     bar AND the rows, not just the rows. Below popovers/menus (z-index:10000+). */
+  z-index: 15;
+}
+/* Right edge: more content to the RIGHT → fade out toward the right edge. */
+.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-actions-scroll-shadow="true"]::after {
+  right: 0;
+  background: linear-gradient(to right, transparent, var(--background-v2));
+}
+/* Left edge: scrolled right (content hidden LEFT) → fade out toward the left. */
+.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-firstcol-scroll-shadow="true"]::before {
+  left: 0;
+  background: linear-gradient(to left, transparent, var(--background-v2));
+}
+/* Lead row — a custom topBarStart (e.g. category tabs) on its own line above
+   the title on list pages, so it doesn't crowd the title + search + buttons. */
+.hot-appearance-v2 .hot-toolbar-lead-row {
+  display: flex;
+  align-items: center;
+  /* Sits OUTSIDE the card on the page canvas — no horizontal inset (the tabs
+     align to the card's left edge), just a small gap down to the card. */
+  padding: 0 0 10px;
+}
+
+/* Toolbar (v2, Figma 220:2935) — title + search on the left, actions
+   right-aligned, all on ONE row. The search no longer has its own line. */
+/* R8 — the single change that makes a list page read as Drive: the toolbar is
+   a TINTED PILL STRIP floating on the card rather than an invisible band.
+   ZERO vertical cost: the 4px margin is paid for out of the old 8px vertical
+   padding (4+4 padding + 4+4 margin == the previous 8+8 padding), so the block
+   size of the toolbar is unchanged and no data row is lost. */
+.hot-appearance-v2 .hot-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* 16px horizontal, matching `.hot-virtual-container`'s own 16px margin, so
+     the search pill's left edge lines up with the table's first column. It was
+     8px, which put the toolbar 9px from the card and the grid 17px — close
+     enough to look like a mistake rather than a decision, and the same
+     mismatch that was fixed inside split panes. Vertical is unchanged. */
+  margin: 4px 16px;
+  padding: 4px 16px;
+  /* `surface-container`, not `-low`: the tinted pill strip is the most
+     recognisable element of the M3 reference, and `-low` (#F8FAFC) against a
+     #FFFFFF page is a 3-value delta nobody can see. `surface-container`
+     (#F1F5F9 light / #16203A dark) is the step M3 actually specifies for a
+     raised chrome bar and reads clearly in both schemes. Costs no height —
+     the 4px margin is absorbed by the toolbar's own vertical padding. */
+  background-color: var(--m3-surface-container);
+  border-radius: var(--m3-shape-full);
+}
+.hot-appearance-v2 .hot-toolbar .hot-toolbar-spacer {
+  flex: 1;
+}
+.hot-appearance-v2 .hot-toolbar .hot-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* The toolbar's own search skin used to live here: a second, competing set of
+   `border` / `border-radius` / `background` / `padding` declarations for the
+   same field SearchBar.css already styles, plus 60px of right padding reserved
+   for a ⌘K pill that no longer renders. It is gone. SearchBar.css loads AFTER
+   this file (see globals.css) and is the single owner of the field, so the
+   search input, its icon and its clear button are skinned in exactly one
+   place. The narrow-container overrides further down still apply. */
+
+/* Align the grid with the toolbar text. The title, search and perspective
+   tabs sit at 16px (the toolbar's padding-left); the grid (column-header bar +
+   rows) otherwise starts flush at the container edge. Use MARGIN (not padding)
+   to inset the scroll container: padding does NOT clip horizontally-scrolling
+   content, so the non-sticky columns would scroll through the padding strip and
+   peek out beside the sticky checkbox/Actions columns. Margin makes the
+   container genuinely narrower, so overflow clips at its border and the sticky
+   columns sit flush at the 16px inset, lined up with "Oferty frachtowe". */
+/* Only inset list-page grids (those with a toolbar) — the 16px aligns the grid
+   with the toolbar title. Embedded/sub-tables render with `hideToolbar` (no
+   `.hot-toolbar`); they should sit flush with their own section title, so they
+   get NO inset. `:has()` scopes the margin to toolbar'd tables only. */
+.hot-appearance-v2.hot-container:has(.hot-toolbar) .hot-virtual-container {
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+/* Bottom breathing room inside the scroll area so the last row clears the
+   horizontal scrollbar (which overlays the container's bottom edge). Modern
+   browsers honour padding at the end of a scroll container, so this extends
+   the scrollable extent past the last row. */
+.hot-appearance-v2 .hot-virtual-container {
+  padding-bottom: 16px;
+  /* Grid-body well — darker than the toolbar/card in dark mode (white in light),
+     so the inter-row gaps and side margins read as one recessed table surface. */
+  background: var(--m3-surface-container-lowest);
+}
+
+/* Grid type ramp — body cells use the named typography token (12/16),
+   matching Figma `body/regular/xs`. The legacy default is Arial 13px. */
+.hot-appearance-v2 .hot-table {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  line-height: var(--text-body-regular-xs--line-height, 1rem);
+}
+/* The base `.hot-container .hot-table th, td { font-size: 14px }` (specificity
+   0,3,1) sits DIRECTLY on the cells, so it overrides the font-size inherited
+   from `.hot-table` above (0,2,1) — which means custom-renderer cells (whose
+   content is a direct <td> child, e.g. offers/invoicing/products) render at the
+   legacy 14px while the v2 12px never takes effect. Re-assert the token on the
+   cells themselves at higher specificity so the WHOLE grid (default + custom
+   renderers) uses Figma `body/regular/xs` (12/16). Per-cell overrides like
+   `.cell-mono` / explicit `text-[10px]` badges still win (they're on the inner
+   span). */
+.hot-appearance-v2.hot-container .hot-table td,
+.hot-appearance-v2.hot-container .hot-table th {
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  line-height: var(--text-body-regular-xs--line-height, 1rem);
+}
+
+/* Toolbar title → Figma 220:2935 `heading/bold/md` (16/24, ls -2.5%). */
+.hot-appearance-v2 .hot-toolbar-title {
+  font-size: var(--text-heading-bold-md, 1rem);
+  line-height: var(--text-heading-bold-md--line-height, 1.5rem);
+  letter-spacing: var(--text-heading-bold-md--letter-spacing, -0.025em);
+  font-weight: var(--text-heading-bold-md--font-weight, 700);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   v2 cell presentation — phase 2
+
+   These classes are opt-in per column (ColumnDef.type='badge', .mono,
+   .align) so they're additive and work regardless of appearance. Colors
+   come from the global --status-v2-* tokens, never hardcoded.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Alignment — text-align handles the wrapped .cell-content (text/badge);
+   justify-content handles the custom-renderer path (no inner span). */
+.hot-cell.cell-align-right { justify-content: flex-end; }
+.hot-cell.cell-align-right > .cell-content { text-align: right; }
+.hot-cell.cell-align-center { justify-content: center; }
+.hot-cell.cell-align-center > .cell-content { text-align: center; }
+
+/* Monospace (Geist Mono) — refs / codes / dates / amounts. */
+.hot-cell.cell-mono {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace);
+  font-size: var(--text-code-regular-sm, 0.75rem);
+  line-height: var(--text-code-regular-sm--line-height, 1rem);
+}
+
+/* Select / dropdown cell (type:'dropdown' | 'multiselect') — bordered control
+   at rest (Figma `select`: radius 10, border #D4D4D8, "Wybierz…" + chevron).
+   Scoped to v2 so legacy dropdown cells keep plain text. */
+.hot-appearance-v2 .hot-cell.cell-select { padding: 4px 6px; }
+.hot-appearance-v2 .hot-cell.cell-select > .cell-content {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--m3-outline);
+  /* Density floor: this pill lives inside a 32px row, so it takes `sm` — the
+     largest rung the floor allows — and now matches the row pill exactly. */
+  border-radius: var(--m3-shape-sm);
+  padding: 5px 30px 5px 10px;
+  background-color: var(--background-v2);
+  /* `stroke='currentColor'` — the chevron used to be a hardcoded #71717A, i.e.
+     invisible to dark mode. It now follows the cell's ink. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  color: var(--m3-on-surface);
+  line-height: 18px;
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-cell.cell-select:hover > .cell-content {
+  border-color: var(--m3-on-surface-variant);
+}
+/* Empty select cell → "Wybierz…" placeholder (overrides the em-dash). */
+.hot-appearance-v2 .hot-cell.cell-select > .cell-content:empty::after {
+  content: "Wybierz\2026";
+  color: var(--m3-on-surface-variant);
+}
+
+/* Status badge pill (type:'badge') — Figma `label/semibold/xs`, radius 9999.
+   NOTE: set only border-width/-style here, NEVER border-color (not even via
+   the `border` shorthand). This rule's specificity (0,2,0) outranks each
+   `.cell-badge-<variant>` `border-color` (0,1,0); pinning the color here —
+   transparent or otherwise — would hide every variant's Figma border. */
+.hot-cell .cell-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  /* D4 — M3 chip FORM (a full pill, container + on-container ink, a 1px
+     outline only where the variant already declares one), FMS semantic hues.
+     Never set `border-color` (or the `border` shorthand) here: this rule
+     out-specifies every `.cell-badge-<variant>` and would flatten all 12. */
+  border-radius: var(--m3-shape-full);
+  border-width: 1px;
+  border-style: solid;
+  white-space: nowrap;
+  font-size: var(--text-label-semibold-xs, 0.75rem);
+  line-height: var(--text-label-semibold-xs--line-height, 1rem);
+  font-weight: var(--text-label-semibold-xs--font-weight, 600);
+}
+.cell-badge-neutral { background: var(--status-v2-neutral-bg); border-color: var(--status-v2-neutral-border); color: var(--status-v2-neutral-text); }
+.cell-badge-primary { background: var(--status-v2-primary-bg); border-color: var(--status-v2-primary-border); color: var(--status-v2-primary-text); }
+.cell-badge-outline { background: var(--status-v2-outline-bg); border-color: var(--status-v2-outline-border); color: var(--status-v2-outline-text); }
+.cell-badge-success { background: var(--status-v2-success-bg); border-color: var(--status-v2-success-border); color: var(--status-v2-success-text); }
+.cell-badge-error   { background: var(--status-v2-error-bg);   border-color: var(--status-v2-error-border);   color: var(--status-v2-error-text); }
+.cell-badge-warning { background: var(--status-v2-warning-bg); border-color: var(--status-v2-warning-border); color: var(--status-v2-warning-text); }
+.cell-badge-info    { background: var(--status-v2-info-bg);    border-color: var(--status-v2-info-border);    color: var(--status-v2-info-text); }
+.cell-badge-purple  { background: var(--status-v2-purple-bg);  border-color: var(--status-v2-purple-border);  color: var(--status-v2-purple-text); }
+.cell-badge-teal    { background: var(--status-v2-teal-bg);    border-color: var(--status-v2-teal-border);    color: var(--status-v2-teal-text); }
+.cell-badge-orange  { background: var(--status-v2-orange-bg);  border-color: var(--status-v2-orange-border);  color: var(--status-v2-orange-text); }
+.cell-badge-sky     { background: var(--status-v2-sky-bg);     border-color: var(--status-v2-sky-border);     color: var(--status-v2-sky-text); }
+.cell-badge-rose    { background: var(--status-v2-rose-bg);    border-color: var(--status-v2-rose-border);    color: var(--status-v2-rose-text); }
+
+/* Empty cell → em-dash. Scoped to v2 so legacy keeps rendering blank.
+   Applies to non-custom text/numeric/date renderers that return '' (their
+   .cell-content span is :empty). Custom renderers manage their own empties. */
+.hot-appearance-v2 .hot-cell > .cell-content:empty::after {
+  content: "—";
+  color: var(--m3-on-surface-variant);
+}
+
+/* Zebra striping (striped prop) — alternate rows get the secondary surface.
+   Row-range selection keeps its !important background, so it still wins; the
+   second rule re-asserts hover at higher specificity so even rows still
+   respond to hover. */
+/* NOTE: these use `background-color` (longhand), NOT the `background`
+   shorthand — the shorthand resets `background-clip` to border-box, which
+   would defeat the padding-box inset that creates the inter-row gap. */
+.hot-appearance-v2[data-striped="true"] tbody tr[data-row-even="true"] td.hot-cell,
+.hot-appearance-v2[data-striped="true"] tbody tr[data-row-even="true"] td.hot-row-header {
+  background-color: var(--table-v2-row-stripe);
+}
+.hot-appearance-v2[data-striped="true"] tbody tr[data-row-even="true"] td.hot-cell:hover:not([data-save-state]) {
+  background-color: var(--m3-row-hover);
+}
+
+/* Checkbox-selected row — pale-blue fill (Figma), covering data cells AND the
+   row-header (checkbox) cell so the whole row is uniform. `!important` so it
+   wins over the zebra stripe + per-cell hover regardless of row parity. */
+.hot-appearance-v2 tbody tr[data-row-checked="true"] td.hot-cell:not([class*="cell-color-"]),
+.hot-appearance-v2 tbody tr[data-row-checked="true"] td.hot-row-header {
+  background-color: var(--m3-row-selected) !important;
+}
+/* M3 composites the hover layer ON TOP of the selected container rather than
+   replacing it, so a checked row still answers the pointer instead of going
+   inert. Pre-composited and OPAQUE — a translucent layer bands against the
+   recessed dark well (ledger 1.28). Same specificity as the rule above,
+   declared after it, so it wins only while hovered. */
+.hot-appearance-v2 tbody tr[data-row-checked="true"] td.hot-cell:not([class*="cell-color-"]):hover,
+.hot-appearance-v2 tbody tr[data-row-checked="true"] td.hot-row-header:hover {
+  background-color: var(--m3-row-selected-hover) !important;
+}
+
+/* Row-range selection (v2) — flat pale-blue, same as the checkbox selection.
+   The legacy treatment turns the row-header NAVY (`--hot-selection-color`) and
+   adds navy inset border lines on the cells. This is the "strange navy
+   first-row/first-column" after cancelling an add-row: the grid auto-selects
+   row 0 as a RANGE, so the trigger is `data-in-row-range` (NOT
+   `data-row-selected`). The selectors are deliberately high specificity
+   (≥ (0,5,1)) to beat the base nth-child + multi-attr box-shadow rules
+   (up to (0,4,3) !important). */
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table td[data-in-row-range="true"],
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table .hot-row-header[data-in-row-range="true"],
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table tr[data-row-selected="true"] td,
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table tr[data-row-selected="true"] .hot-row-header {
+  background-clip: padding-box !important;
+  color: var(--m3-on-surface) !important;
+  box-shadow: none !important;
+}
+/* Pale-blue fill only on un-annotated cells — colored cells keep their
+   annotation color (the row header + the rest of the row convey selection). */
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table td[data-in-row-range="true"]:not([class*="cell-color-"]),
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table .hot-row-header[data-in-row-range="true"],
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table tr[data-row-selected="true"] td:not([class*="cell-color-"]),
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table tr[data-row-selected="true"] .hot-row-header {
+  background-color: var(--m3-row-selected) !important;
+}
+/* Row-header must not darken to navy/grey when a cell in its row is selected. */
+.hot-appearance-v2 .hot-row-header[data-has-selected-cell="true"] {
+  background-color: var(--m3-surface-container-lowest) !important;
+  color: var(--m3-on-surface) !important;
+}
+
+/* Cell / range selection (v2) — match the row-selected look: a flat pale-blue
+   fill with NO border outline. `box-shadow: none !important` strips the base
+   navy inset borders (cell + every range-edge variant); background-color
+   (longhand) keeps the inter-row gap intact. `background-clip: padding-box
+   !important` is required because the base `td[data-in-range]` rule uses the
+   `background` shorthand with !important, which would otherwise force
+   border-box clip and make the fill overhang the row (taller than the row bg). */
+.hot-appearance-v2 td[data-cell-selected="true"],
+.hot-appearance-v2 td[data-in-range="true"] {
+  box-shadow: none !important;
+  background-clip: padding-box !important;
+}
+/* Plain (un-annotated) selected cells get the soft blue-50 fill (Figma Frame
+   142) — same as the new/add row in LIGHT, lighter than the blue-100
+   checkbox-selected row.
+   `--range-v2-fill` rather than `--row-v2-new` directly: in DARK the new-row
+   mirror (#14233A) sat within a couple of steps of the #1E293B row hover, so a
+   multi-cell selection read as row banding instead of as a selection (ledger
+   row 1.28). The token carries the per-theme answer; light is unchanged. */
+.hot-appearance-v2 td[data-cell-selected="true"]:not([class*="cell-color-"]),
+.hot-appearance-v2 td[data-in-range="true"]:not([class*="cell-color-"]) {
+  background-color: var(--range-v2-fill, var(--m3-primary-container)) !important;
+}
+/* Drag-selected cell range — a 1px dotted #3B82F6 outline on the OUTER edges of
+   the selection rectangle (per-edge via the `data-range-*` attrs), so internal
+   cell boundaries stay clean. Drawn on an inset ::after (no layout shift, never
+   clips text). The outline only appears once the drag FINISHES: DynamicTable
+   sets `data-range-phase="committed"` on mouseup (fade in) and flips it to
+   `"exiting"` on deselect (fade out) before the selection actually clears. While
+   dragging, the attribute is absent → fill only, no outline. */
+/* The committed outline pulses its opacity 0↔1 forever (fade in / fade out)
+   while the range stays selected; on deselect it does one last fade to 0. */
+@keyframes hot-range-outline-pulse {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes hot-range-outline-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.hot-appearance-v2[data-range-phase] td[data-in-range="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.hot-appearance-v2[data-range-phase="committed"] td[data-in-range="true"]::after {
+  animation: hot-range-outline-pulse 1.1s var(--m3-ease-standard) infinite alternate;
+}
+.hot-appearance-v2[data-range-phase="exiting"] td[data-in-range="true"]::after {
+  animation: hot-range-outline-out var(--m3-duration-short3) var(--m3-ease-emphasized-accelerate) forwards;
+}
+/* The committed outline pulses FOREVER while a range stays selected. Motion
+   that cannot be switched off and never ends is an accessibility failure, so
+   hold it at full strength instead — the outline still marks the range. */
+@media (prefers-reduced-motion: reduce) {
+  .hot-appearance-v2[data-range-phase="committed"] td[data-in-range="true"]::after,
+  .hot-appearance-v2[data-range-phase="exiting"] td[data-in-range="true"]::after {
+    animation: none;
+    opacity: 1;
+  }
+}
+.hot-appearance-v2[data-range-phase] td[data-in-range="true"][data-range-top="true"]::after { border-top: 2px dotted var(--m3-accent); }
+.hot-appearance-v2[data-range-phase] td[data-in-range="true"][data-range-bottom="true"]::after { border-bottom: 2px dotted var(--m3-accent); }
+.hot-appearance-v2[data-range-phase] td[data-in-range="true"][data-range-left="true"]::after { border-left: 2px dotted var(--m3-accent); }
+.hot-appearance-v2[data-range-phase] td[data-in-range="true"][data-range-right="true"]::after { border-right: 2px dotted var(--m3-accent); }
+/* Annotation palette mirrored as variables. `--cell-anno-bg` (the light fill)
+   lets the selected-state rule below RE-ASSERT the color — the base
+   `td[data-in-range] { background: … !important }` rule (DynamicTable.css)
+   outranks a plain color class, so it must be re-applied with !important when
+   the cell is selected. `--cell-anno-fg` (a darker shade of the same hue, the
+   palette's -700) is the matching comment-indicator color. Both inherit to the
+   cell's children. There is no v2 token for the annotation palette, so these hex
+   values duplicate the legacy `.cell-color-*` fills in DynamicTable.css — keep
+   them in sync. */
+.hot-appearance-v2 .cell-color-gray   { --cell-anno-bg: #e5e7eb; --cell-anno-fg: #374151; }
+.hot-appearance-v2 .cell-color-pink   { --cell-anno-bg: #fce7f3; --cell-anno-fg: #be185d; }
+.hot-appearance-v2 .cell-color-orange { --cell-anno-bg: #ffedd5; --cell-anno-fg: #c2410c; }
+.hot-appearance-v2 .cell-color-yellow { --cell-anno-bg: #fef9c3; --cell-anno-fg: #a16207; }
+.hot-appearance-v2 .cell-color-green  { --cell-anno-bg: #dcfce7; --cell-anno-fg: #15803d; }
+.hot-appearance-v2 .cell-color-blue   { --cell-anno-bg: #dbeafe; --cell-anno-fg: #1d4ed8; }
+.hot-appearance-v2 .cell-color-purple { --cell-anno-bg: #f3e8ff; --cell-anno-fg: #7e22ce; }
+
+/* Dark-mode annotation palette. The light fills above (#dcfce7 etc.) rendered as
+   glaring pastel boxes under the `.dark` class — and the cell's near-white text
+   (--hot-fg) was unreadable on them. Re-tint the fill to a dark wash of the same
+   hue (legacy `.dark .cell-*` uses the same 25% color-mix), and lift --cell-anno-fg
+   (the comment-indicator colour) to a light shade so the badge stays visible.
+   Cell text keeps --hot-fg, now legible on the dark fill. The base @media
+   (prefers-color-scheme: dark) block in DynamicTable.css doesn't track the
+   class-based theme toggle the app uses, so this `.dark` rule is required. */
+.dark .hot-appearance-v2 .cell-color-gray   { --cell-anno-bg: color-mix(in srgb, #9ca3af 25%, var(--background-v2)); --cell-anno-fg: #d1d5db; }
+.dark .hot-appearance-v2 .cell-color-pink   { --cell-anno-bg: color-mix(in srgb, #ec4899 25%, var(--background-v2)); --cell-anno-fg: #f9a8d4; }
+.dark .hot-appearance-v2 .cell-color-orange { --cell-anno-bg: color-mix(in srgb, #fb923c 25%, var(--background-v2)); --cell-anno-fg: #fdba74; }
+.dark .hot-appearance-v2 .cell-color-yellow { --cell-anno-bg: color-mix(in srgb, #eab308 25%, var(--background-v2)); --cell-anno-fg: #fde047; }
+.dark .hot-appearance-v2 .cell-color-green  { --cell-anno-bg: color-mix(in srgb, #22c55e 25%, var(--background-v2)); --cell-anno-fg: #86efac; }
+.dark .hot-appearance-v2 .cell-color-blue   { --cell-anno-bg: color-mix(in srgb, #3b82f6 25%, var(--background-v2)); --cell-anno-fg: #93c5fd; }
+.dark .hot-appearance-v2 .cell-color-purple { --cell-anno-bg: color-mix(in srgb, #a855f7 25%, var(--background-v2)); --cell-anno-fg: #d8b4fe; }
+
+/* Annotated (commented) cells keep their color when selected. The pale-blue
+   selection fill would otherwise cover the annotation color — and since the
+   tint is itself blue, every color reads as "blue / not applied". Re-assert the
+   color and show the selection as an inset ring layered over it instead.
+   Selectors carry the full container prefix on the row-range variants so they
+   beat the base !important selection backgrounds. */
+/* CELL-range / single-cell selection: the fill is UNIFIED — annotated cells show
+   the same pale-blue selection fill as the rest (their colour returns on
+   deselect) so a mixed-colour range reads as one block, not a patchwork. The
+   dotted range outline marks the selection. */
+.hot-appearance-v2 td.hot-cell[data-cell-selected="true"][class*="cell-color-"],
+.hot-appearance-v2 td.hot-cell[data-in-range="true"][class*="cell-color-"] {
+  background-color: var(--m3-primary-container) !important;
+}
+/* ROW-level (checkbox / row-range) selection — coloured cells take the SAME
+   pale-blue row-selection fill as every other cell, so the whole row reads as one
+   uniform highlight (the original row-selection style), not a patchwork of
+   annotation colours. The per-cell colour returns on deselect. No inset ring. */
+.hot-appearance-v2 tbody tr[data-row-checked="true"] td.hot-cell[class*="cell-color-"],
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table td[data-in-row-range="true"][class*="cell-color-"],
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table tr[data-row-selected="true"] td[class*="cell-color-"] {
+  background-color: var(--m3-row-selected) !important;
+  box-shadow: none !important;
+  /* Square — drop the annotation-pill corner rounding (the `.cell-color-*`
+     corner rules don't exclude row selection), which would otherwise notch the
+     flat uniform highlight. */
+  border-radius: 0 !important;
+}
+
+/* Round the outer corners of the selection. The range-edge attributes mark
+   each boundary cell; a single selected cell carries all four, so it rounds on
+   every corner, while a multi-cell range only rounds its four outer corners. */
+.hot-appearance-v2 td[data-range-top="true"][data-range-left="true"] {
+  border-top-left-radius: var(--m3-shape-sm) !important;
+}
+.hot-appearance-v2 td[data-range-top="true"][data-range-right="true"] {
+  border-top-right-radius: var(--m3-shape-sm) !important;
+}
+.hot-appearance-v2 td[data-range-bottom="true"][data-range-left="true"] {
+  border-bottom-left-radius: var(--m3-shape-sm) !important;
+}
+.hot-appearance-v2 td[data-range-bottom="true"][data-range-right="true"] {
+  border-bottom-right-radius: var(--m3-shape-sm) !important;
+}
+
+/* Hovered cell — round its corners (6px) so the per-cell hover fill reads as
+   the same inset pill as a selected cell. Scoped to `:not([data-row-hover-style])`
+   because when ROW hover is enabled the whole row highlights and the row-end
+   rules already round it; rounding an interior cell there would carve an odd
+   notch out of the row fill. background-clip:padding-box (set on every body
+   cell) clips the fill to the radius. */
+.hot-appearance-v2:not([data-row-hover-style]) td.hot-cell:hover {
+  border-radius: var(--m3-shape-sm);
+}
+
+/* Warning / overdue cell (Figma red-50). A custom cell renderer adds
+   `.cell-warning` to flag an overdue amount/date; the `!important` +
+   padding-box clip keep it consistent with the inter-row gap. */
+.hot-appearance-v2 td.hot-cell.cell-warning {
+  background-color: var(--m3-error-container) !important;
+  background-clip: padding-box !important;
+}
+
+/* Cell edit mode (v2) — the base editor draws a square, navy 2px inset border
+   (--hot-selection-color → --primary-v2). Re-skin it to a rounded, BLUE
+   (--selection-v2 #3B82F6) input that echoes the hover/row-pill rounding. The
+   editing cell drops its overflow:hidden (via :has) so the rounded corners
+   aren't clipped square by the cell box. */
+.hot-appearance-v2 .hot-cell:has(> .hot-cell-editor),
+.hot-appearance-v2 .hot-cell:has(> .hot-boolean-editor-wrapper) {
+  overflow: visible;
+}
+.hot-appearance-v2 .hot-cell-editor,
+.hot-appearance-v2 .hot-boolean-editor-wrapper {
+  /* `sm` — the density floor's ceiling — so the editor pill matches the row
+     pill and the hovered-cell pill exactly. */
+  border-radius: var(--m3-shape-sm);
+  background: var(--background-v2);
+  /* Focus is TEAL and INSET. Teal because tokens.v2.css defines it as the
+     interaction-affirmative colour and every primitives-v2 control focuses
+     teal; inset because an outward halo on a grid cell is clipped by its
+     neighbours. Outward halos are only for controls with clearance. */
+  box-shadow: var(--m3-focus-ring-inset);
+}
+/* The text editor is a <textarea> that, in the base, fills the whole cell
+   (top/left:0, width/height:100%, padding:8px 12px). Figma Frame 142 draws it
+   as an inset white pill so the pale-blue new-row fill reads as a gap around
+   it. Inset 4px top/bottom + 6px sides, drop the vertical padding, and set the
+   line-height to the full inset height (md row 44px → 40px cell → 32px editor)
+   so the single line's line-box fills the box and the glyph stays vertically
+   centered. */
+.hot-appearance-v2 textarea.hot-cell-editor {
+  top: 4px;
+  left: 6px;
+  width: calc(100% - 12px);
+  height: calc(100% - 8px);
+  padding: 0 14px;
+  line-height: 32px;
+}
+
+/* ── Default (tight 32px) density — fit the editable controls to the short row ──
+   The select pill and cell editor above are dimensioned for the md (44px) row
+   (the editor's line-height:32px = "md row 44px → 40px cell → 32px editor"). A
+   table that doesn't set `density` renders 32px rows (a 24px content box), so
+   those controls overflow and stretch the row (default-state targets/finance
+   grids). Compact them to the 32px row: a ~22px select pill and a 24px editor
+   line-box both center cleanly in the 24px content. Scoped to `:not([data-density])`
+   so the sm/md tables (which set the attribute) keep their Figma sizing. */
+.hot-appearance-v2:not([data-density]) .hot-cell.cell-select > .cell-content {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  line-height: 16px;
+}
+.hot-appearance-v2:not([data-density]) textarea.hot-cell-editor {
+  line-height: 24px;
+}
+
+/* Annotated / commented cell (`.cell-color-*`) — the base CSS paints a flat,
+   square, full-bleed fill. Round its corners and clip to the padding box so it
+   reads as an inset pill matching the selection treatment. The radius applies
+   on all four corners; first/last columns keep the larger 8px row radius on
+   their outer edge via the row-end rules below. */
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"] {
+  background-clip: padding-box !important;
+  /* Make the annotation fill authoritative. `!important` beats the (non-
+     important but higher-specificity) zebra-stripe and per-cell hover rules,
+     which would otherwise paint over the color on striped tables (e.g. the
+     even-row stripe on Transports / Contractors showed the stripe, not the
+     color — it only "worked" on the non-striped Offers table). Selected cells
+     re-assert the same `--cell-anno-bg` at higher specificity and add the ring. */
+  background-color: var(--cell-anno-bg) !important;
+}
+/* Coloured cells default to SQUARE; a corner rounds (6px) ONLY when it is an
+   OUTER corner of the same-colour block — i.e. there is NO same-colour neighbour
+   in EITHER direction that forms that corner. `data-cb-{above,below,left,right}`
+   are set by a post-render scan in DynamicTable (CSS can't see vertical adjacency
+   across <tr>s, so all four edges go through the same scan for consistency).
+   This mirrors the selection's range-edge corner rules. Skipped while selected —
+   there the selection's range-edge rules (!important, below) own the rounding. */
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"] {
+  border-radius: 0;
+}
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"]:not([data-cb-above="true"]):not([data-cb-left="true"]):not([data-in-range="true"]):not([data-cell-selected="true"]) {
+  border-top-left-radius: var(--m3-shape-sm);
+}
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"]:not([data-cb-above="true"]):not([data-cb-right="true"]):not([data-in-range="true"]):not([data-cell-selected="true"]) {
+  border-top-right-radius: var(--m3-shape-sm);
+}
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"]:not([data-cb-below="true"]):not([data-cb-left="true"]):not([data-in-range="true"]):not([data-cell-selected="true"]) {
+  border-bottom-left-radius: var(--m3-shape-sm);
+}
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"]:not([data-cb-below="true"]):not([data-cb-right="true"]):not([data-in-range="true"]):not([data-cell-selected="true"]) {
+  border-bottom-right-radius: var(--m3-shape-sm);
+}
+/* Paint the 2px transparent inter-row border with the colour when the same colour
+   sits directly above/below, so a vertical run reads as one continuous block. */
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"][data-cb-above="true"] {
+  border-top-color: var(--cell-anno-bg);
+}
+.hot-appearance-v2 td.hot-cell[class*="cell-color-"][data-cb-below="true"] {
+  border-bottom-color: var(--cell-anno-bg);
+}
+
+/* Comment indicator (the speech-bubble badge on commented cells). Its color
+   tracks the cell's annotation color — a darker shade of the same hue
+   (`--cell-anno-fg`, inherited from the `.cell-color-*` cell). Cells with a
+   comment but NO color fall back to the normal text/foreground color. */
+.hot-appearance-v2 .cell-comment-indicator {
+  color: var(--cell-anno-fg, var(--m3-on-surface));
+  /* An icon button, so: a circle. */
+  border-radius: var(--m3-shape-full);
+  padding: 1px;
+  transition: var(--m3-transition-state);
+}
+/* A commented cell's indicator has to READ as a button, not as decoration —
+   half of workshop B9 is that people did not realise the existing icon was
+   clickable. Hover gives it a hit area and a background, like every other
+   affordance in the grid chrome. */
+.hot-appearance-v2 .cell-comment-indicator:hover {
+  background-color: var(--m3-state-layer-hover);
+}
+
+/* B9 — the ghost affordance on the focused cell. Muted enough to be ignorable
+   while typing, solid enough to invite a click; it inherits every geometric
+   property of the real indicator above, so discovering it teaches the real one. */
+/* Muted by INK, not by opacity: `on-surface-variant` is the role for a
+   secondary affordance, and it keeps its contrast in both themes where a 55%
+   wash simply dissolved against the dark well. */
+.hot-appearance-v2 .cell-comment-indicator-ghost {
+  color: var(--m3-on-surface-variant);
+}
+.hot-appearance-v2 .cell-comment-indicator-ghost:hover {
+  color: var(--m3-on-surface);
+  background-color: var(--m3-state-layer-hover);
+}
+/* Reserve the same right-hand gutter the solid indicator gets, so the value
+   does not jump sideways when a cell is selected.
+   NOT for the hover variant: reserving on hover would re-ellipsize the value
+   under the pointer, so dragging the mouse across a row would make every cell's
+   text twitch in turn. */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell:has(> .cell-comment-indicator-ghost:not(.cell-comment-indicator-hover)) {
+  padding-right: 28px;
+}
+/* The hover affordance (ledger 8.1). Sits on its own chip so it stays legible
+   over the tail of a long value without moving it. */
+/* Opaque on purpose — this chip sits over the tail of a long value, so a
+   translucent state layer would let the text show through it. */
+.hot-appearance-v2 .cell-comment-indicator-hover {
+  background-color: var(--m3-surface-container);
+  box-shadow: 0 0 0 3px var(--m3-surface-container);
+}
+/* The indicator is absolutely positioned at the cell's right edge (right:10px),
+   so a cell's text would otherwise run UNDER it (ellipsing only at the cell
+   edge). Reserve room via the cell's own padding-right so the content box ends
+   before the icon — this works for BOTH the wrapped `.cell-content` text and
+   custom renderers (which render their own `.truncate` span, not .cell-content).
+   28px ≈ the indicator's 10px offset + the 15px icon + a small gap. The full
+   container prefix out-specifies the base 8px cell padding-right. */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell[data-has-comment="true"] {
+  padding-right: 28px;
+}
+/* Text content truncates with an ellipsis when it exceeds the cell width.
+   Needed because custom renderers emit their own span with
+   `white-space:nowrap; overflow:visible`, so the cell's `overflow:hidden` would
+   HARD-clip the text at the edge with no ellipsis (and, on commented cells, run
+   it under the icon — the padding-right above reserves that space).
+   `min-width:0` lets the flex child shrink so the ellipsis can render.
+   BADGES are excluded: they must never be cut — their column is widened to fit
+   the longest badge instead (see Cell.tsx badge-column auto-fit). The comment
+   indicator is excluded (absolutely positioned, fixed size). */
+.hot-appearance-v2 td.hot-cell > *:not(.cell-comment-indicator):not(.cell-badge) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Portaled popovers / Configure-View drawer — phase 4
+
+   Popovers render via createPortal to <body>, outside this container.
+   AppearanceContext lets each portaled root re-apply .hot-appearance-v2,
+   so the --hot-* → -v2 remap above reaches them and they re-skin for free
+   (they already read --hot-popup-bg / --hot-border / --hot-btn-* / etc.).
+   These rules only fix the few values the popover CSS hardcodes.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Configure-View drawer → Figma width (400) + Geist + solid surface.
+   The Sheet primitive paints `bg-card`, which doesn't resolve solid inside
+   the portal/v2 scope (drawer reads transparent), so set it explicitly. */
+.hot-config-panel.hot-appearance-v2 {
+  /* 400px (Figma) crowded the field/operator/value selects, clipped longer
+     column names in "Hide fields", and wrapped the date-range triggers onto two
+     lines; 600px gives the filter row controls room to breathe on one line. */
+  max-width: 600px !important;
+  background: var(--surface-v2);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  /* An M3 side sheet: `xl` on the free (left) edge only — the docked edge stays
+     square — and level 3, the elevation for a sheet over content. `overflow:
+     hidden` is what clips the header and footer bands to that corner; the body
+     keeps its own scroll. */
+  border-radius: var(--m3-shape-xl) 0 0 var(--m3-shape-xl);
+  box-shadow: var(--m3-elevation-3);
+  overflow: hidden;
+}
+
+/* Keep the date-range triggers ("15 cze 2026") on a single line. The filter row
+   is flex and each trigger is `flex:1`; without a floor the localized date text
+   wraps to two lines. nowrap + a min-width that fits "DD mmm YYYY" prevents it —
+   the 600px drawer above leaves ample room for both triggers side by side. */
+.hot-config-panel.hot-appearance-v2 .hot-config-filter-date-trigger {
+  white-space: nowrap;
+  min-width: 96px;
+}
+
+/* Checked boxes + "Add condition/sort" links use teal accent (Figma),
+   not the indigo the base CSS hardcodes / derives from selection color. */
+.hot-appearance-v2 .hot-config-fields-checkbox { accent-color: var(--m3-focus-ring-color); }
+.hot-appearance-v2 .hot-config-add-btn { color: var(--accent-v2); }
+
+/* ── ConfigureView v2 skin — Figma "Configure View" drawer ────────── */
+/* Section cards: spaced, rounded, bordered. `flex-shrink: 0` so an expanded
+   section's content doesn't squish the sibling cards into slivers — the body
+   (a flex column) scrolls instead. */
+.hot-config-panel.hot-appearance-v2 .hot-config-section {
+  flex-shrink: 0;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-lg);
+  background: var(--background-v2);
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-section-header {
+  padding: 12px 14px;
+  gap: 10px;
+  color: var(--m3-on-surface);
+  font-size: var(--text-label-semibold-md, 0.875rem);
+  line-height: var(--text-label-semibold-md--line-height, 1.25rem);
+  font-weight: var(--text-label-semibold-md--font-weight, 600);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-section-badge {
+  color: var(--m3-on-surface-variant);
+  font-weight: 400;
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-section-chevron { color: var(--m3-on-surface-variant); }
+.hot-config-panel.hot-appearance-v2 .hot-config-fields-grip { color: var(--m3-on-surface-variant); }
+.hot-config-panel.hot-appearance-v2 .hot-config-fields-bulk-btn { color: var(--accent-v2); }
+/* Drop the nested 400px scroll box on the field list — the drawer body is the
+   single scroll container in v2, so the section grows to fit its fields. */
+.hot-config-panel.hot-appearance-v2 .hot-config-fields-list {
+  max-height: none;
+  overflow: visible;
+}
+
+/* Sort rank badge (1/2/3). */
+.hot-config-panel.hot-appearance-v2 .hot-config-sort-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--m3-shape-full);
+  background-color: var(--m3-surface-container);
+  border: 1px solid var(--m3-outline-variant);
+  color: var(--m3-on-surface-variant);
+  font-size: var(--text-label-semibold-xs, 0.75rem);
+  line-height: var(--text-label-semibold-xs--line-height, 1rem);
+  font-weight: var(--text-label-semibold-xs--font-weight, 600);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-sort-select,
+.hot-config-panel.hot-appearance-v2 .hot-config-sort-direction-select {
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-md);
+  background: var(--background-v2);
+  color: var(--m3-on-surface);
+  transition: var(--m3-transition-state);
+}
+
+/* Linked (lookup) columns → "Linked sources" multiselect (trigger + chips;
+   the option menu is a portaled Popover styled with global tokens). */
+.hot-config-panel.hot-appearance-v2 .hot-config-linked {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Match the sibling section content inset (.hot-config-sorting). */
+  padding: 8px 14px 12px;
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-hint {
+  color: var(--m3-on-surface-variant);
+  font-size: var(--text-body-regular-sm, 0.875rem);
+  line-height: var(--text-body-regular-sm--line-height, 1.25rem);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-empty-hint {
+  color: var(--m3-on-surface-variant);
+  font-size: var(--text-body-regular-sm, 0.875rem);
+  padding: 4px 0;
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-md);
+  background: var(--background-v2);
+  cursor: pointer;
+  text-align: left;
+  transition: var(--m3-transition-state);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-trigger:hover {
+  border-color: var(--m3-outline);
+  background-color: var(--m3-state-layer-hover);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-placeholder {
+  flex: 1;
+  color: var(--m3-on-surface-variant);
+  font-size: var(--text-body-regular-sm, 0.875rem);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-chevron {
+  flex-shrink: 0;
+  color: var(--m3-on-surface-variant);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-full);
+  background-color: var(--m3-surface-container);
+  color: var(--m3-on-surface);
+  font-size: var(--text-label-semibold-xs, 0.75rem);
+  line-height: var(--text-label-semibold-xs--line-height, 1rem);
+  font-weight: var(--text-label-semibold-xs--font-weight, 600);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--m3-shape-full);
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-linked-ms-chip-x:hover {
+  color: var(--m3-on-surface);
+  background-color: var(--m3-state-layer-hover);
+}
+
+/* View-name + colour form. */
+.hot-config-panel.hot-appearance-v2 .hot-config-save-label {
+  color: var(--m3-on-surface);
+  font-size: var(--text-label-semibold-md, 0.875rem);
+  line-height: var(--text-label-semibold-md--line-height, 1.25rem);
+  font-weight: var(--text-label-semibold-md--font-weight, 600);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-save-colors { gap: 10px; }
+/* Explains what an empty name does on the base tab — the answer to "where did
+   my Default-view changes go?". Sits between the input and the colour row, so
+   it takes the same 4px stack gap as the labels around it. */
+.hot-config-panel.hot-appearance-v2 .hot-config-save-hint {
+  margin: 2px 0 2px;
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  line-height: var(--text-body-regular-xs--line-height, 1rem);
+  color: var(--m3-on-surface-variant);
+}
+/* The 120-character cap has bitten. Same slot and rhythm as the base-view hint
+   above; only the colour changes, because this one is a refusal, not a note. */
+.hot-config-panel.hot-appearance-v2 .hot-config-save-hint-limit {
+  color: var(--m3-error);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-save-color-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--m3-shape-full);   /* circles (Figma) */
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--m3-transition-elevation);
+}
+/* The selected swatch takes the same two-step ring shape as an M3 focus ring,
+   spaced off the drawer surface so it reads on any hue. */
+.hot-config-panel.hot-appearance-v2 .hot-config-save-color-btn.selected {
+  box-shadow: 0 0 0 2px var(--surface-v2), 0 0 0 4px var(--m3-accent);
+}
+/* Saturated swatch hues (Figma view-name palette) — override the inline
+   pastel `background` set in COLOR_PALETTE for the v2 picker only. */
+.hot-config-panel.hot-appearance-v2 .hot-config-color-blue   { background: var(--m3-view-color-blue) !important; }
+.hot-config-panel.hot-appearance-v2 .hot-config-color-green  { background: var(--m3-view-color-green) !important; }
+.hot-config-panel.hot-appearance-v2 .hot-config-color-teal   { background: var(--m3-view-color-teal) !important; }
+.hot-config-panel.hot-appearance-v2 .hot-config-color-purple { background: var(--m3-view-color-purple) !important; }
+.hot-config-panel.hot-appearance-v2 .hot-config-color-pink   { background: var(--m3-view-color-pink) !important; }
+.hot-config-panel.hot-appearance-v2 .hot-config-color-red    { background: var(--m3-view-color-red) !important; }
+.hot-config-panel.hot-appearance-v2 .hot-config-color-orange { background: var(--m3-view-color-orange) !important; }
+.hot-config-panel.hot-appearance-v2 .hot-config-color-yellow { background: var(--m3-view-color-yellow) !important; }
+
+/* Footer: full-width buttons side by side (the Button primitives carry their
+   own navy/outline skin). */
+.hot-config-panel.hot-appearance-v2 .hot-config-panel-footer {
+  display: flex;
+  gap: 12px;
+}
+
+/* Save form + footer surface. The base CSS hardcodes a light gray
+   (rgb(243,243,245)) on the save section and the adjacent footer, and the
+   name input uses the legacy --hot-bg (#fff) — all stayed light inside the v2
+   drawer in dark mode. Re-point them at v2 tokens so the footer matches the
+   drawer surface in both themes. */
+.hot-config-panel.hot-appearance-v2 .hot-config-panel-save,
+.hot-config-panel.hot-appearance-v2 .hot-config-panel-save + .hot-config-panel-footer {
+  background: var(--surface-v2);
+  border-top-color: var(--m3-outline-variant);
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-save-input {
+  background: var(--background-v2);
+  border-color: var(--m3-outline-variant);
+  border-radius: var(--m3-shape-md);
+  color: var(--m3-on-surface);
+  transition: var(--m3-transition-state), box-shadow var(--m3-duration-short2) var(--m3-ease-standard);
+}
+/* This field HAS clearance, so it gets the outward teal halo the grid cells
+   cannot have. */
+.hot-config-panel.hot-appearance-v2 .hot-config-save-input:focus {
+  border-color: var(--m3-focus-ring-color);
+  box-shadow: var(--m3-focus-halo);
+  outline: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Rows (v2) — borderless. The base `.hot-container .hot-table td` paints a
+   1px grid (border-bottom + border-right, plus a left edge on the first
+   cell). Figma shows no row separators at all — rows are delimited by
+   whitespace + hover/selection only. Strip every body-cell border here
+   (higher specificity than the base `.hot-container` rule wins).
+   ════════════════════════════════════════════════════════════════ */
+.hot-appearance-v2.hot-container .hot-table td,
+.hot-appearance-v2.hot-container .hot-table td.hot-cell,
+.hot-appearance-v2.hot-container .hot-table td:first-child {
+  border: none;
+  /* Gap between rows: transparent top/bottom borders inset the cell's
+     background (clipped to padding-box) so adjacent row fills don't touch.
+     Combined with the rounded ends, every stripe/selected row reads as a
+     separate rounded pill. 2px each = 4px gap (Figma 220:2935). */
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Tight cell padding (Figma 220:2935 — body cell 4×8 inside a 32px row). */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Authoritative padding-box clip for EVERY v2 body cell. Many base rules paint
+   with the `background` shorthand + `!important` (cell hover, new-row hover,
+   range selection), which resets `background-clip` to border-box and makes the
+   fill overhang the row gap. The selector is DELIBERATELY high specificity
+   (0,4,3) so it outranks the worst offender — the new-row hover rule
+   `tr[data-is-new] td:hover:not():not()` (0,4,2) — and the gap always holds
+   (rest, hover, new-row, selected). */
+.hot-appearance-v2 .hot-virtual-container .hot-table tbody tr td.hot-cell,
+.hot-appearance-v2 .hot-virtual-container .hot-table tbody tr td.hot-row-header {
+  background-clip: padding-box !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Column headers (v2) — gray rounded bar, no outer border, per-column
+   kebab. Figma: the header is a single light-gray pill with rounded ends
+   and NO surrounding border; columns are separated by thin internal
+   dividers only.
+   ════════════════════════════════════════════════════════════════ */
+
+/* The header is its own <table> inside .hot-headers-sticky, so switching it
+   to separated borders (needed for border-radius to render) doesn't touch
+   the virtualized body table. A small gap below lets the rounding read
+   against the white body. */
+.hot-appearance-v2 .hot-headers-sticky {
+  /* Solid grid-body bg (not transparent) so body rows scrolling under the sticky
+     header don't peek through the gap below the floating bar. The 2px bottom
+     gap + the first row's 2px transparent top border = 4px, matching the
+     inter-row gap. */
+  background: var(--m3-surface-container-lowest);
+  padding-bottom: 2px;
+}
+.hot-appearance-v2 .hot-headers-sticky .hot-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Header cells: gray fill, muted title, thin internal divider, NO outer
+   border (the base paints bottom/right/left hex borders — override them). */
+.hot-appearance-v2.hot-container .hot-table th.hot-col-header,
+.hot-appearance-v2.hot-container .hot-table th.hot-row-header {
+  background: var(--table-v2-header-bg);
+  color: var(--table-v2-header-text);
+  font-weight: 500;
+  border: none;
+  border-right: 1px solid var(--table-v2-divider);
+  /* Figma 220:2935 — tight header padding. The <tr> is display:flex so each
+     <th> is a flex child; make the th a flex container too so its inner label
+     wrapper centers vertically (vertical-align doesn't apply to flex items). */
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+}
+/* The header label wrapper carries a legacy `.hot-col-header>div { padding: 0 4px }`
+   (DynamicTable.css) that the body cells don't have — so header titles sat 4px
+   further in than their column's data (12px vs 8px). Zero it so the header label
+   (and the right-aligned sort/kebab) line up flush with the cell content below. */
+.hot-appearance-v2.hot-container .hot-table th.hot-col-header > div {
+  padding: 0;
+}
+/* Last header cell ends the bar cleanly — no trailing divider. */
+.hot-appearance-v2.hot-container .hot-table thead tr th:last-child {
+  border-right: none;
+}
+/* Rounded ends on the bar (Figma 220:2935 — radius 6). */
+.hot-appearance-v2.hot-container .hot-table thead tr th:first-child {
+  border-top-left-radius: var(--m3-shape-sm);
+  border-bottom-left-radius: var(--m3-shape-sm);
+}
+.hot-appearance-v2.hot-container .hot-table thead tr th:last-child {
+  border-top-right-radius: var(--m3-shape-sm);
+  border-bottom-right-radius: var(--m3-shape-sm);
+}
+/* Selection checkbox column (replaces the row number in v2). */
+.hot-appearance-v2 td.hot-row-header,
+.hot-appearance-v2 th.hot-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* TEAL, not blue. `--m3-focus-ring-color` (`--accent-v2`) is documented in
+   tokens.v2.css as the FMS interaction-affirmative colour — focus rings, CHECKED
+   CHECKBOXES, toggled switches — and it is what the config drawer's field
+   checkbox already uses (L1127). `--m3-accent` (`--selection-v2`, #3B82F6) is the
+   SELECTION colour: the row tint, the sort indicator, the selection edges. The
+   two roles were reading as two different checkbox accents on one screen; the
+   checkbox belongs to the affirmative role, so it follows the drawer. */
+.hot-appearance-v2 .hot-row-select {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--m3-focus-ring-color);
+  cursor: pointer;
+}
+/* The column-header select-all checkbox shares `.hot-row-select` but its flex
+   header cell shrinks it to ~15px. Pin it to the same 13×16 the data-row
+   checkboxes render at so all three match. */
+.hot-appearance-v2 .hot-row-select-all {
+  flex-shrink: 0;
+  width: 13px;
+  height: 16px;
+}
+
+/* Group header row — slate-100 fill (Figma), rounded like data rows, with a
+   group select-all checkbox aligned to the row-header column. The fill lives on
+   the CELLS (not the <tr>) so the shared first/last-cell radius + inter-row gap
+   rules clip the band into a rounded pill matching the data rows. The base layer
+   paints the <tr> grey + a 1px bottom divider — strip both, otherwise the tr's
+   square fill paints over the cells' rounded corners and the divider reads as a
+   full-width block edge. */
+.hot-appearance-v2 .hot-group-header-row {
+  background: transparent;
+  border-bottom: none;
+}
+.hot-appearance-v2 .hot-group-header-row:hover {
+  background: transparent;
+}
+.hot-appearance-v2 td.hot-group-header-cell,
+.hot-appearance-v2 td.hot-group-header-select-cell {
+  height: 100%;
+  background: var(--table-v2-header-bg);
+  background-clip: padding-box;
+}
+/* The select cell carries `.hot-row-header`, which the generic rule paints
+   white — re-assert the band fill at higher specificity so the checkbox column
+   matches the rest of the group header. */
+.hot-appearance-v2.hot-container td.hot-group-header-select-cell {
+  background: var(--table-v2-header-bg);
+}
+/* The zero-width sticky label cell stays transparent — its label overflows onto
+   the band-fill cell, which already carries the slate fill. Painting it would
+   add a 0-width sliver and (when it's :first-child) a stray rounded corner. */
+.hot-appearance-v2 td.hot-group-header-label-cell {
+  background: transparent;
+}
+/* When there's no group select checkbox, the zero-width label cell is the row's
+   :first-child and absorbs the left pill radius (invisibly, since it has no
+   width). Round the band-fill cell's left edge instead so the band keeps its
+   rounded-pill shape. It's the 2nd and last child in that case. */
+.hot-appearance-v2 .hot-virtual-container tbody tr.hot-group-header-row
+  > td.hot-group-header-cell:nth-child(2):last-child {
+  border-top-left-radius: var(--m3-shape-sm);
+  border-bottom-left-radius: var(--m3-shape-sm);
+}
+
+/* Group summary (subtotal) row (v2) — reads as a totals strip: white fill with a
+   1px top rule separating it from the group's data rows, bolder right-aligned
+   values. Fills live on the cells (the base paints the <tr> grey) so the row
+   sits flush with the column grid. */
+.hot-appearance-v2 .hot-group-summary-row {
+  background: transparent;
+  border-top: none;
+}
+.hot-appearance-v2 td.hot-group-summary-cell,
+.hot-appearance-v2 td.hot-group-summary-rowheader,
+.hot-appearance-v2 td.hot-group-summary-actions {
+  background: var(--m3-surface-container-lowest);
+  border-top: 1px solid var(--m3-outline-variant);
+  background-clip: padding-box;
+}
+.hot-appearance-v2 .hot-group-summary-label-cell {
+  background: transparent;
+}
+.hot-appearance-v2 .hot-group-summary-label {
+  color: var(--m3-on-surface-variant);
+}
+.hot-appearance-v2 .hot-group-summary-value {
+  color: var(--m3-on-surface);
+}
+/* Read-only subtotal row: keep cells at their band fill on hover (no cell-hover
+   tint that would read as an interactive box). */
+.hot-appearance-v2 .hot-group-summary-row .hot-cell:hover:not([data-save-state]) {
+  background: var(--m3-surface-container-lowest);
+}
+
+/* New (add) row — keep the pale-blue fill inset to the row gap (the base
+   paints `background:!important` which would otherwise overhang). */
+.hot-appearance-v2 tr[data-is-new="true"] td {
+  background-clip: padding-box !important;
+}
+
+/* New-row cancel button (row-header ✕) — bare red glyph, no box (Figma Frame
+   142). Compact square hit-area centered in the cell; the hover tint gives a
+   subtle target without reintroducing the filled navy pill. */
+.hot-appearance-v2 .hot-row-cancel-btn-header {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  margin: 0 auto;
+  background-color: transparent;
+  color: var(--m3-error);
+  border-radius: var(--m3-shape-full);
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  line-height: 1;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-row-cancel-btn-header:hover {
+  background-color: var(--m3-state-layer-error-hover);
+  color: var(--m3-error);
+}
+
+/* Save button (new-row actions) → compact v2 navy pill (not full-bleed),
+   centered in the actions cell. */
+.hot-appearance-v2 .hot-row-save-btn {
+  width: auto;
+  height: 24px;
+  min-height: 0;
+  padding: 0 12px;
+  border-radius: var(--m3-shape-full);
+  font-size: var(--text-label-semibold-xs, 0.75rem);
+  line-height: var(--text-label-semibold-xs--line-height, 1rem);
+  font-weight: var(--text-label-semibold-xs--font-weight, 600);
+}
+.hot-appearance-v2 .hot-row-save-btn:hover {
+  transform: none;
+}
+.hot-appearance-v2 .hot-row-save-btn:active {
+  background: var(--primary-v2-hover);
+  transform: none;
+}
+
+/* Actions column kebab (•••) — opens the row actions menu. */
+.hot-appearance-v2 td.hot-actions-cell {
+  justify-content: center;
+}
+.hot-appearance-v2 .hot-row-actions-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  /* An icon button is a circle in M3. 28×28 is unchanged — only the corner. */
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-row-actions-btn:hover {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+.hot-appearance-v2 .hot-row-actions-btn:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+/* Body row-header (checkbox) cells follow the row background, not the grey
+   header bar — the zebra stripe further down overrides it to match darker rows.
+   `surface-container-lowest` rather than `--background-v2`: they resolve to the
+   same white in light, but in DARK `--background-v2` is slate-900 while the grid
+   body is the recessed #040A11 well, so the checkbox column used to sit a full
+   step lighter than the row it belongs to. */
+.hot-appearance-v2 td.hot-row-header {
+  background: var(--m3-surface-container-lowest);
+}
+
+/* Rounded row ends — match the header bar. The body table needs separated
+   borders for the radius to render; rounding the first/last cell clips the
+   row background (stripe / hover / selection) into a rounded rectangle. */
+.hot-appearance-v2 .hot-virtual-container .hot-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.hot-appearance-v2 .hot-virtual-container tbody tr > td:first-child {
+  border-top-left-radius: var(--m3-shape-sm);
+  border-bottom-left-radius: var(--m3-shape-sm);
+}
+.hot-appearance-v2 .hot-virtual-container tbody tr > td:last-child {
+  border-top-right-radius: var(--m3-shape-sm);
+  border-bottom-right-radius: var(--m3-shape-sm);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   A16 — drag a header to reorder the column.
+   The drop indicator is a 2px accent rule painted on the LEADING edge of the
+   column the source would land before, drawn as an ::after so it overlays the
+   header's own 1px border instead of shifting layout. `data-drop-*` is written
+   from an INDEX (see ColumnHeaders): a column scrolled out of the
+   virtualization window simply never paints one, and nothing drifts.
+   ════════════════════════════════════════════════════════════════ */
+.hot-appearance-v2 .hot-col-header[data-reorderable] {
+  cursor: grab;
+}
+.hot-appearance-v2 .hot-headers-sticky[data-reordering] .hot-col-header[data-reorderable] {
+  cursor: grabbing;
+}
+.hot-appearance-v2 .hot-col-header[data-reorder-source] {
+  opacity: 0.45;
+}
+.hot-appearance-v2 .hot-col-header[data-drop-before]::after,
+.hot-appearance-v2 .hot-col-header[data-drop-after]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  border-radius: var(--m3-shape-full);
+  background: var(--m3-accent);
+  z-index: 6;
+  pointer-events: none;
+}
+.hot-appearance-v2 .hot-col-header[data-drop-before]::after {
+  left: -1px;
+}
+.hot-appearance-v2 .hot-col-header[data-drop-after]::after {
+  right: -1px;
+}
+
+/* Per-column options trigger (⋮) — always visible, muted; darkens on hover. */
+.hot-appearance-v2 .hot-col-kebab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  /* A circle at its existing 20×20 — M3's 40dp target is exactly the
+     touch-first geometry this system rejects, so the box does not grow. */
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-col-kebab:hover {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+.hot-appearance-v2 .hot-col-kebab:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+
+/* Per-column quick-filter trigger (funnel) — A1. Geometry is COPIED from the
+   kebab above so the two chrome affordances in a header cell are the same box;
+   only the resting colour differs, and only once a filter is live. Always
+   rendered, never hover-revealed: being findable IS the requested feature. */
+.hot-appearance-v2 .hot-col-funnel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  /* Was `--muted-v2-foreground` at 55% opacity — a wash on top of an already
+     tertiary ink, which is how a permanently-rendered control ended up
+     illegible. One role, full strength, no opacity. */
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-col-funnel:hover {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+.hot-appearance-v2 .hot-col-funnel:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+/* A13 — a filtered column has to be legible as filtered from the header row
+   alone. The glyph goes full-strength accent and stops being a hover hint. */
+/* 12% is already M3's selected-state layer value — this only tokenizes it. */
+.hot-appearance-v2 .hot-col-funnel[data-filtered] {
+  color: var(--m3-accent);
+  background-color: var(--m3-state-layer-accent-selected);
+}
+
+/* …and the header cell picks up a DASHED accent underline. Dashed, not solid,
+   because this rule is temporary and is never written to the saved view
+   (A2/D6) — the same visual language as the toolbar's dashed clear-all pill. */
+.hot-appearance-v2.hot-container .hot-table th.hot-col-header[data-filtered] {
+  color: var(--m3-on-surface);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--m3-accent) 0 4px,
+    transparent 4px 8px
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  background-position: left bottom;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Perspective tabs (v2) — rendered via the primitives-v2 Tab/TabBar.
+   The primitive owns the underline + active state; these rules only add the
+   hover-reveal delete affordance and the inline rename box.
+   ════════════════════════════════════════════════════════════════ */
+/* Edit (pencil) + close (×) affordances. At rest they collapse to zero width
+   so the active tab's underline sits right under the label (not stretched out
+   by reserved icon space). On hover they expand to full size, widening the tab;
+   because the underline is `inset-x-0` it grows in step with the tab, and the
+   `width` transition makes that extension smooth. `display` stays inline-flex
+   (it can't animate) — `width`/`margin`/`opacity` carry the reveal instead.
+   `:has()` zeroes the flex gap so the collapsed state leaves no trailing space. */
+.hot-top-tabs-v2 [role="tab"]:has(.hot-top-tab-close-v2),
+.hot-top-tabs-v2 [role="tab"]:has(.hot-top-tab-menu-v2) {
+  gap: 0;
+}
+.hot-top-tabs-v2 .hot-top-tab-edit-v2,
+.hot-top-tabs-v2 .hot-top-tab-menu-v2,
+.hot-top-tabs-v2 .hot-top-tab-close-v2 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 0;
+  height: 15px;
+  margin-left: 0;
+  border-radius: var(--m3-shape-full);
+  line-height: 1;
+  color: var(--m3-on-surface-variant);
+  opacity: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    width var(--m3-duration-short4) var(--m3-ease-standard),
+    margin-left var(--m3-duration-short4) var(--m3-ease-standard),
+    opacity var(--m3-duration-short3) var(--m3-ease-standard),
+    background-color var(--m3-duration-short2) var(--m3-ease-standard),
+    color var(--m3-duration-short2) var(--m3-ease-standard);
+}
+.hot-top-tabs-v2 .hot-top-tab-close-v2 {
+  font-size: var(--text-body-regular-sm, 0.875rem);
+}
+.hot-top-tabs-v2 [role="tab"]:hover .hot-top-tab-edit-v2,
+.hot-top-tabs-v2 [role="tab"]:hover .hot-top-tab-menu-v2,
+.hot-top-tabs-v2 [role="tab"]:hover .hot-top-tab-close-v2,
+/* Keep the `⋯` present on the ACTIVE tab even without hover: the view you are
+   working in is the one whose actions you reach for, and a control that only
+   exists on hover is the discoverability failure A6/B9 are both about. */
+.hot-top-tabs-v2 [role="tab"][aria-selected="true"] .hot-top-tab-menu-v2 {
+  width: 15px;
+  margin-left: 3px;
+  opacity: 1;
+}
+.hot-top-tabs-v2 .hot-top-tab-edit-v2:hover,
+.hot-top-tabs-v2 .hot-top-tab-menu-v2:hover,
+.hot-top-tabs-v2 .hot-top-tab-close-v2:hover {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+
+/* ── R8 — the perspective selector becomes M3 SELECTION ─────────────────────
+   This is the most visible selector on the page, and it was the last one still
+   speaking in underlines while every other selected thing in the grid — rows,
+   cells, chips, menu items — had become a tinted container. It now takes the
+   SAME `--m3-secondary-container` role as a selected row (D1), so "selected"
+   reads identically everywhere.
+
+   ZERO vertical cost. The views bar's height is set by the 32px rows-per-page
+   select, not by the tabs: a tab at 20px line-height plus 4+4 of padding is
+   28px and still clears it. The primitive's own asymmetric 4/8 padding was
+   already zeroed further down by the "one centre line" rule.
+
+   The underline is switched off HERE rather than in the Tab primitive, which
+   other surfaces still render with its underline intact. */
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 {
+  /* 24px of gap read as separate links; 4px reads as one segmented group. */
+  gap: 4px;
+}
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] {
+  padding: 4px 12px;
+  border-radius: var(--m3-shape-full);
+  color: var(--m3-on-surface-variant);
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"]::after {
+  content: none;
+}
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"]:hover:not([aria-selected="true"]) {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"]:active:not([aria-selected="true"]) {
+  background-color: var(--m3-state-layer-pressed);
+}
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"][aria-selected="true"] {
+  background-color: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+}
+/* The per-tab affordances follow the tab's ink instead of holding three
+   different greys, so the pill reads as one object. `:not(:hover)` matters:
+   without it this rule out-specifies each affordance's own hover colour and
+   the hover would silently do nothing. */
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] .hot-top-tab-edit-v2:not(:hover),
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] .hot-top-tab-menu-v2:not(:hover),
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] .hot-top-tab-close-v2:not(:hover),
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] .hot-top-tab-default-v2 {
+  color: currentColor;
+}
+/* In a pane the row is shorter, so the pill's padding is paid for out of the
+   pane's own 2px/4px tab padding — the row height does not move. */
+[data-split-view='true'] .hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+/* A4 — the user's own default view carries a small star. It is never
+   hover-revealed: which view opens tomorrow morning is a fact about the tab,
+   not an action on it. */
+.hot-top-tabs-v2 .hot-top-tab-default-v2 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 12px;
+  height: 15px;
+  margin-left: 4px;
+  color: var(--m3-on-surface-variant);
+}
+
+/* Destructive row in the shared `.hot-col-menu` dropdown (view delete). */
+.hot-col-menu-item-danger {
+  color: var(--m3-error);
+}
+.hot-col-menu-item-danger svg {
+  color: currentColor;
+}
+.hot-col-menu-item-danger:hover:not(:disabled) {
+  background-color: var(--m3-state-layer-error-hover);
+}
+
+/* Shared-template shelf. Same `.hot-col-menu` shell as the column and view
+   menus — only the row's inner structure differs (two lines instead of one),
+   so the three dropdowns keep identical padding, radius and shadow. */
+.hot-col-menu-title {
+  padding: 6px 10px 4px;
+  font-size: var(--text-label-semibold-2xs, 0.625rem);
+  line-height: var(--text-label-semibold-2xs--line-height, 0.75rem);
+  font-weight: var(--text-label-semibold-2xs--font-weight, 600);
+  letter-spacing: var(--text-label-semibold-2xs--letter-spacing, 0.02em);
+  text-transform: uppercase;
+  color: var(--m3-on-surface-variant);
+}
+.hot-col-menu-empty {
+  padding: 6px 10px 8px;
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  line-height: var(--text-body-regular-xs--line-height, 1rem);
+  color: var(--m3-on-surface-variant);
+}
+/* A two-line row: icon top-aligned with the title, not centred on the pair. */
+.hot-col-menu-item-stack {
+  align-items: flex-start;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+.hot-col-menu-item-stack svg {
+  margin-top: 1px;
+}
+.hot-col-menu-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.hot-col-menu-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hot-col-menu-item-sub {
+  font-size: var(--text-body-regular-2xs, 0.6875rem);
+  line-height: var(--text-body-regular-2xs--line-height, 0.875rem);
+  letter-spacing: var(--text-body-regular-2xs--letter-spacing, 0.01em);
+  color: var(--m3-on-surface-variant);
+}
+/* Provenance line in the view menu — information, so it is not a button and
+   never takes hover. Padding matches `.hot-col-menu-item` exactly so the menu
+   reads as one column of rows. */
+.hot-col-menu-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  line-height: var(--text-body-regular-xs--line-height, 1rem);
+  color: var(--m3-on-surface-variant);
+}
+.hot-col-menu-note svg {
+  flex-shrink: 0;
+  color: var(--m3-on-surface-variant);
+}
+.hot-col-menu-note span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hot-top-tabs-v2 .hot-top-tab-input {
+  align-self: center;
+  height: 28px;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: var(--m3-shape-sm);
+  padding: 0 8px;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: var(--text-body-regular-sm, 0.875rem);
+  color: var(--m3-on-surface);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Pagination (v2, Figma 220:2935) — compact, right-aligned on the tabs row.
+   `‹ [active] ··· page › [rows-per-page ⌄]`. Active page = slate-300 pill;
+   no record-count text; no bottom footer.
+   ════════════════════════════════════════════════════════════════ */
+.hot-appearance-v2 .hot-table-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+.hot-appearance-v2 .hot-table-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.hot-appearance-v2 .hot-table-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-table-pagination-btn:hover:not(:disabled) {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+.hot-appearance-v2 .hot-table-pagination-btn:active:not(:disabled) {
+  background-color: var(--m3-state-layer-pressed);
+}
+/* A genuinely disabled control — the one legitimate use of opacity here. */
+.hot-appearance-v2 .hot-table-pagination-btn:disabled {
+  opacity: var(--m3-disabled-content-opacity);
+  cursor: default;
+}
+.hot-appearance-v2 .hot-table-pagination-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border: none;
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  color: var(--m3-on-surface-variant);
+  font-family: inherit;
+  font-size: var(--text-label-semibold-xs, 0.75rem);
+  line-height: var(--text-label-semibold-xs--line-height, 1rem);
+  font-weight: var(--text-label-semibold-xs--font-weight, 600);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-table-pagination-page:hover:not(.is-active) {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+/* The current page IS a selection, so it takes the one selection role rather
+   than a neutral slate pill — the same tint as a selected row or tab (D1). */
+.hot-appearance-v2 .hot-table-pagination-page.is-active {
+  background-color: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+}
+.hot-appearance-v2 .hot-table-pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 24px;
+  color: var(--m3-on-surface-variant);
+  font-size: var(--text-body-regular-xs, 0.75rem);
+}
+
+/* Rows-per-page select — white, 1px slate-300, radius 10, trailing chevron. */
+.hot-appearance-v2 .hot-table-pagination-perpage {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.hot-appearance-v2 .hot-table-pagination-select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: var(--text-body-regular-xs, 0.75rem);
+  color: var(--m3-on-surface-variant);
+  background: var(--background-v2);
+  border: 1px solid var(--m3-outline);
+  /* Pill-able and outside the grid, so it takes the full corner. Height is
+     unchanged — this is the whole reason the tab pills above cost nothing. */
+  border-radius: var(--m3-shape-full);
+  height: 32px;
+  padding: 0 28px 0 12px;
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-table-pagination-select:hover {
+  border-color: var(--m3-on-surface-variant);
+}
+.hot-appearance-v2 .hot-table-pagination-select-chevron {
+  position: absolute;
+  right: 8px;
+  color: var(--m3-on-surface-variant);
+  pointer-events: none;
+}
+
+/* ============================================================
+   Fill handle (drag-to-fill)
+   ============================================================
+   Opt-in via `uiConfig.enableFillHandle`, which sets [data-fill-enabled] on
+   the scroll container. The nub element is rendered (in Cell.tsx) only on a
+   single active editable cell; this gate hides it unless the feature is on. */
+.hot-virtual-container:not([data-fill-enabled]) .fill-handle {
+  display: none;
+}
+/* Relax the cell's text-ellipsis `overflow: hidden` so the corner nub can
+   straddle the bottom-right corner without being clipped (text still ellipses
+   via the inner `.cell-content`, which keeps its own overflow). */
+.hot-appearance-v2 .hot-cell:has(> .fill-handle) {
+  overflow: visible;
+}
+.fill-handle {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 8px;
+  height: 8px;
+  background: var(--m3-accent);
+  border: 1.5px solid var(--m3-surface-container-lowest);
+  /* 4px on an 8px nub is a full circle — the smallest rung, applied round. */
+  border-radius: var(--m3-shape-xs);
+  cursor: crosshair;
+  z-index: 6;
+}
+/* Dashed preview RECTANGLE — deliberately DASHED so a fill drag never reads as
+   the SOLID selection box.
+
+   PER EDGE, not per cell. A single `outline` on every previewed cell collapses
+   visually into one outline on a 1-wide strip, but over a rectangle it draws a
+   GRID OF BOXES — one around each cell. The four `data-fill-*` attributes carry
+   the real rectangle edges (the store computes them with the same helper the
+   selection outline uses), so only the outer border of the block is painted.
+
+   `::before`, not `::after`: the v2 range outline owns `td[data-in-range]::after`
+   and the source cells are STILL `data-in-range` during a fill drag —
+   `handleFillMouseDown` returns before the range phase is reset, by design, so
+   the user keeps seeing what they are filling FROM.
+
+   `::before` has exactly one incumbent, `td[data-frozen-edge]::before` (the
+   frozen-column divider). The collision window is one column edge, only while
+   the pinned block is floating AND inside the fill rectangle: for the duration
+   of the drag the fill edge wins that border and the divider returns on release.
+   Accepted, and cheaper than a third pseudo-element. */
+.hot-appearance-v2 td[data-fill-preview="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.hot-appearance-v2 td[data-fill-preview="true"][data-fill-top="true"]::before    { border-top:    1.5px dashed var(--m3-accent); }
+.hot-appearance-v2 td[data-fill-preview="true"][data-fill-bottom="true"]::before { border-bottom: 1.5px dashed var(--m3-accent); }
+.hot-appearance-v2 td[data-fill-preview="true"][data-fill-left="true"]::before   { border-left:   1.5px dashed var(--m3-accent); }
+.hot-appearance-v2 td[data-fill-preview="true"][data-fill-right="true"]::before  { border-right:  1.5px dashed var(--m3-accent); }
+/* Cells a back-drag is about to EMPTY. Washed out rather than outlined: the
+   user is destroying content and must see which content before releasing. */
+.hot-appearance-v2 td[data-fill-clear="true"] {
+  opacity: 0.45;
+}
+
+/* ============================================================
+   MARCHING ANTS — the clipboard source outline
+   ============================================================
+   Excel's marquee, and the product owner asked for it by feel: after Ctrl+C /
+   Ctrl+X the copied block keeps an ANIMATED DASHED border until Escape or a
+   paste ends it, so you can move the cursor away and still see what a Ctrl+V
+   is about to paste.
+
+   NOT scoped to `.hot-appearance-v2`: `.hot-clip-ants` is a new class with no
+   legacy incumbent, and the marker is a correctness affordance rather than a
+   theme flourish — the legacy appearance must not silently ship without it.
+
+   ONE element, four edges. Four background LAYERS are always declared and each
+   one is switched on by giving it a size — `--ants-<edge>` defaults to 0 (a
+   zero-width layer paints nothing) and the per-edge rules below raise it to
+   100%. Custom properties accumulate across rules where `background-image`
+   would not, which is what lets four independent booleans drive one shorthand.
+
+   The animation shifts each layer by exactly one 8px dash period, so the loop
+   is seamless; the four directions run top→right, bottom→left, left→up,
+   right→down, which is the rotation Excel draws.
+
+   Colour: the selection accent, so the ants read as "the grid marked this" in
+   both themes — `--hot-selection-color` (per-table override) falling back to
+   `--selection-v2`, exactly like the fill-preview rectangle above. */
+@keyframes hot-marching-ants {
+  to {
+    background-position: 8px 0, -8px 100%, 0 -8px, 100% 8px;
+  }
+}
+.hot-clip-ants {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  --ants-top: 0;
+  --ants-bottom: 0;
+  --ants-left: 0;
+  --ants-right: 0;
+  --ants-color: var(--m3-accent);
+  background-image:
+    repeating-linear-gradient(to right,  var(--ants-color) 0 4px, transparent 4px 8px),
+    repeating-linear-gradient(to right,  var(--ants-color) 0 4px, transparent 4px 8px),
+    repeating-linear-gradient(to bottom, var(--ants-color) 0 4px, transparent 4px 8px),
+    repeating-linear-gradient(to bottom, var(--ants-color) 0 4px, transparent 4px 8px);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size:
+    var(--ants-top) 1.5px,
+    var(--ants-bottom) 1.5px,
+    1.5px var(--ants-left),
+    1.5px var(--ants-right);
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  animation: hot-marching-ants 600ms var(--m3-ease-linear) infinite;
+}
+.hot-clip-ants[data-clip-top]    { --ants-top: 100%; }
+.hot-clip-ants[data-clip-bottom] { --ants-bottom: 100%; }
+.hot-clip-ants[data-clip-left]   { --ants-left: 100%; }
+.hot-clip-ants[data-clip-right]  { --ants-right: 100%; }
+/* A dashed outline still says "clipboard" without moving. Motion that cannot
+   be switched off is an accessibility failure, and the marker persists, so it
+   would be a permanent one. */
+@media (prefers-reduced-motion: reduce) {
+  .hot-clip-ants { animation: none; }
+}/* Pinned totals row — v2 surface. Matches the group-subtotal band so the two
+   read as the same kind of row, and sits on the header fill so scrolling body
+   rows pass underneath it rather than showing through. */
+/* The sticky shell owns the fill and the hairline; the inner row is now just
+   the flex track of cells (see FooterTotalsRow's `hot-footer-totals` wrapper,
+   added for ledger 3.3). Both are selected so the rule survives either shape. */
+.hot-appearance-v2 .hot-footer-totals,
+.hot-appearance-v2 .hot-footer-totals-row {
+  background: var(--m3-surface-container-lowest);
+}
+.hot-appearance-v2 .hot-footer-totals {
+  border-top: 1px solid var(--m3-outline-variant);
+}
+.hot-appearance-v2 .hot-footer-totals .hot-footer-totals-row {
+  border-top: none;
+}
+.hot-appearance-v2 .hot-footer-totals-cell,
+.hot-appearance-v2 .hot-footer-totals-rowheader,
+.hot-appearance-v2 .hot-footer-totals-actions {
+  background: var(--m3-surface-container-lowest);
+  border-top: none;
+  background-clip: padding-box;
+}
+.hot-appearance-v2 .hot-footer-totals-label {
+  color: var(--m3-on-surface-variant);
+}
+.hot-appearance-v2 .hot-footer-totals-value {
+  color: var(--m3-on-surface);
+}
+.hot-appearance-v2 .hot-footer-totals-scope {
+  color: var(--m3-on-surface-variant);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   COLUMN-VIRTUALIZATION SPACERS
+
+   Under `uiConfig.enableColumnVirtualization`, a run of unmounted columns is
+   replaced by ONE placeholder box whose width is the summed width of the
+   columns it stands in for. Geometry is inline (see
+   `utils/columnSpacerStyle.ts`); everything a spacer must NOT do is here.
+
+   Why the fills below exist: a striped, checkbox-selected or range-selected
+   row paints its background on the CELLS, never on the <tr>. A spacer that
+   painted nothing would therefore read as a hole punched through the middle
+   of a highlighted row — and it would MOVE as the user scrolls, which is the
+   most obviously-broken artifact this feature could ship. Each rule mirrors
+   its `td.hot-cell` counterpart exactly, including `background-color`
+   (longhand — the shorthand resets background-clip and breaks the row gap).
+   ════════════════════════════════════════════════════════════════ */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell-spacer,
+.hot-appearance-v2.hot-container .hot-table th.hot-header-spacer {
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  background-clip: padding-box;
+}
+
+/* Zebra stripe — mirrors the `td.hot-cell` rule above. */
+.hot-appearance-v2[data-striped="true"] tbody tr[data-row-even="true"] td.hot-cell-spacer {
+  background-color: var(--table-v2-row-stripe);
+}
+
+/* Checkbox-selected row. */
+.hot-appearance-v2 tbody tr[data-row-checked="true"] td.hot-cell-spacer {
+  background-color: var(--m3-row-selected) !important;
+}
+
+/* Row-range selection. */
+.hot-appearance-v2.hot-container .hot-virtual-container .hot-table tr[data-row-selected="true"] td.hot-cell-spacer {
+  background-color: var(--m3-row-selected) !important;
+  background-clip: padding-box !important;
+  box-shadow: none !important;
+}
+
+/* Header band: the sticky header strip has its own surface, so a header spacer
+   must carry it or a white notch travels across the header while scrolling. */
+.hot-appearance-v2 .hot-headers-sticky th.hot-header-spacer {
+  background: var(--table-v2-header-bg, var(--m3-surface-container));
+}
+
+/* Pinned totals row — same surface as its neighbouring footer cells. */
+.hot-appearance-v2 .hot-footer-totals-row .hot-cell-spacer {
+  background: var(--m3-surface-container-lowest);
+  background-clip: padding-box;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPACT TOOLBAR — the grid adapts to its OWN width, not the viewport's
+   Spec: .ai/specs/2026-08-04-module-table-registry.md
+
+   `.hot-toolbar` is a single non-wrapping flex row (title · search · spacer ·
+   N action buttons) and the grid had no container queries or breakpoints at
+   all, so in any narrow host — a split-view pane, a drawer, a narrow laptop —
+   the actions simply overflowed.
+
+   A CONTAINER query, not a media query: a pane's width is set by a splitter,
+   not by the viewport, so a media query would be answering the wrong question.
+   The same rule therefore serves panes, drawers and small screens alike.
+
+   Nothing is HIDDEN except the title. Hiding search or the perspective tabs
+   would remove the very capability an embedded table exists to provide; the
+   title is the one element a host already shows in its own chrome.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hot-appearance-v2.hot-container {
+  /* Inline-axis containment only — block size still follows content, so the
+     `height: 'fill'` measurement in DynamicTable.tsx is unaffected. */
+  container-type: inline-size;
+  container-name: dt-grid;
+}
+
+@container dt-grid (max-width: 720px) {
+  /* ONE row, always. A narrow pane gets AT MOST two rows of chrome before the
+     first data row — the toolbar (search + actions) and the views+pagination
+     bar. The toolbar used to wrap into two on its own, which made three.
+     `nowrap` is safe because everything inside it is elastic or collapsible:
+     the search shrinks (below), the button labels drop to icons under 520px,
+     and extra actions already live behind the overflow menu. */
+  .hot-appearance-v2 .hot-toolbar {
+    flex-wrap: nowrap;
+  }
+
+  /* The host's own pane header already names the table. */
+  .hot-appearance-v2 .hot-toolbar-title {
+    display: none;
+  }
+
+  /* Search SHRINKS; it does not take a row of its own.
+     It used to be `flex: 1 1 100%` with `order: -1`, which forced the actions
+     onto a second line and gave a pane THREE rows of chrome before the first
+     data row: search, then actions, then the views+pagination bar. In a split
+     pane that is most of the pane. Two rows is the ceiling.
+     `min-width: 0` is what actually lets it shrink — a flex item will not go
+     below its content's intrinsic width without it, and the input's own
+     `width: 100%` would otherwise pin the row open and re-trigger the wrap. */
+  .hot-appearance-v2 .hot-toolbar .search-bar {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .hot-appearance-v2 .hot-toolbar .search-input-wrapper {
+    max-width: none;
+    min-width: 0;
+  }
+  /* An `<input>` carries an intrinsic width from its `size` attribute (~170px)
+     that `width: 100%` does not override as a flex MINIMUM — without this the
+     input alone holds the row open and the wrap comes back. */
+  .hot-appearance-v2 .hot-toolbar .search-input {
+    min-width: 0;
+  }
+
+  /* The search grows into the gap instead, so the spacer would be a second
+     elastic item fighting it for the same space. */
+  .hot-appearance-v2 .hot-toolbar .hot-toolbar-spacer {
+    display: none;
+  }
+
+  /* Actions hold their size and stay pinned right — they are the fixed end of
+     the row, and `margin-left: auto` keeps them there even if the search is
+     ever hidden by the chrome toggles. */
+  .hot-appearance-v2 .hot-toolbar .hot-toolbar-actions {
+    /* `0 1 auto`, not `0 0 auto`: actions hold their natural size while there is
+       room, but they must be ABLE to give some back, because the active-filter
+       chip strip lives in here and is up to 360px wide. Unshrinkable, a couple
+       of active filters would push the row past the pane. Shrinking makes the
+       chip strip scroll inside itself instead, which is what it is built for. */
+    flex: 0 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+    /* Keeps actions at the right edge even if the search is hidden by the
+       pane's chrome toggles, when nothing else would push them over. */
+    margin-left: auto;
+  }
+
+  /* The TABS scroll; the row does not.
+     Scrolling the whole row carried the pagination away with the tabs, so in a
+     three-column pane the page controls were simply off-screen with no hint
+     they existed. Confining the scroll to the tab list keeps pagination pinned
+     at the right where it always is. */
+  .hot-appearance-v2.hot-container .hot-tabs-row {
+    overflow-x: visible;
+  }
+  /* Everything in the row that is NOT the tab list holds its size — pagination
+     is the fixed end of the bar. */
+  .hot-appearance-v2.hot-container .hot-tabs-row > *:not(.hot-top-tabs-v2) {
+    flex: 0 0 auto;
+  }
+
+  /* `overflow-x` on the row was not enough on its own: the tabs are flex items
+     with no `nowrap`, so instead of overflowing they SHRANK and wrapped their
+     own labels — "Default view" became two lines and the bar rendered 54px
+     tall. Two rows of chrome, one of them double-height, is the three-row
+     problem by another route.
+     Holding each tab at its natural width is what actually makes the list
+     overflow, which is what makes it scroll. The 24px inter-tab gap is page
+     geometry; in a pane it is most of the row. */
+  .hot-appearance-v2.hot-container .hot-top-tabs-v2 {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 12px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .hot-appearance-v2.hot-container .hot-top-tabs-v2::-webkit-scrollbar {
+    display: none;
+  }
+  .hot-appearance-v2.hot-container .hot-top-tabs-v2 > * {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
+/* Below ~520px even the two-row toolbar is tight: drop the button labels and
+   keep the icons, which every action button already renders. */
+@container dt-grid (max-width: 520px) {
+  .hot-appearance-v2 .hot-toolbar .hot-toolbar-actions button > span:not([data-keep-label]) {
+    display: none;
+  }
+  .hot-appearance-v2 .hot-toolbar {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMBEDDED (split-view pane) — reclaim vertical space
+   Spec: .ai/specs/2026-08-04-dynamic-table-split-view.md
+
+   A pane is a budget: every pixel of chrome is a data row not shown, and the
+   cost multiplies by pane count. Full-page padding is generous on purpose;
+   inside a pane it is the single biggest avoidable loss. These rules only
+   apply under `[data-split-view="true"]`, so a full-page table is untouched.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The pane's pill strip. Same total block size as the pane's previous 4px/4px
+   padding: the margin is taken OUT of the padding, never added to it. */
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar {
+  /* Horizontal margin dropped to 0: the card owns the pane's inset now, so the
+     pill strip spans the full content width and its left edge lines up with the
+     table's first column. Vertical margin is unchanged. */
+  margin: 2px 0;
+  padding: 2px 8px;            /* was 4px 8px, minus the 2px margin */
+  gap: 8px;                    /* was 12px */
+}
+
+[data-split-view='true'] .hot-appearance-v2.hot-container .hot-tabs-row {
+  margin-bottom: 0;            /* was 8px */
+  padding-right: 8px;          /* was 16px */
+}
+
+/* The card's own inset — a pane already has a border and a divider around it,
+   so the extra frame is drawn twice. */
+/* R2 — ONE frame owner. Inside a split view the PANE wrapper draws the 16px
+   outlined frame; if the card drew one too the result was two concentric 1px
+   hairlines at mismatched radii. The card keeps its `background` and its
+   `overflow: hidden` (that clip is what rounds the grid header to the pane)
+   and gives up only its own border and corner. */
+[data-split-view='true'] .hot-appearance-v2 .hot-card {
+  /* ONE owner for the pane's horizontal inset.
+     Measured before this (1600x1000, four-cell template): the toolbar sat 5px
+     from the pane frame while the grid sat 17px, because each carried its own
+     margin. Two problems at once — the search pill and the table's first column
+     did not line up, and at 5px the toolbar was visibly cramped against the
+     card's 16px corner, which is the "needs more padding" the design review
+     called out.
+     The card now owns the inset and the children below give up their own, so
+     every row in a pane — toolbar, tabs, grid — shares one 16px edge.
+     HORIZONTAL ONLY: vertical padding here would cost a data row in every pane,
+     and rows-per-screen is the product requirement. */
+  padding: 0 16px;
+  border: none;
+  border-radius: 0;
+}
+
+/* The children stop paying their own horizontal inset now that the card pays it
+   once. Without these the two stack and the content sits 32px in. */
+[data-split-view='true'] .hot-appearance-v2.hot-container:has(.hot-toolbar) .hot-virtual-container,
+[data-split-view='true'] .hot-appearance-v2 .hot-virtual-container {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Toolbar title: keep it (nothing else names the table in a pane) but stop it
+   reserving a full-size heading's leading. */
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar-title {
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* The page-level bleed margins do not apply inside a host. */
+[data-split-view='true'] .hot-appearance-v2.hot-container {
+  border-radius: 0;
+}
+
+/* ── Pane controls: sized for a pane, not for a page ───────────────────────
+   Measured before changing anything (1800x1000, two panes):
+     toolbar 50px · tabs+pagination row 38px
+     .hot-table-pagination-select  32px tall, 40px horizontal padding for "50"
+     action buttons               32x32 with a 16px icon
+   Full-page those are comfortable. In a pane they are the difference between
+   seeing the next row and not, and the cost repeats per pane. Scoped to
+   `[data-split-view="true"]` so nothing outside a split changes.
+   ───────────────────────────────────────────────────────────────────────── */
+
+[data-split-view='true'] .hot-appearance-v2 .hot-tabs-row {
+  min-height: 0;
+}
+
+/* Page-size select: the padding was sized for a wide label, not a 2-digit
+   number, so most of its width was empty. */
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-select {
+  height: 22px;
+  padding: 0 18px 0 6px;
+  background-position: right 4px center;
+  font-size: var(--text-body-regular-2xs, 0.6875rem);
+  line-height: var(--text-body-regular-2xs--line-height, 0.875rem);
+}
+
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-page,
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-ellipsis {
+  height: 18px;
+  min-width: 18px;
+  padding: 0 3px;
+  font-size: var(--text-body-regular-2xs, 0.6875rem);
+  line-height: var(--text-body-regular-2xs--line-height, 0.875rem);
+}
+
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-btn {
+  height: 16px;
+  width: 16px;
+}
+
+/* Icon actions: keep the 16px icon, drop the 8px of dead ring around it. */
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar .hot-add-row-btn,
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar .fullscreen-toggle-btn {
+  height: 24px;
+  width: 24px;
+}
+
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar button svg {
+  height: 14px;
+  width: 14px;
+}
+
+/* The saved-view tabs carry a page-sized bottom rail.
+   `:not([class*='pagination'])` matters: the pagination controls live INSIDE
+   this row, so the unqualified selector was giving them an asymmetric
+   2px/4px padding and pushing them 4px below the tab baseline — which is
+   exactly the "pagination looks off" symptom. */
+[data-split-view='true'] .hot-appearance-v2 .hot-tabs-row button:not([class*='pagination']) {
+  padding-top: 2px;
+  padding-bottom: 4px;
+}
+
+/* The row is `align-items: flex-end` for the tab underline rail; the
+   pagination is not a tab and should sit on the row's centre line. */
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-btn,
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-page,
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-ellipsis,
+[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-select {
+  align-self: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* With the toolbar hidden the restore handle floats at the pane's top-right,
+   where the pagination already is. Reserve room for it so the two never
+   collide, rather than moving the handle out of the pane's clipped bounds. */
+[data-split-view='true'] [data-pane-toolbar='hidden'] .hot-appearance-v2 .hot-tabs-row {
+  padding-right: 40px;
+}
+
+/* Overflow trigger — matches the other icon actions in the toolbar. */
+.hot-appearance-v2 .hot-toolbar-overflow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  /* The three legacy shadcn tokens this rule used (`--border`, `--background`,
+     `--muted`) are the last of their kind in this sheet. An icon button on the
+     tinted toolbar strip needs no box of its own — just a circular state
+     layer. Sizes are unchanged. */
+  border: none;
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  color: var(--m3-on-surface-variant);
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-toolbar-overflow-btn:hover {
+  background-color: var(--m3-state-layer-hover);
+  color: var(--m3-on-surface);
+}
+.hot-appearance-v2 .hot-toolbar-overflow-btn:active {
+  background-color: var(--m3-state-layer-pressed);
+}
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar-overflow-btn {
+  height: 24px;
+  width: 24px;
+  border-radius: var(--m3-shape-full);
+}
+
+/* ── Views bar: one centre line ────────────────────────────────────────────
+   Measured before changing anything (full page):
+     row       h 38  centre 164
+     view tab  h 23  centre 172   (inside a nested `div.flex.items-end`)
+     page btn  h 24  centre 169
+     select    h 32  centre 169
+
+   Three centre lines in one row — that is what reads as "not centered". The
+   tabs sit in their own flex wrapper that bottom-aligns them, so aligning the
+   ROW alone never moved them; the wrapper had to be addressed too.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.hot-appearance-v2.hot-container .hot-tabs-row {
+  align-items: center;
+}
+
+/* The tab GROUP is a nested flex container with its own `items-end`. */
+.hot-appearance-v2.hot-container .hot-tabs-row > div {
+  align-items: center;
+}
+
+.hot-appearance-v2.hot-container .hot-tabs-row > div > button {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-table-pagination-btn,
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-table-pagination-page,
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-table-pagination-ellipsis,
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-table-pagination-select {
+  align-self: center;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* The pagination CONTAINER is what sits off-centre: `align-self: flex-end`
+   plus a -2px bottom margin, both there to hang it on the old bottom rail.
+   Targeting the individual buttons never moved it. */
+.hot-appearance-v2.hot-container .hot-tabs-row .hot-table-pagination {
+  align-self: center;
+  margin-bottom: 0;
+}
+
+/* The select's 28px right inset was sized for a wider label than two digits. */
+.hot-appearance-v2 .hot-table-pagination-select {
+  padding-right: 22px;
+  padding-left: 8px;
+  background-position: right 6px center;
+}
+
+/* Stale-data bar (HEDGE-165) — the band shown when the list request FAILED but
+   the grid still holds the previous response's rows. Sits between the tabs row
+   and the column headers, i.e. the same slot the bulk bar uses, and borrows its
+   geometry (44px, 8px/16px margins) so the two never disagree about where a
+   band above the headers lives.
+
+   Coloured from the error container tokens rather than the primary ones the
+   bulk bar uses: this is a warning about what is on screen, not an action bar,
+   and it must not read as "something is selected" at a glance. `flex-shrink: 0`
+   because it is a flex child of the fill-height column — without it the bar is
+   the thing that gets squeezed when the grid is tall. */
+.hot-appearance-v2.hot-container .hot-stale-data-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 44px;
+  box-sizing: border-box;
+  margin: 8px 16px;
+  padding: 4px 10px;
+  border-radius: var(--m3-shape-md);
+  background: var(--m3-error-container);
+  color: var(--m3-on-error-container);
+}
+.hot-appearance-v2 .hot-stale-data-bar-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+.hot-appearance-v2 .hot-stale-data-bar-message {
+  flex: 1;
+  min-width: 0;
+  /* One line: the bar must not grow the band and re-measure the grid on a
+     narrow viewport. The full sentence stays available as the title. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

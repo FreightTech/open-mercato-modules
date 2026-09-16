@@ -1,0 +1,206 @@
+{
+  "terminal_tracking": {
+    "title": "Śledzenie terminali",
+    "stops": {
+      "title": "Ograniczenia załadunku",
+      "vsl": "Brak załadunku na statek",
+      "road": "Brak podjęcia drogowego",
+      "rail": "Brak podjęcia kolejowego"
+    },
+    "nav": {
+      "group": "Śledzenie terminali",
+      "terminal_configs": "Terminale",
+      "tracking_jobs": "Śledzone kontenery"
+    },
+    "errors": {
+      "tenant_required": "Wymagany jest kontekst najemcy",
+      "organization_required": "Wymagany jest kontekst organizacji"
+    },
+    "terminal_config": {
+      "title": "Konfiguracje terminali",
+      "displayName": "Nazwa",
+      "terminalCode": "Kod terminalu",
+      "adapterType": "Adapter",
+      "baseUrl": "Bazowy adres API",
+      "proxyUrl": "Adres proxy API (opcjonalnie)",
+      "unlocode": "UN/LOCODE",
+      "smdgCodes": "Kody SMDG (po przecinku)",
+      "bicCodes": "Kody BIC (po przecinku)",
+      "nameAliases": "Aliasy nazwy (po przecinku)",
+      "tokenUrl": "Adres URL tokenu",
+      "scope": "Zakres (scope)",
+      "clientId": "Identyfikator klienta",
+      "rateLimitRequests": "Limit zapytań",
+      "rateLimitWindowSeconds": "Okno (sekundy)",
+      "isActive": "Aktywny",
+      "unchanged": "bez zmian",
+      "credEditHint": "Pozostaw dane uwierzytelniające puste, aby ich nie zmieniać.",
+      "gctHint": "Klucz (base32) widoczny w panelu GCT obok kodu QR. Na jego podstawie przy każdym logowaniu obliczany jest aktualny kod jednorazowy.",
+      "section": {
+        "terminal": "Terminal",
+        "auth": "Uwierzytelnianie",
+        "matching": "Dopasowanie",
+        "advanced": "Zaawansowane"
+      },
+      "cred": {
+        "username": "Nazwa użytkownika",
+        "password": "Hasło",
+        "clientSecret": "Sekret klienta",
+        "companyCode": "Kod firmy",
+        "loginName": "Login",
+        "totpSecret": "Twój sekret 2FA"
+      },
+      "validation": {
+        "allCredentials": "Wprowadź wszystkie pola danych uwierzytelniających",
+        "credentialsRequired": "Dane uwierzytelniające są wymagane"
+      }
+    },
+    "tracking_job": {
+      "title": "Zadania śledzenia terminali",
+      "containerNumber": "Kontener",
+      "status": "Status",
+      "gateIn": "Wjazd",
+      "gateOut": "Wyjazd",
+      "holds": "Blokady",
+      "lastPollAt": "Ostatnie odpytanie",
+      "details": "Szczegóły kontenera",
+      "noEvents": "Brak zdarzeń terminalowych. Użyj „Odpytaj teraz”, aby pobrać.",
+      "leg": "Wizyta na terminalu",
+      "recentErrors": "Ostatnie błędy odpytania",
+      "jobInfo": "Śledzenie",
+      "nextPollAt": "Następne odpytanie",
+      "retryCount": "Ponowienia",
+      "jobId": "ID zadania",
+      "actions": {
+        "details": "Szczegóły",
+        "poll": "Odpytaj teraz"
+      },
+      "flash": {
+        "polled": "Odpytano — {n} nowych, {u} zaktualizowanych zdarzeń"
+      },
+      "statuses": {
+        "active": "Aktywny",
+        "paused": "Wstrzymany",
+        "deactivated": "Dezaktywowany",
+        "failed": "Błąd",
+        "completed": "Zakończony"
+      }
+    },
+    "event": {
+      "source_badge": "Terminal",
+      "yardPosition": "Pozycja na placu",
+      "vgm": "VGM (kg)",
+      "visitPhase": "Faza wizyty",
+      "impediments": "Blokady",
+      "seals": "Plomby",
+      "eta": "ETA",
+      "etd": "ETD",
+      "ata": "ATA",
+      "atd": "ATD",
+      "gate_in": "Wjazd (brama)",
+      "yard": "Na placu / rozładowany",
+      "loaded": "Załadowany",
+      "loadedAt": "Data załadunku",
+      "departed": "Wyjazd",
+      "ufvGkey": "Ufv_Gkey",
+      "rawData": "Surowe dane terminalu"
+    },
+    "holds": {
+      "unknown": {
+        "label": "Nieznana blokada",
+        "description": "Nierozpoznana blokada terminalowa. Szczegóły uzyskasz w terminalu.",
+        "resolution": "Skontaktuj się z terminalem, aby ustalić sposób zdjęcia blokady."
+      },
+      "cfs_appointment": {
+        "label": "Awizacja CFS",
+        "description": "Nakładana podczas przyjmowania zlecenia importowego przez magazyn CFS.",
+        "resolution": "Zdejmowana automatycznie po zrealizowaniu zlecenia i pracy magazynu."
+      },
+      "customs_import_permission": {
+        "label": "Pozwolenie celne (import)",
+        "description": "Nakładana systemowo na wszystkie kontenery importowe oczekujące na zwolnienie celne.",
+        "resolution": "Zdejmowana automatycznie po aktualizacji numeru MRN przy użyciu polskich kodów PCS."
+      },
+      "customs_import_hold": {
+        "label": "Blokada celna (import)",
+        "description": "Nakładana ręcznie przez funkcjonariusza celnego w celu skanowania, kontroli lub z powodu problemu z odprawą.",
+        "resolution": "Może ją zdjąć wyłącznie funkcjonariusz celny — skontaktuj się z urzędem celnym."
+      },
+      "line_import_permission": {
+        "label": "Pozwolenie armatora (import)",
+        "description": "Nakładana systemowo na wszystkie kontenery importowe do czasu zwolnienia przez armatora.",
+        "resolution": "Zdejmowana po zwolnieniu kontenera przez armatora numerem PIN."
+      },
+      "oog_hold": {
+        "label": "Blokada OOG",
+        "description": "Nakładana na ponadgabarytowe kontenery importowe wymagające specjalnych zezwoleń.",
+        "resolution": "Wymaga weryfikacji przez Baltic Hub przed odbiorem; do tego czasu kontener nie może zostać awizowany do odbioru."
+      },
+      "cfs_hold": {
+        "label": "Blokada CFS",
+        "description": "Nakładana podczas przyjmowania zlecenia eksportowego przez magazyn CFS.",
+        "resolution": "Zdejmowana automatycznie po zrealizowaniu zlecenia i pracy magazynu."
+      },
+      "customs_export_permission": {
+        "label": "Pozwolenie celne (eksport)",
+        "description": "Nakładana systemowo na kontenery eksportowe oczekujące na zwolnienie celne.",
+        "resolution": "Zdejmowana automatycznie po aktualizacji MRN; musi zostać zdjęta przed terminem odprawy celnej."
+      },
+      "customs_export_hold": {
+        "label": "Blokada celna (eksport)",
+        "description": "Nakładana ręcznie przez funkcjonariusza celnego w celu skanowania, kontroli lub z powodu problemu z odprawą.",
+        "resolution": "Może ją zdjąć wyłącznie funkcjonariusz celny — skontaktuj się z urzędem celnym."
+      },
+      "unit_vgm_load_permission": {
+        "label": "Pozwolenie VGM na załadunek",
+        "description": "Nakładana na wszystkie pełne kontenery eksportowe bez zweryfikowanej masy brutto (VGM).",
+        "resolution": "Zdejmowana po wprowadzeniu masy VGM do systemu Navis."
+      },
+      "dgd_hold": {
+        "label": "Blokada DGD",
+        "description": "Nakładana automatycznie na wszystkie kontenery eksportowe z ładunkiem IMO (niebezpiecznym).",
+        "resolution": "Wymaga złożenia dokumentu DGD (deklaracji ładunku niebezpiecznego)."
+      },
+      "scanning_hold": {
+        "label": "Blokada skanowania",
+        "description": "Nakładana ręcznie przez funkcjonariusza celnego; kontener musi zostać przedstawiony do skanowania.",
+        "resolution": "Zdejmowana przez służby celne po skanowaniu (wybór DCT_CFS_SCANNING)."
+      },
+      "empty_permission": {
+        "label": "Pozwolenie (pusty)",
+        "description": "Nakładana systemowo na wszystkie puste kontenery oczekujące na referencję zwolnienia.",
+        "resolution": "Zdejmowana po podaniu numeru EDO / bookingu od armatora."
+      },
+      "missing_agent_permission": {
+        "label": "Brak pozwolenia agenta",
+        "description": "Dotyczy nieaktywnej płatności PCS. Obecnie nie blokuje załadunku na statek ani odbioru.",
+        "resolution": "Zdejmowana po wpisaniu kodu armatora w polu Agent One."
+      },
+      "technical_full_container": {
+        "label": "Techniczna (pełny kontener)",
+        "description": "Nakładana na wszystkie pełne kontenery importowe/eksportowe w celu obsługi rozpoznawania znaków OCR. Nie blokuje ruchu.",
+        "resolution": "Nie wymaga działań — wyłącznie informacyjna."
+      },
+      "technical_live_reefer": {
+        "label": "Techniczna (aktywny reefer)",
+        "description": "Nakładana na wszystkie pełne kontenery chłodnicze w celu obsługi OCR. Nie blokuje operacji.",
+        "resolution": "Nie wymaga działań — wyłącznie informacyjna."
+      },
+      "terminal_hold": {
+        "label": "Blokada terminalowa",
+        "description": "Nakładana z powodu nieprawidłowości kontenera (błędne oznakowanie, wygięte belki kontenera itp.).",
+        "resolution": "Skontaktuj się z Biurem Obsługi Klienta Baltic Hub."
+      },
+      "czrm_hold": {
+        "label": "Blokada CZRM",
+        "description": "Nakładana przez urząd celny.",
+        "resolution": "Skontaktuj się bezpośrednio z urzędem celnym w celu jej zdjęcia."
+      },
+      "izrx_hold": {
+        "label": "Blokada IZRX",
+        "description": "Nakładana przez urząd celny.",
+        "resolution": "Skontaktuj się bezpośrednio z urzędem celnym w celu jej zdjęcia."
+      }
+    }
+  }
+}

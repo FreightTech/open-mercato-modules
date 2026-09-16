@@ -1,0 +1,702 @@
+[
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-15T04:14:00-06:00",
+    "eventCreatedDateTime": "2026-02-15T10:17:42.384Z",
+    "eventLocation": {
+      "UNLocationCode": "USCHI",
+      "locationName": "CHICAGO, IL",
+      "address": {
+        "name": "CP CHICAGO BENSENVILLE"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "2584596d-2297-4d5f-afca-fce02a5660f1",
+      "modeOfTransport": "RAIL",
+      "UNLocationCode": "USCHI",
+      "facilityCode": null,
+      "facilityCodeListProvider": null,
+      "facilityTypeCode": "INTE",
+      "location": {
+        "UNLocationCode": "USCHI",
+        "locationName": "CHICAGO, IL",
+        "address": {
+          "name": "CP CHICAGO BENSENVILLE"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "EMPTY",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-13T11:07:00-06:00",
+    "eventCreatedDateTime": "2026-02-13T17:08:36.576Z",
+    "eventLocation": {
+      "UNLocationCode": "USCHI",
+      "locationName": "CHICAGO, IL",
+      "address": {
+        "name": "CP CHICAGO BENSENVILLE"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "62f42514-373b-4d8d-89a2-53c6bc2cef94",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "USCHI",
+      "facilityCode": null,
+      "facilityCodeListProvider": null,
+      "facilityTypeCode": "INTE",
+      "location": {
+        "UNLocationCode": "USCHI",
+        "locationName": "CHICAGO, IL",
+        "address": {
+          "name": "CP CHICAGO BENSENVILLE"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-13T08:25:00-06:00",
+    "eventCreatedDateTime": "2026-02-13T14:35:17.41Z",
+    "eventLocation": {
+      "UNLocationCode": "USCHI",
+      "locationName": "CHICAGO, IL",
+      "address": {
+        "name": "NORFOLK & SOUTHERN RAILROAD"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "4dac7773-a1b3-4fcd-85d7-e036601d31d5",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "USCHI",
+      "facilityCode": null,
+      "facilityCodeListProvider": null,
+      "facilityTypeCode": "INTE",
+      "location": {
+        "UNLocationCode": "USCHI",
+        "locationName": "CHICAGO, IL",
+        "address": {
+          "name": "NORFOLK & SOUTHERN RAILROAD"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-12T03:15:00-06:00",
+    "eventCreatedDateTime": "2026-02-12T09:22:01.363Z",
+    "eventLocation": {
+      "UNLocationCode": "USCHI",
+      "locationName": "CHICAGO, IL",
+      "address": {
+        "name": "NORFOLK & SOUTHERN RAILROAD"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "f1f1197b-1f57-46fd-9a24-9edebe416571",
+      "modeOfTransport": "RAIL",
+      "UNLocationCode": "USCHI",
+      "facilityCode": null,
+      "facilityCodeListProvider": null,
+      "facilityTypeCode": "INTE",
+      "location": {
+        "UNLocationCode": "USCHI",
+        "locationName": "CHICAGO, IL",
+        "address": {
+          "name": "NORFOLK & SOUTHERN RAILROAD"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTOT",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-05T23:53:00-05:00",
+    "eventCreatedDateTime": "2026-02-06T06:35:22.738Z",
+    "eventLocation": {
+      "UNLocationCode": "USORF",
+      "locationName": "NORFOLK, VA",
+      "address": {
+        "name": "NORFOLK INTL TERMINAL"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "e31c7042-1e65-464e-9442-3b5092785366",
+      "modeOfTransport": "RAIL",
+      "UNLocationCode": "USORF",
+      "facilityCode": "USORFVITA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "USORF",
+        "locationName": "NORFOLK, VA",
+        "address": {
+          "name": "NORFOLK INTL TERMINAL"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-05T11:49:00-05:00",
+    "eventCreatedDateTime": "2026-02-05T17:35:13.803Z",
+    "eventLocation": {
+      "UNLocationCode": "USORF",
+      "locationName": "NORFOLK, VA",
+      "address": {
+        "name": "NORFOLK INTL TERMINAL"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "862b5388-9373-4c22-b800-826b6b738ef7",
+      "modeOfTransport": "RAIL",
+      "UNLocationCode": "USORF",
+      "facilityCode": "USORFVITA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "USORF",
+        "locationName": "NORFOLK, VA",
+        "address": {
+          "name": "NORFOLK INTL TERMINAL"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-04T01:50:00-05:00",
+    "eventCreatedDateTime": "2026-02-04T07:36:41.685Z",
+    "eventLocation": {
+      "UNLocationCode": "USORF",
+      "locationName": "NORFOLK, VA",
+      "address": {
+        "name": "NORFOLK INTL TERMINAL"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "295df228-d063-41e8-a489-be85deba2aa8",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "USORF",
+      "facilityCode": "USORFVITA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "USORF",
+        "locationName": "NORFOLK, VA",
+        "address": {
+          "name": "NORFOLK INTL TERMINAL"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 13",
+        "vesselIMONumber": "8000013"
+      },
+      "importVoyageNumber": "601W",
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventCreatedDateTime": "2026-02-03T14:46:13.256Z",
+    "eventType": "TRANSPORT",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-02-03T09:12:00-05:00",
+    "transportEventTypeCode": "ARRI",
+    "transportCall": {
+      "transportCallId": "86d15588-09a4-4f1d-b9d8-1a404c9b1546",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "USORF",
+      "facilityCode": "USORFVITA",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "USORF",
+        "locationName": "NORFOLK, VA",
+        "address": {
+          "name": "NORFOLK INTL TERMINAL"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 13",
+        "vesselIMONumber": "8000013"
+      },
+      "importVoyageNumber": "601W",
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventCreatedDateTime": "2026-01-15T03:15:20.266Z",
+    "eventType": "TRANSPORT",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-01-15T03:35:00+01:00",
+    "transportEventTypeCode": "DEPA",
+    "transportCall": {
+      "transportCallId": "a13bf07c-f41a-44d1-8941-eba5b3e3c859",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEWVN",
+      "facilityCode": "DEWVNTNII",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEWVN",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "EUROGATE CONTAINER TERMINAL DEWVN"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-01-14T19:02:00+01:00",
+    "eventCreatedDateTime": "2026-01-14T18:09:22.317Z",
+    "eventLocation": {
+      "UNLocationCode": "DEWVN",
+      "locationName": "HAMBURG",
+      "address": {
+        "name": "EUROGATE CONTAINER TERMINAL DEWVN"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "eb3755fe-c6a8-4a23-bd27-4713d77059a4",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEWVN",
+      "facilityCode": "DEWVNTNII",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEWVN",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "EUROGATE CONTAINER TERMINAL DEWVN"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventCreatedDateTime": "2026-01-13T00:45:02.702Z",
+    "eventType": "TRANSPORT",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-01-12T10:22:00+01:00",
+    "transportEventTypeCode": "ARRI",
+    "transportCall": {
+      "transportCallId": "a3cc658b-08be-41bf-a57a-6918fb3ec337",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEWVN",
+      "facilityCode": "DEWVNTNII",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEWVN",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "EUROGATE CONTAINER TERMINAL DEWVN"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-01-12T22:47:00+01:00",
+    "eventCreatedDateTime": "2026-01-12T21:57:07.274Z",
+    "eventLocation": {
+      "UNLocationCode": "DEWVN",
+      "locationName": "HAMBURG",
+      "address": {
+        "name": "EUROGATE CONTAINER TERMINAL DEWVN"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "9a8210d5-4f8e-4f10-86cc-0ff76eb18736",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEWVN",
+      "facilityCode": "DEWVNTNII",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEWVN",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "EUROGATE CONTAINER TERMINAL DEWVN"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventCreatedDateTime": "2026-01-02T17:45:18.994Z",
+    "eventType": "TRANSPORT",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-01-02T18:13:00+01:00",
+    "transportEventTypeCode": "DEPA",
+    "transportCall": {
+      "transportCallId": "6f6b2ad6-6a76-4b19-b088-5b3ed75d5017",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "PLGDY",
+      "facilityCode": "PLGDYEOOJ",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "PLGDY",
+        "locationName": "GDYNIA",
+        "address": {
+          "name": "GDYNIA CONTAINER TERMINAL SP. Z O.O"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 12",
+        "vesselIMONumber": "8000012"
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": "2601W"
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2026-01-02T09:58:00+01:00",
+    "eventCreatedDateTime": "2026-01-02T09:09:01.591Z",
+    "eventLocation": {
+      "UNLocationCode": "PLGDY",
+      "locationName": "GDYNIA",
+      "address": {
+        "name": "GDYNIA CONTAINER TERMINAL SP. Z O.O"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "f5dce175-fcf7-4654-b987-c800fb110ff4",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "PLGDY",
+      "facilityCode": "PLGDYEOOJ",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "PLGDY",
+        "locationName": "GDYNIA",
+        "address": {
+          "name": "GDYNIA CONTAINER TERMINAL SP. Z O.O"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 12",
+        "vesselIMONumber": "8000012"
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": "2601W"
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "GTIN",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "ACT",
+    "eventDateTime": "2025-12-30T19:34:00+01:00",
+    "eventCreatedDateTime": "2025-12-30T18:50:57.567Z",
+    "eventLocation": {
+      "UNLocationCode": "PLGDY",
+      "locationName": "GDYNIA",
+      "address": {
+        "name": "GDYNIA CONTAINER TERMINAL SP. Z O.O"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "bcc9ba1e-0135-4e04-8c34-f632e8f99f9f",
+      "modeOfTransport": "TRUCK",
+      "UNLocationCode": "PLGDY",
+      "facilityCode": "PLGDYEOOJ",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "PLGDY",
+        "locationName": "GDYNIA",
+        "address": {
+          "name": "GDYNIA CONTAINER TERMINAL SP. Z O.O"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "LOAD",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "PLN",
+    "eventDateTime": "2026-01-05T11:00:00+01:00",
+    "eventCreatedDateTime": "2025-12-18T12:18:06.172Z",
+    "eventLocation": {
+      "UNLocationCode": "DEHAM",
+      "locationName": "HAMBURG",
+      "address": {
+        "name": "HHLA CONTAINER-TERMINAL (CTA)"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "0bbb2397-c5e7-4c06-8d04-70465655223d",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEHAM",
+      "facilityCode": "DEHAMSRJQ",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEHAM",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "HHLA CONTAINER-TERMINAL (CTA)"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 13",
+        "vesselIMONumber": "8000013"
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": "601W"
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "PLN",
+    "eventDateTime": "2026-01-03T11:00:00+01:00",
+    "eventCreatedDateTime": "2025-12-18T12:18:06.172Z",
+    "eventLocation": {
+      "UNLocationCode": "DEHAM",
+      "locationName": "HAMBURG",
+      "address": {
+        "name": "HHLA CONTAINER-TERMINAL (CTA)"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "913c2003-e763-4f0d-98b2-0ee53d900f1d",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEHAM",
+      "facilityCode": "DEHAMSRJQ",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEHAM",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "HHLA CONTAINER-TERMINAL (CTA)"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 12",
+        "vesselIMONumber": "8000012"
+      },
+      "importVoyageNumber": "2601W",
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventType": "EQUIPMENT",
+    "equipmentEventTypeCode": "DISC",
+    "equipmentReference": "HLCU1000001",
+    "ISOEquipmentCode": "45GP",
+    "emptyIndicatorCode": "LADEN",
+    "eventClassifierCode": "PLN",
+    "eventDateTime": "2026-01-25T12:00:00-06:00",
+    "eventCreatedDateTime": "2025-12-18T12:18:06.172Z",
+    "eventLocation": {
+      "UNLocationCode": "USCHI",
+      "locationName": "CHICAGO, IL",
+      "address": {
+        "name": "NORFOLK & SOUTHERN RAILROAD"
+      }
+    },
+    "transportCall": {
+      "transportCallId": "822d83ee-6333-49c6-ba2a-d97db105a916",
+      "modeOfTransport": "RAIL",
+      "UNLocationCode": "USCHI",
+      "facilityCode": null,
+      "facilityCodeListProvider": null,
+      "facilityTypeCode": "INTE",
+      "location": {
+        "UNLocationCode": "USCHI",
+        "locationName": "CHICAGO, IL",
+        "address": {
+          "name": "NORFOLK & SOUTHERN RAILROAD"
+        }
+      },
+      "vessel": {
+        "vesselName": null,
+        "vesselIMONumber": null
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": null
+    }
+  },
+  {
+    "eventCreatedDateTime": "2025-12-18T12:18:06.172Z",
+    "eventType": "TRANSPORT",
+    "eventClassifierCode": "PLN",
+    "eventDateTime": "2026-01-05T23:00:00+01:00",
+    "transportEventTypeCode": "DEPA",
+    "transportCall": {
+      "transportCallId": "875257bd-cee3-48b6-a0be-a8367abe8c10",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEHAM",
+      "facilityCode": "DEHAMSRJQ",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEHAM",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "HHLA CONTAINER-TERMINAL (CTA)"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 13",
+        "vesselIMONumber": "8000013"
+      },
+      "importVoyageNumber": null,
+      "exportVoyageNumber": "601W"
+    }
+  },
+  {
+    "eventCreatedDateTime": "2025-12-18T12:18:06.172Z",
+    "eventType": "TRANSPORT",
+    "eventClassifierCode": "PLN",
+    "eventDateTime": "2026-01-02T23:00:00+01:00",
+    "transportEventTypeCode": "ARRI",
+    "transportCall": {
+      "transportCallId": "ec5dda76-1acb-460a-8955-4d510f736354",
+      "modeOfTransport": "VESSEL",
+      "UNLocationCode": "DEHAM",
+      "facilityCode": "DEHAMSRJQ",
+      "facilityCodeListProvider": "BIC",
+      "facilityTypeCode": "POTE",
+      "location": {
+        "UNLocationCode": "DEHAM",
+        "locationName": "HAMBURG",
+        "address": {
+          "name": "HHLA CONTAINER-TERMINAL (CTA)"
+        }
+      },
+      "vessel": {
+        "vesselName": "EXAMPLE VESSEL 12",
+        "vesselIMONumber": "8000012"
+      },
+      "importVoyageNumber": "2601W",
+      "exportVoyageNumber": null
+    }
+  }
+]

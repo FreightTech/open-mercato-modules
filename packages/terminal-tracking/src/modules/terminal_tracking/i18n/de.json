@@ -1,0 +1,175 @@
+{
+  "terminal_tracking": {
+    "title": "Terminal Tracking",
+    "stops": {
+      "title": "Verladebeschränkungen",
+      "vsl": "Keine Schiffsverladung",
+      "road": "Keine Straßenabholung",
+      "rail": "Keine Bahnabholung"
+    },
+    "nav": {
+      "group": "Terminal Tracking",
+      "terminal_configs": "Terminals",
+      "tracking_jobs": "Tracked Containers"
+    },
+    "errors": {
+      "tenant_required": "Tenant context is required",
+      "organization_required": "Organization context is required"
+    },
+    "terminal_config": {
+      "title": "Terminal Configurations",
+      "displayName": "Name",
+      "terminalCode": "Terminal code",
+      "adapterType": "Adapter",
+      "baseUrl": "API base URL",
+      "proxyUrl": "API-Proxy-URL (optional)",
+      "unlocode": "UN/LOCODE",
+      "isActive": "Active",
+      "gctHint": "Base32-Schlüssel, der im GCT-Panel neben dem QR-Code angezeigt wird. Daraus wird bei jeder Anmeldung ein neuer Einmalcode berechnet."
+    },
+    "tracking_job": {
+      "title": "Terminal Tracking Jobs",
+      "containerNumber": "Container",
+      "status": "Status",
+      "lastPollAt": "Last polled",
+      "details": "Container Details",
+      "noEvents": "No terminal events yet. Use \"Poll now\" to fetch.",
+      "leg": "Facility visit",
+      "recentErrors": "Recent poll errors",
+      "jobInfo": "Tracking",
+      "nextPollAt": "Next poll",
+      "retryCount": "Retries",
+      "jobId": "Job ID",
+      "actions": {
+        "details": "Details",
+        "poll": "Poll now"
+      },
+      "flash": {
+        "polled": "Abgefragt — {n} neue, {u} aktualisierte Ereignis(se)"
+      },
+      "statuses": {
+        "active": "Aktiv",
+        "paused": "Pausiert",
+        "deactivated": "Deaktiviert",
+        "failed": "Fehlgeschlagen",
+        "completed": "Abgeschlossen"
+      }
+    },
+    "event": {
+      "source_badge": "Terminal",
+      "yardPosition": "Yard position",
+      "vgm": "VGM (kg)",
+      "visitPhase": "Visit phase",
+      "impediments": "Holds",
+      "seals": "Seals",
+      "eta": "ETA",
+      "etd": "ETD",
+      "ata": "ATA",
+      "atd": "ATD",
+      "gate_in": "Gate In",
+      "yard": "In Yard / Discharged",
+      "loaded": "Loaded",
+      "loadedAt": "Verladen am",
+      "departed": "Departed",
+      "ufvGkey": "Ufv_Gkey",
+      "rawData": "Raw terminal data"
+    },
+    "holds": {
+      "unknown": {
+        "label": "Unbekannte Sperre",
+        "description": "Nicht erkannte Terminalsperre. Einzelheiten erfahren Sie beim Terminal.",
+        "resolution": "Wenden Sie sich an das Terminal, um zu klären, wie diese Sperre aufgehoben wird."
+      },
+      "cfs_appointment": {
+        "label": "CFS-Termin",
+        "description": "Wird während der Annahme eines CFS-Importauftrags (Lager) gesetzt.",
+        "resolution": "Wird automatisch aufgehoben, sobald der Auftrag und die Lagerarbeit abgeschlossen sind."
+      },
+      "customs_import_permission": {
+        "label": "Zollfreigabe (Import)",
+        "description": "Wird systematisch auf alle Importcontainer gesetzt, die auf die Zollfreigabe warten.",
+        "resolution": "Wird automatisch nach Aktualisierung der MRN-Nummer über die polnischen PCS-Codes aufgehoben."
+      },
+      "customs_import_hold": {
+        "label": "Zollsperre (Import)",
+        "description": "Wird manuell vom Zollbeamten für Scan, Kontrolle oder bei einem Abfertigungsproblem gesetzt.",
+        "resolution": "Nur ein Zollbeamter kann sie aufheben — wenden Sie sich an das Zollamt."
+      },
+      "line_import_permission": {
+        "label": "Reederei-Freigabe (Import)",
+        "description": "Wird systematisch auf alle Importcontainer gesetzt, bis die Reederei sie freigibt.",
+        "resolution": "Wird aufgehoben, sobald die Reederei den Container per PIN-Nummer freigibt."
+      },
+      "oog_hold": {
+        "label": "OOG-Sperre",
+        "description": "Wird auf übergroße Importcontainer gesetzt, die Sondergenehmigungen erfordern.",
+        "resolution": "Muss vor der Abholung von Baltic Hub geprüft werden; bis dahin kann der Container nicht zur Abholung avisiert werden."
+      },
+      "cfs_hold": {
+        "label": "CFS-Sperre",
+        "description": "Wird während der Annahme eines CFS-Exportauftrags (Lager) gesetzt.",
+        "resolution": "Wird automatisch aufgehoben, sobald der Auftrag und die Lagerarbeit abgeschlossen sind."
+      },
+      "customs_export_permission": {
+        "label": "Zollfreigabe (Export)",
+        "description": "Wird systematisch auf Exportcontainer gesetzt, die auf die Zollfreigabe warten.",
+        "resolution": "Wird automatisch nach der MRN-Aktualisierung aufgehoben; muss vor der Zollabfertigungsfrist aufgehoben werden."
+      },
+      "customs_export_hold": {
+        "label": "Zollsperre (Export)",
+        "description": "Wird manuell vom Zollbeamten für Scan, Kontrolle oder bei einem Abfertigungsproblem gesetzt.",
+        "resolution": "Nur ein Zollbeamter kann sie aufheben — wenden Sie sich an das Zollamt."
+      },
+      "unit_vgm_load_permission": {
+        "label": "VGM-Ladefreigabe",
+        "description": "Wird auf jeden vollen Exportcontainer ohne verifizierte Bruttomasse gesetzt.",
+        "resolution": "Wird aufgehoben, sobald das VGM-Gewicht in Navis hochgeladen wird."
+      },
+      "dgd_hold": {
+        "label": "DGD-Sperre",
+        "description": "Wird automatisch auf alle Exportcontainer mit IMO-Gefahrgut gesetzt.",
+        "resolution": "Erfordert die Einreichung des DGD-Dokuments (Gefahrgutdeklaration)."
+      },
+      "scanning_hold": {
+        "label": "Scan-Sperre",
+        "description": "Wird manuell vom Zollbeamten gesetzt; der Container muss zum Scannen vorgeführt werden.",
+        "resolution": "Wird vom Zoll nach dem Scannen aufgehoben (Auswahl DCT_CFS_SCANNING)."
+      },
+      "empty_permission": {
+        "label": "Freigabe (leer)",
+        "description": "Wird systematisch auf alle Leercontainer gesetzt, die auf eine Freigabereferenz warten.",
+        "resolution": "Wird aufgehoben, sobald die EDO-/Buchungsnummer der Reederei vorliegt."
+      },
+      "missing_agent_permission": {
+        "label": "Fehlende Agentenfreigabe",
+        "description": "Bezieht sich auf eine inaktive PCS-Zahlung. Blockiert derzeit weder die Verladung noch die Abholung.",
+        "resolution": "Wird durch Eingabe des Reederei-Codes im Feld Agent One aufgehoben."
+      },
+      "technical_full_container": {
+        "label": "Technisch (voller Container)",
+        "description": "Wird auf alle vollen Import-/Exportcontainer zur Unterstützung der OCR-Zeichenerkennung gesetzt. Blockiert die Bewegung nicht.",
+        "resolution": "Keine Aktion erforderlich — nur informativ."
+      },
+      "technical_live_reefer": {
+        "label": "Technisch (aktiver Reefer)",
+        "description": "Wird auf alle vollen Kühlcontainer zur OCR-Unterstützung gesetzt. Blockiert den Betrieb nicht.",
+        "resolution": "Keine Aktion erforderlich — nur informativ."
+      },
+      "terminal_hold": {
+        "label": "Terminalsperre",
+        "description": "Wird bei einer Container-Unregelmäßigkeit gesetzt (falsche Kennzeichnung, verbogene Containerträger usw.).",
+        "resolution": "Wenden Sie sich an den Baltic Hub Kundenservice."
+      },
+      "czrm_hold": {
+        "label": "CZRM-Sperre",
+        "description": "Wird vom Zollamt gesetzt.",
+        "resolution": "Wenden Sie sich zur Aufhebung direkt an das Zollamt."
+      },
+      "izrx_hold": {
+        "label": "IZRX-Sperre",
+        "description": "Wird vom Zollamt gesetzt.",
+        "resolution": "Wenden Sie sich zur Aufhebung direkt an das Zollamt."
+      }
+    }
+  }
+}
