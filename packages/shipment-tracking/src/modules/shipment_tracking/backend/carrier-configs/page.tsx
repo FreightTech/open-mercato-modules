@@ -25,11 +25,106 @@ import { Button as ButtonV2 } from '@freighttech/ui/primitives-v2'
 import { Input } from '@freighttech/ui/primitives/input'
 import { Label } from '@freighttech/ui/primitives/label'
 import { Checkbox } from '@freighttech/ui/primitives/checkbox'
-import { Textarea } from '@freighttech/ui/primitives/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@freighttech/ui/primitives/card'
 import { Badge } from '@freighttech/ui/primitives/badge'
 import { Loader2, CheckCircle2, XCircle, Shield, Plus } from 'lucide-react'
 import { ShipsGoConfigSection } from '../../components/ShipsGoConfigSection'
+
+// ─── Carrier specs ───────────────────────────────────────────
+// One entry per registered carrier adapter (see
+// lib/adapters/index.ts / services/carrierRegistry.ts). Each carrier maps to a
+// fixed set of auth_config keys and a default events endpoint (the value the
+// adapter falls back to when apiEndpoint is null). ShipsGo is intentionally
+// absent — it has its own dedicated config section, not a carrier-configs row.
+type CredField = { key: string; label: string; secret?: boolean; placeholder?: string; optional?: boolean }
+
+type CarrierSpec = {
+  value: string
+  label: string
+  /** Adapter's default events endpoint; '' when the adapter has none. */
+  defaultEndpoint: string
+  /** Evergreen has no default endpoint — apiEndpoint must be supplied. */
+  endpointRequired?: boolean
+  credentials: CredField[]
+}
+
+const CLIENT_ID: CredField = { key: 'client_id', label: 'Client ID' }
+const CLIENT_SECRET: CredField = { key: 'client_secret', label: 'Client secret', secret: true }
+
+const CARRIER_SPECS: CarrierSpec[] = [
+  {
+    value: 'maersk',
+    label: 'Maersk',
+    defaultEndpoint: 'https://api.maersk.com/track-and-trace-private/events',
+    credentials: [CLIENT_ID, CLIENT_SECRET],
+  },
+  {
+    value: 'msc',
+    label: 'MSC',
+    defaultEndpoint: 'https://api.tech.msc.com/msc/trackandtrace/v2.2/events',
+    // The MSC OAuth account identity (client_id/scope/token_url/aud) is supplied
+    // per config, not baked into the adapter — so the form collects it here
+    // alongside the certificate. `aud` defaults to `token_url` when left blank.
+    credentials: [
+      CLIENT_ID,
+      { key: 'scope', label: 'Scope' },
+      { key: 'token_url', label: 'Token URL' },
+      { key: 'aud', label: 'Audience', optional: true, placeholder: 'defaults to Token URL' },
+      { key: 'certificate_base64', label: 'Certificate (base64 PFX)', secret: true },
+    ],
+  },
+  {
+    value: 'cma-cgm',
+    label: 'CMA CGM',
+    defaultEndpoint: 'https://apis.cma-cgm.net/operation/trackandtrace/v1/events',
+    credentials: [{ key: 'api_key', label: 'API key', secret: true }],
+  },
+  {
+    value: 'hapag-lloyd',
+    label: 'Hapag-Lloyd',
+    defaultEndpoint: 'https://api.hlag.com/hlag/external/v2/events',
+    credentials: [CLIENT_ID, CLIENT_SECRET],
+  },
+  {
+    value: 'zim',
+    label: 'ZIM',
+    defaultEndpoint: 'https://apigw.zim.com/trackAndTrace/v1',
+    credentials: [CLIENT_ID, CLIENT_SECRET, { key: 'subscription_key', label: 'Subscription key', secret: true }],
+  },
+  {
+    value: 'cosco',
+    label: 'COSCO',
+    defaultEndpoint: 'https://apis.cargosmart.com/openapi/cs2/ctvc/COSU',
+    credentials: [
+      { key: 'app_key', label: 'App key', secret: true },
+      { key: 'customer_id', label: 'Customer ID' },
+      { key: 'scac_code', label: 'SCAC code', optional: true, placeholder: 'COSU' },
+    ],
+  },
+  {
+    value: 'evergreen',
+    label: 'Evergreen',
+    defaultEndpoint: '',
+    endpointRequired: true,
+    credentials: [CLIENT_ID, CLIENT_SECRET, { key: 'token_url', label: 'Token URL' }],
+  },
+]
+
+function specFor(carrierCode: string): CarrierSpec | undefined {
+  return CARRIER_SPECS.find((c) => c.value === carrierCode)
+}
+
+/**
+ * Credential fields for a carrier. For a known carrier this is its fixed set;
+ * for an unrecognised legacy row (edit) we derive the fields from the stored
+ * auth_config keys so the form never falls back to raw JSON.
+ */
+function credentialFieldsFor(carrierCode: string, authConfig?: Record<string, unknown> | null): CredField[] {
+  const spec = specFor(carrierCode)
+  if (spec) return spec.credentials
+  const keys = authConfig ? Object.keys(authConfig) : []
+  return keys.map((k) => ({ key: k, label: k, secret: /secret|password|key|token|cert/i.test(k) }))
+}
 
 // ─── Carrier Config Types ────────────────────────────────────
 
@@ -63,91 +158,39 @@ function mapItem(item: Record<string, unknown>): CarrierConfigRow | null {
 type FormState = {
   carrierCode: string
   apiEndpoint: string
-  /** authConfig as flat key→value; assembled into the authConfig object on save. */
-  authValues: Record<string, string>
+  credentials: Record<string, string>
   rateLimitRequests: number
   rateLimitWindowSeconds: number
   isActive: boolean
 }
 
-const emptyForm: FormState = {
-  carrierCode: '',
-  apiEndpoint: '',
-  authValues: {},
-  rateLimitRequests: 60,
-  rateLimitWindowSeconds: 60,
-  isActive: true,
+function formForCarrier(carrierCode: string): FormState {
+  const spec = specFor(carrierCode)
+  return {
+    carrierCode,
+    apiEndpoint: spec?.defaultEndpoint ?? '',
+    credentials: {},
+    rateLimitRequests: 60,
+    rateLimitWindowSeconds: 60,
+    isActive: true,
+  }
 }
 
-/** Flatten a stored authConfig object into editable string values. */
-function authConfigToValues(authConfig: Record<string, unknown> | null): Record<string, string> {
-  if (!authConfig) return {}
-  return Object.fromEntries(
-    Object.entries(authConfig).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]),
-  )
-}
+const emptyForm: FormState = formForCarrier(CARRIER_SPECS[0].value)
 
 function rowToForm(row: CarrierConfigRow): FormState {
+  // auth_config is returned by the API (plaintext jsonb); prefill the fields.
+  const credentials: Record<string, string> = {}
+  const auth = row.authConfig ?? {}
+  for (const [k, v] of Object.entries(auth)) credentials[k] = v == null ? '' : String(v)
   return {
     carrierCode: row.carrierCode,
-    apiEndpoint: row.apiEndpoint ?? '',
-    authValues: authConfigToValues(row.authConfig),
+    apiEndpoint: row.apiEndpoint ?? specFor(row.carrierCode)?.defaultEndpoint ?? '',
+    credentials,
     rateLimitRequests: row.rateLimitRequests,
     rateLimitWindowSeconds: row.rateLimitWindowSeconds,
     isActive: row.isActive,
   }
-}
-
-// ─── Per-carrier auth field specs ────────────────────────────
-// Labeled inputs for the carriers whose authConfig shape we know (mirrors the
-// keys each adapter reads). Carriers not listed fall back to a generic
-// key/value editor. `secret` masks the input; `multiline` uses a textarea.
-
-type CarrierAuthField = { key: string; label: string; secret?: boolean; multiline?: boolean; placeholder?: string }
-
-const CARRIER_AUTH_FIELDS: Record<string, CarrierAuthField[]> = {
-  msc: [
-    { key: 'client_id', label: 'Client ID' },
-    { key: 'scope', label: 'Scope' },
-    { key: 'token_url', label: 'Token URL' },
-    { key: 'aud', label: 'Audience', placeholder: 'defaults to Token URL if blank' },
-    { key: 'certificate_base64', label: 'Certificate (PFX, base64)', secret: true, multiline: true },
-  ],
-  maersk: [
-    { key: 'client_id', label: 'Client ID' },
-    { key: 'client_secret', label: 'Client Secret', secret: true },
-  ],
-  'hapag-lloyd': [
-    { key: 'client_id', label: 'Client ID' },
-    { key: 'client_secret', label: 'Client Secret', secret: true },
-  ],
-  evergreen: [
-    { key: 'client_id', label: 'Client ID' },
-    { key: 'client_secret', label: 'Client Secret', secret: true },
-    { key: 'token_url', label: 'Token URL' },
-  ],
-  zim: [
-    { key: 'client_id', label: 'Client ID' },
-    { key: 'client_secret', label: 'Client Secret', secret: true },
-    { key: 'subscription_key', label: 'Subscription Key', secret: true },
-  ],
-  cosco: [
-    { key: 'app_key', label: 'App Key', secret: true },
-    { key: 'customer_id', label: 'Customer ID' },
-    { key: 'scac_code', label: 'SCAC Code' },
-  ],
-  'cma-cgm': [
-    { key: 'api_key', label: 'API Key', secret: true },
-  ],
-}
-
-/** Assemble the authConfig object from form values, dropping blank entries. */
-function valuesToAuthConfig(values: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(values)
-      .map(([k, v]) => [k.trim(), v] as const)
-      .filter(([k, v]) => k !== '' && String(v).trim() !== ''),
-  )
 }
 
 // ─── BIC Config Types ────────────────────────────────────────
@@ -469,16 +512,28 @@ export default function TrackingAuthConfigPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const isEdit = editingId !== null
+  const credFields = credentialFieldsFor(form.carrierCode, form.credentials)
+  const spec = specFor(form.carrierCode)
+
+  const setField = useCallback(
+    <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((p) => ({ ...p, [key]: value })),
+    [],
+  )
+  const setCredential = useCallback(
+    (key: string, value: string) => setForm((p) => ({ ...p, credentials: { ...p.credentials, [key]: value } })),
+    [],
+  )
+  const changeCarrier = useCallback((carrierCode: string) => setForm(formForCarrier(carrierCode)), [])
 
   const columns = useMemo<ColumnDef[]>(
     () => [
       {
         data: 'carrierCode',
-        title: t('shipment_tracking.carrier_configs.fields.carrierCode', 'Carrier Code'),
+        title: t('shipment_tracking.carrier_configs.fields.carrierCode', 'Carrier'),
         width: 150,
         readOnly: true,
         renderer: (value: unknown) => (
-          <span className="font-medium">{String(value ?? '')}</span>
+          <span className="font-medium">{specFor(String(value))?.label ?? String(value ?? '')}</span>
         ),
       },
       {
@@ -565,29 +620,48 @@ export default function TrackingAuthConfigPage() {
     if (submitting) return
 
     if (!isEdit && !form.carrierCode.trim()) {
-      flash(t('shipment_tracking.carrier_configs.validation.carrierCodeRequired', 'Carrier code is required'), 'error')
+      flash(t('shipment_tracking.carrier_configs.validation.carrierCodeRequired', 'Carrier is required'), 'error')
       return
     }
 
-    if (form.apiEndpoint.trim()) {
+    const currentSpec = specFor(form.carrierCode)
+    const endpoint = form.apiEndpoint.trim()
+    if (currentSpec?.endpointRequired && !endpoint) {
+      flash(t('shipment_tracking.carrier_configs.validation.endpointRequired', 'API endpoint is required for this carrier'), 'error')
+      return
+    }
+    if (endpoint) {
       try {
-        new URL(form.apiEndpoint.trim())
+        new URL(endpoint)
       } catch {
         flash(t('shipment_tracking.carrier_configs.validation.apiEndpointInvalidUrl', 'API endpoint must be a valid URL'), 'error')
         return
       }
     }
 
+    // Assemble auth_config from the structured fields; require all non-optional.
+    const fields = credentialFieldsFor(form.carrierCode, form.credentials)
+    const authConfig: Record<string, string> = {}
+    for (const f of fields) {
+      const val = (form.credentials[f.key] ?? '').trim()
+      if (!val) {
+        if (f.optional) continue
+        flash(
+          t('shipment_tracking.carrier_configs.validation.credentialsRequired', 'Fill in all credential fields'),
+          'error',
+        )
+        return
+      }
+      authConfig[f.key] = val
+    }
+
     setSubmitting(true)
     try {
-      const assembled = valuesToAuthConfig(form.authValues)
-      const authConfig = Object.keys(assembled).length ? assembled : undefined
-
+      const hasAuth = Object.keys(authConfig).length > 0
       if (isEdit) {
         const body: Record<string, unknown> = { id: editingId }
-        if (form.apiEndpoint.trim()) body.apiEndpoint = form.apiEndpoint.trim()
-        else body.apiEndpoint = null
-        body.authConfig = authConfig ?? null
+        body.apiEndpoint = endpoint || null
+        body.authConfig = hasAuth ? authConfig : null
         body.rateLimitRequests = form.rateLimitRequests
         body.rateLimitWindowSeconds = form.rateLimitWindowSeconds
         body.isActive = form.isActive
@@ -604,8 +678,8 @@ export default function TrackingAuthConfigPage() {
           rateLimitWindowSeconds: form.rateLimitWindowSeconds,
           isActive: form.isActive,
         }
-        if (form.apiEndpoint.trim()) body.apiEndpoint = form.apiEndpoint.trim()
-        if (authConfig) body.authConfig = authConfig
+        if (endpoint) body.apiEndpoint = endpoint
+        if (hasAuth) body.authConfig = authConfig
 
         await apiCallOrThrow('/api/shipment_tracking/carrier-configs', {
           method: 'POST',
@@ -743,15 +817,21 @@ export default function TrackingAuthConfigPage() {
 
             <div className="grid gap-4 py-2">
               <div className="grid gap-2">
-                <Label htmlFor="carrierCode">{t('shipment_tracking.carrier_configs.fields.carrierCode', 'Carrier Code')}</Label>
-                <Input
-                  id="carrierCode"
-                  value={form.carrierCode}
-                  onChange={(event) => setForm((prev) => ({ ...prev, carrierCode: event.target.value }))}
-                  placeholder="e.g. maersk, msc, cma-cgm"
-                  disabled={isEdit}
-                  autoFocus={!isEdit}
-                />
+                <Label htmlFor="carrierCode">{t('shipment_tracking.carrier_configs.fields.carrierCode', 'Carrier')}</Label>
+                {isEdit ? (
+                  <Input id="carrierCode" value={spec?.label ?? form.carrierCode} disabled />
+                ) : (
+                  <select
+                    id="carrierCode"
+                    className="border rounded h-9 px-2 text-sm"
+                    value={form.carrierCode}
+                    onChange={(event) => changeCarrier(event.target.value)}
+                  >
+                    {CARRIER_SPECS.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="grid gap-2">
@@ -759,105 +839,33 @@ export default function TrackingAuthConfigPage() {
                 <Input
                   id="apiEndpoint"
                   value={form.apiEndpoint}
-                  onChange={(event) => setForm((prev) => ({ ...prev, apiEndpoint: event.target.value }))}
+                  onChange={(event) => setField('apiEndpoint', event.target.value)}
                   placeholder="https://api.example.com/tracking"
                 />
+                {spec?.endpointRequired && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('shipment_tracking.carrier_configs.hints.endpointRequired', 'This carrier requires an explicit API endpoint.')}
+                  </p>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label>{t('shipment_tracking.carrier_configs.fields.auth', 'Authentication')}</Label>
-                {(() => {
-                  const spec = CARRIER_AUTH_FIELDS[form.carrierCode.trim().toLowerCase()]
-                  const setValue = (key: string, value: string) =>
-                    setForm((prev) => ({ ...prev, authValues: { ...prev.authValues, [key]: value } }))
-                  if (spec) {
-                    return spec.map((f) => (
-                      <div key={f.key} className="grid gap-1.5">
-                        <Label htmlFor={`auth-${f.key}`} className="text-xs text-muted-foreground">{f.label}</Label>
-                        {f.multiline ? (
-                          <Textarea
-                            id={`auth-${f.key}`}
-                            value={form.authValues[f.key] ?? ''}
-                            onChange={(event) => setValue(f.key, event.target.value)}
-                            placeholder={f.placeholder}
-                            rows={3}
-                            className="font-mono text-xs"
-                          />
-                        ) : (
-                          <Input
-                            id={`auth-${f.key}`}
-                            type={f.secret ? 'password' : 'text'}
-                            autoComplete="off"
-                            value={form.authValues[f.key] ?? ''}
-                            onChange={(event) => setValue(f.key, event.target.value)}
-                            placeholder={f.placeholder}
-                          />
-                        )}
-                      </div>
-                    ))
-                  }
-                  // Unknown carrier: generic key/value editor (keys renamed on blur to avoid focus loss).
-                  return (
-                    <div className="grid gap-2">
-                      {Object.entries(form.authValues).map(([k, v], idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <Input
-                            className="w-1/3 font-mono text-xs"
-                            defaultValue={k}
-                            placeholder="key"
-                            onBlur={(event) => {
-                              const nk = event.target.value.trim()
-                              if (nk === k) return
-                              setForm((prev) => {
-                                const next = { ...prev.authValues }
-                                const val = next[k] ?? ''
-                                delete next[k]
-                                if (nk) next[nk] = val
-                                return { ...prev, authValues: next }
-                              })
-                            }}
-                          />
-                          <Input
-                            className="flex-1 text-xs"
-                            value={v}
-                            placeholder="value"
-                            onChange={(event) => setValue(k, event.target.value)}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setForm((prev) => {
-                                const next = { ...prev.authValues }
-                                delete next[k]
-                                return { ...prev, authValues: next }
-                              })
-                            }
-                          >
-                            {t('shipment_tracking.carrier_configs.auth.remove', 'Remove')}
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="justify-self-start"
-                        onClick={() =>
-                          setForm((prev) => ({
-                            ...prev,
-                            authValues: { ...prev.authValues, [`field_${Object.keys(prev.authValues).length + 1}`]: '' },
-                          }))
-                        }
-                      >
-                        <Plus className="mr-1 h-3.5 w-3.5" />
-                        {t('shipment_tracking.carrier_configs.auth.addField', 'Add field')}
-                      </Button>
-                    </div>
-                  )
-                })()}
-              </div>
+              {/* Structured credentials (per carrier) */}
+              {credFields.map((f) => (
+                <div className="grid gap-2" key={f.key}>
+                  <Label htmlFor={`cred-${f.key}`}>
+                    {t(`shipment_tracking.carrier_configs.cred.${f.key}`, f.label)}
+                    {f.optional ? ` (${t('common.optional', 'optional')})` : ''}
+                  </Label>
+                  <Input
+                    id={`cred-${f.key}`}
+                    type={f.secret ? 'password' : 'text'}
+                    autoComplete="off"
+                    value={form.credentials[f.key] ?? ''}
+                    onChange={(event) => setCredential(f.key, event.target.value)}
+                    placeholder={f.placeholder}
+                  />
+                </div>
+              ))}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -869,7 +877,7 @@ export default function TrackingAuthConfigPage() {
                     max={10000}
                     value={form.rateLimitRequests}
                     onChange={(event) =>
-                      setForm((prev) => ({ ...prev, rateLimitRequests: Number(event.target.value) || 60 }))
+                      setField('rateLimitRequests', Number(event.target.value) || 60)
                     }
                   />
                 </div>
@@ -882,7 +890,7 @@ export default function TrackingAuthConfigPage() {
                     max={86400}
                     value={form.rateLimitWindowSeconds}
                     onChange={(event) =>
-                      setForm((prev) => ({ ...prev, rateLimitWindowSeconds: Number(event.target.value) || 60 }))
+                      setField('rateLimitWindowSeconds', Number(event.target.value) || 60)
                     }
                   />
                 </div>
@@ -892,9 +900,7 @@ export default function TrackingAuthConfigPage() {
                 <Checkbox
                   id="isActive"
                   checked={form.isActive}
-                  onCheckedChange={(checked) =>
-                    setForm((prev) => ({ ...prev, isActive: checked === true }))
-                  }
+                  onCheckedChange={(checked) => setField('isActive', checked === true)}
                 />
                 <Label htmlFor="isActive" className="cursor-pointer">
                   {t('shipment_tracking.carrier_configs.fields.isActive', 'Active')}
