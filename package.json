@@ -1,0 +1,21 @@
+{
+  "name": "open-mercato-modules",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Global Trade Logistics modules for Open Mercato, published under @freighttech/*",
+  "license": "MIT",
+  "homepage": "https://freighttech.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FreightTech/open-mercato-modules.git"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "yarn workspaces foreach -Apt run build",
+    "typecheck": "yarn workspaces foreach -Ap run typecheck",
+    "lint": "yarn workspaces foreach -Ap run lint",
+    "test": "yarn workspaces foreach -Ap run test"
+  }
+}
