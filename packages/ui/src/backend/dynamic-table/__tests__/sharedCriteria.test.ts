@@ -11,7 +11,6 @@
  */
 
 import {
-  SHARED_CRITERION_KEYS,
   SHARED_FILTER_ID_PREFIX,
   WIDGET_SHARED_FILTERS,
   mapCriteriaForTable,
@@ -20,11 +19,11 @@ import {
   type SharedCriteria,
   type SharedCriterionRule,
 } from '../split-view/sharedCriteria'
-// Reached by path, not by package name, ON PURPOSE: `@freighttech/ui` must not
-// take a dependency on `@freighttech/split-view` (that arrow points the other
-// way). This is a test-only reach into the file that IS the server's authority
-// on the vocabulary, so the two enums cannot drift unnoticed.
-import { SHARED_CRITERION_KEYS as SERVER_KEYS } from '../../../../../split-view/src/modules/split_views/data/validators'
+// NOTE (open-mercato-modules): the original suite also asserted this client
+// enum matches `@freighttech/split-view`'s server zod enum, reached by relative
+// path. That parity guard only makes sense in the FMS monorepo where both
+// packages live; split-view is not part of this repo, so that single test was
+// removed here. The mapping behaviour below still fully covers this module.
 import type { FilterRow } from '../types/index'
 
 /** Two tables that answer "customer" with DIFFERENT field names — the whole point. */
@@ -42,15 +41,6 @@ const customerRule: SharedCriterionRule = {
 function criteria(...rules: SharedCriterionRule[]): SharedCriteria {
   return { search: '', rules }
 }
-
-describe('shared criteria — vocabulary', () => {
-  // Not numbered: a guard, not a scenario. The client enum and the server's zod
-  // enum are two files, and a key that exists in only one either 400s on save
-  // or is silently dropped on read.
-  it('matches the server vocabulary exactly', () => {
-    expect([...SHARED_CRITERION_KEYS]).toEqual([...SERVER_KEYS])
-  })
-})
 
 describe('TC-SPLIT-620 — a criterion maps to the table declared field name', () => {
   it('emits the declaring table own field, not the criterion key', () => {
