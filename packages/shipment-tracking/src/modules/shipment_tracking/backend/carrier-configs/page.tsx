@@ -63,7 +63,8 @@ function mapItem(item: Record<string, unknown>): CarrierConfigRow | null {
 type FormState = {
   carrierCode: string
   apiEndpoint: string
-  authConfig: string
+  /** authConfig as flat key→value; assembled into the authConfig object on save. */
+  authValues: Record<string, string>
   rateLimitRequests: number
   rateLimitWindowSeconds: number
   isActive: boolean
@@ -72,21 +73,81 @@ type FormState = {
 const emptyForm: FormState = {
   carrierCode: '',
   apiEndpoint: '',
-  authConfig: '',
+  authValues: {},
   rateLimitRequests: 60,
   rateLimitWindowSeconds: 60,
   isActive: true,
+}
+
+/** Flatten a stored authConfig object into editable string values. */
+function authConfigToValues(authConfig: Record<string, unknown> | null): Record<string, string> {
+  if (!authConfig) return {}
+  return Object.fromEntries(
+    Object.entries(authConfig).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]),
+  )
 }
 
 function rowToForm(row: CarrierConfigRow): FormState {
   return {
     carrierCode: row.carrierCode,
     apiEndpoint: row.apiEndpoint ?? '',
-    authConfig: row.authConfig ? JSON.stringify(row.authConfig, null, 2) : '',
+    authValues: authConfigToValues(row.authConfig),
     rateLimitRequests: row.rateLimitRequests,
     rateLimitWindowSeconds: row.rateLimitWindowSeconds,
     isActive: row.isActive,
   }
+}
+
+// ─── Per-carrier auth field specs ────────────────────────────
+// Labeled inputs for the carriers whose authConfig shape we know (mirrors the
+// keys each adapter reads). Carriers not listed fall back to a generic
+// key/value editor. `secret` masks the input; `multiline` uses a textarea.
+
+type CarrierAuthField = { key: string; label: string; secret?: boolean; multiline?: boolean; placeholder?: string }
+
+const CARRIER_AUTH_FIELDS: Record<string, CarrierAuthField[]> = {
+  msc: [
+    { key: 'client_id', label: 'Client ID' },
+    { key: 'scope', label: 'Scope' },
+    { key: 'token_url', label: 'Token URL' },
+    { key: 'aud', label: 'Audience', placeholder: 'defaults to Token URL if blank' },
+    { key: 'certificate_base64', label: 'Certificate (PFX, base64)', secret: true, multiline: true },
+  ],
+  maersk: [
+    { key: 'client_id', label: 'Client ID' },
+    { key: 'client_secret', label: 'Client Secret', secret: true },
+  ],
+  'hapag-lloyd': [
+    { key: 'client_id', label: 'Client ID' },
+    { key: 'client_secret', label: 'Client Secret', secret: true },
+  ],
+  evergreen: [
+    { key: 'client_id', label: 'Client ID' },
+    { key: 'client_secret', label: 'Client Secret', secret: true },
+    { key: 'token_url', label: 'Token URL' },
+  ],
+  zim: [
+    { key: 'client_id', label: 'Client ID' },
+    { key: 'client_secret', label: 'Client Secret', secret: true },
+    { key: 'subscription_key', label: 'Subscription Key', secret: true },
+  ],
+  cosco: [
+    { key: 'app_key', label: 'App Key', secret: true },
+    { key: 'customer_id', label: 'Customer ID' },
+    { key: 'scac_code', label: 'SCAC Code' },
+  ],
+  'cma-cgm': [
+    { key: 'api_key', label: 'API Key', secret: true },
+  ],
+}
+
+/** Assemble the authConfig object from form values, dropping blank entries. */
+function valuesToAuthConfig(values: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(values)
+      .map(([k, v]) => [k.trim(), v] as const)
+      .filter(([k, v]) => k !== '' && String(v).trim() !== ''),
+  )
 }
 
 // ─── BIC Config Types ────────────────────────────────────────
@@ -508,15 +569,6 @@ export default function TrackingAuthConfigPage() {
       return
     }
 
-    if (form.authConfig.trim()) {
-      try {
-        JSON.parse(form.authConfig)
-      } catch {
-        flash(t('shipment_tracking.carrier_configs.validation.authConfigInvalidJson', 'Auth config must be valid JSON'), 'error')
-        return
-      }
-    }
-
     if (form.apiEndpoint.trim()) {
       try {
         new URL(form.apiEndpoint.trim())
@@ -528,7 +580,8 @@ export default function TrackingAuthConfigPage() {
 
     setSubmitting(true)
     try {
-      const authConfig = form.authConfig.trim() ? JSON.parse(form.authConfig) : undefined
+      const assembled = valuesToAuthConfig(form.authValues)
+      const authConfig = Object.keys(assembled).length ? assembled : undefined
 
       if (isEdit) {
         const body: Record<string, unknown> = { id: editingId }
@@ -712,15 +765,98 @@ export default function TrackingAuthConfigPage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="authConfig">{t('shipment_tracking.carrier_configs.fields.authConfig', 'Auth Config (JSON)')}</Label>
-                <Textarea
-                  id="authConfig"
-                  value={form.authConfig}
-                  onChange={(event) => setForm((prev) => ({ ...prev, authConfig: event.target.value }))}
-                  placeholder='{"apiKey": "..."}'
-                  rows={3}
-                  className="font-mono text-xs"
-                />
+                <Label>{t('shipment_tracking.carrier_configs.fields.auth', 'Authentication')}</Label>
+                {(() => {
+                  const spec = CARRIER_AUTH_FIELDS[form.carrierCode.trim().toLowerCase()]
+                  const setValue = (key: string, value: string) =>
+                    setForm((prev) => ({ ...prev, authValues: { ...prev.authValues, [key]: value } }))
+                  if (spec) {
+                    return spec.map((f) => (
+                      <div key={f.key} className="grid gap-1.5">
+                        <Label htmlFor={`auth-${f.key}`} className="text-xs text-muted-foreground">{f.label}</Label>
+                        {f.multiline ? (
+                          <Textarea
+                            id={`auth-${f.key}`}
+                            value={form.authValues[f.key] ?? ''}
+                            onChange={(event) => setValue(f.key, event.target.value)}
+                            placeholder={f.placeholder}
+                            rows={3}
+                            className="font-mono text-xs"
+                          />
+                        ) : (
+                          <Input
+                            id={`auth-${f.key}`}
+                            type={f.secret ? 'password' : 'text'}
+                            autoComplete="off"
+                            value={form.authValues[f.key] ?? ''}
+                            onChange={(event) => setValue(f.key, event.target.value)}
+                            placeholder={f.placeholder}
+                          />
+                        )}
+                      </div>
+                    ))
+                  }
+                  // Unknown carrier: generic key/value editor (keys renamed on blur to avoid focus loss).
+                  return (
+                    <div className="grid gap-2">
+                      {Object.entries(form.authValues).map(([k, v], idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <Input
+                            className="w-1/3 font-mono text-xs"
+                            defaultValue={k}
+                            placeholder="key"
+                            onBlur={(event) => {
+                              const nk = event.target.value.trim()
+                              if (nk === k) return
+                              setForm((prev) => {
+                                const next = { ...prev.authValues }
+                                const val = next[k] ?? ''
+                                delete next[k]
+                                if (nk) next[nk] = val
+                                return { ...prev, authValues: next }
+                              })
+                            }}
+                          />
+                          <Input
+                            className="flex-1 text-xs"
+                            value={v}
+                            placeholder="value"
+                            onChange={(event) => setValue(k, event.target.value)}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setForm((prev) => {
+                                const next = { ...prev.authValues }
+                                delete next[k]
+                                return { ...prev, authValues: next }
+                              })
+                            }
+                          >
+                            {t('shipment_tracking.carrier_configs.auth.remove', 'Remove')}
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="justify-self-start"
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            authValues: { ...prev.authValues, [`field_${Object.keys(prev.authValues).length + 1}`]: '' },
+                          }))
+                        }
+                      >
+                        <Plus className="mr-1 h-3.5 w-3.5" />
+                        {t('shipment_tracking.carrier_configs.auth.addField', 'Add field')}
+                      </Button>
+                    </div>
+                  )
+                })()}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
