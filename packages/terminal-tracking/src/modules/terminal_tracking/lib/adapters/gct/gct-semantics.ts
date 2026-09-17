@@ -1,7 +1,11 @@
 import type { GctContainer } from './types'
 import { DEFAULT_TERMINAL_TIMEZONE, zonedNaiveToUtc } from '../zoned-time'
 import type { TerminalFetchedEvent, ResolvedTerminalConfig } from '../../terminal-adapter'
-import type { TerminalEventType, TerminalEventClassifierCode } from '../../../data/entities'
+import type {
+  TerminalEventType,
+  TerminalEventClassifierCode,
+  TerminalModeOfTransport,
+} from '../../../data/entities'
 
 /**
  * GCT returns a container *state snapshot*, not a timestamped milestone stream.
@@ -36,6 +40,29 @@ export function directionFromStatus(status: string | null | undefined): GctCargo
   if (s.startsWith('X')) return 'export'
   if (s.startsWith('I')) return 'import'
   return null
+}
+
+/**
+ * GCT has no per-movement mode/yard-type field (unlike INCOS/BCT). Its one mode
+ * signal is a sentinel it stuffs into the vessel/voyage fields for a purely
+ * *land* movement — a box trucked in that never touched a vessel, labelled
+ * "Transport lądowy wym. odprawy" and abbreviated **TLO** (e.g. VesselName
+ * "Transport lądowy wym. odprawy (TLO)", GCTVoyage "GCT-TLO-2023"). Those are
+ * not real vessel identifiers, so when the sentinel is present we treat the
+ * movement as TRUCK and suppress the placeholder vessel/voyage downstream.
+ *
+ * Everything else defaults to VESSEL: GCT is a maritime container terminal and,
+ * absent a vessel/export sample confirming the finer direction×milestone mode
+ * matrix (import-discharge vs export-load), VESSEL is the correct default for a
+ * real, named vessel visit.
+ */
+const LAND_TRANSPORT_RE = /\bTLO\b|transport\s+l[aą]dowy/i
+
+export function isLandTransport(container: GctContainer): boolean {
+  return (
+    LAND_TRANSPORT_RE.test(container.VesselName ?? '') ||
+    LAND_TRANSPORT_RE.test(container.GCTVoyage ?? '')
+  )
 }
 
 /**
@@ -82,6 +109,13 @@ function baseEvent(
     (c): c is string => typeof c === 'string' && c.trim() !== '',
   )
   const direction = directionFromStatus(container.CntrStatus)
+  // GCT signals a land (truck) movement via a TLO sentinel in the vessel/voyage
+  // fields rather than a per-movement mode field; when present, the movement is
+  // by truck and the "vessel"/"voyage" are placeholders, not real identifiers.
+  const land = isLandTransport(container)
+  const modeOfTransport: TerminalModeOfTransport = land ? 'TRUCK' : 'VESSEL'
+  const vesselName = land ? null : container.VesselName ?? null
+  const voyageNumber = land ? null : container.GCTVoyage ?? container.OwnerVoyage ?? null
 
   return {
     source: 'terminal',
@@ -100,10 +134,11 @@ function baseEvent(
     visitRefIn: null,
     visitRefOut: null,
     // Vessel name/voyage are metadata only — GCT has no vessel-visit endpoint, so
-    // no schedule (ETA/ATA) enrichment is possible.
-    vesselName: container.VesselName ?? null,
-    voyageNumber: container.GCTVoyage ?? container.OwnerVoyage ?? null,
-    modeOfTransport: 'VESSEL',
+    // no schedule (ETA/ATA) enrichment is possible. Nulled for land (TLO) moves
+    // so the placeholder does not surface as a real vessel/voyage downstream.
+    vesselName,
+    voyageNumber,
+    modeOfTransport,
     seals: seals.length ? seals : null,
     vgmWeightKg: typeof container.VGMWeight === 'number' ? container.VGMWeight : null,
     impediments: holds.length ? holds : null,
