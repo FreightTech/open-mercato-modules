@@ -17,7 +17,17 @@ periodic polling, and terminal matching.
   (password grant) or client-credentials.
 - **GCT adapter** (`adapterType: 'gct'`) — Gdynia Container Terminal's bespoke
   FastAPI. Path-minted token replayed in the `Authorization` header; a container
-  *snapshot* mapped to gate-in (`GTIN`) / departed (`DEPA`) milestones.
+  *snapshot* mapped to arrival + departure milestones. GCT has no per-movement
+  mode field, so the mode/milestone is inferred from the cargo direction
+  (`CntrStatus`) and a land-transport sentinel: a purely land ("TLO") move is a
+  truck gate-in (`GTIN` / TRUCK); a vessel import arrival is a discharge (`DISC` /
+  VESSEL); a vessel export arrival is a truck gate-in (`GTIN` / TRUCK). Departures
+  are `DEPA` with the mode set by direction (export = VESSEL load, import = TRUCK
+  gate-out). `testConnection` mints a token **and** probes `GetContainerDetails`
+  so a wrong base URL / rejected token is caught, and batch polling runs with a
+  small bounded concurrency (the service rate-limits the batch, not each call).
+  Gross/net weight and dangerous-goods (`DGs`) / damage codes are preserved in
+  `rawData` and surfaced in the container-details drawer when present.
 - **BCT adapter** (`adapterType: 'bct'`) — Bałtycki Terminal Kontenerowy (Gdynia)
   via the **INCOS** platform (`https://incos.pl`). Plain HTTP **Basic** auth
   (`authType: 'basic'`, `auth_config: { username, password }`). Read-only Phase 1:

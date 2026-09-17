@@ -55,10 +55,14 @@ describe('GctTerminalAdapter.testConnection', () => {
   // TC-TRACK-301
   it('mints a token and reports success; a generated TOTP code goes in the path, token in the Authorization header', async () => {
     fetchMock.mockResolvedValueOnce(tokenResponse('abc'))
+    fetchMock.mockResolvedValueOnce(detailsResponse([])) // data-endpoint probe
     const config = cfg()
     const res = await new GctTerminalAdapter().testConnection(config)
 
     expect(res.success).toBe(true)
+    // Probe exercised the data endpoint (POST) with the minted token.
+    const probeCall = fetchMock.mock.calls.find(isDetailsCall)!
+    expect((probeCall[1] as any).headers.Authorization).toBe('abc')
     const authCall = fetchMock.mock.calls.find(isAuthCall)!
     // company/login in the path; the password segment is a fresh 6-digit TOTP code.
     expect(String(authCall[0])).toMatch(/\/gctapi\/Auth\/ACME\/user\/\d{6}$/)
@@ -68,12 +72,29 @@ describe('GctTerminalAdapter.testConnection', () => {
 
   it('honours a legacy static loginPassword when no totpSecret is configured', async () => {
     fetchMock.mockResolvedValueOnce(tokenResponse('abc'))
+    fetchMock.mockResolvedValueOnce(detailsResponse([])) // data-endpoint probe
     const config = cfg({ authConfig: { companyCode: 'ACME', loginName: 'user', loginPassword: 'legacy-pass' } })
     const res = await new GctTerminalAdapter().testConnection(config)
 
     expect(res.success).toBe(true)
     const authCall = fetchMock.mock.calls.find(isAuthCall)!
     expect(String(authCall[0])).toContain('/gctapi/Auth/ACME/user/legacy-pass')
+  })
+
+  it('fails when the data endpoint rejects the token (401), even though the mint succeeded', async () => {
+    fetchMock.mockResolvedValueOnce(tokenResponse('abc'))
+    fetchMock.mockResolvedValueOnce(new Response('unauth', { status: 401 })) // probe rejects token
+    const res = await new GctTerminalAdapter().testConnection(cfg())
+    expect(res.success).toBe(false)
+    expect(res.message).toContain('401')
+  })
+
+  it('still succeeds (with a note) when the data-endpoint probe cannot connect', async () => {
+    fetchMock.mockResolvedValueOnce(tokenResponse('abc'))
+    fetchMock.mockRejectedValue(new Error('nope')) // probe transport failure (non-transient → no retry)
+    const res = await new GctTerminalAdapter().testConnection(cfg())
+    expect(res.success).toBe(true)
+    expect(res.message).toMatch(/probe/i)
   })
 
   it('reports failure with only the status (never the secret) on a bad token', async () => {
@@ -211,22 +232,45 @@ describe('GctTerminalAdapter token refresh (keep-alive)', () => {
 })
 
 describe('GctTerminalAdapter.fetchEventsBatch', () => {
-  it('loops per container and isolates a single container failure', async () => {
-    const config = cfg()
-    fetchMock.mockResolvedValueOnce(tokenResponse()) // up-front acquire
-    // container A (token cached now): details 500 → isolated
-    fetchMock.mockResolvedValueOnce(new Response('err', { status: 500 }))
-    // container B: details 200 with a mappable row
-    fetchMock.mockResolvedValueOnce(
-      detailsResponse([{ CntrID: 'B', VisitNo: 'VB', GroundingDateTime: '2026-08-10T09:30:00Z' }]),
-    )
+  // Route by request so the assertion is independent of the concurrent order.
+  function routeByContainer(fail: (cntr: string) => Response | null) {
+    fetchMock.mockImplementation(async (_url: any, init: any) => {
+      if (init?.method === 'GET') return tokenResponse() // auth mint / refresh
+      const body = JSON.parse(init.body)
+      return (
+        fail(body.CntrID) ??
+        detailsResponse([
+          { CntrID: body.CntrID, VisitNo: `V${body.CntrID}`, GroundingDateTime: '2026-08-10T09:30:00Z' },
+        ])
+      )
+    })
+  }
+
+  it('fetches each container (bounded concurrency) and isolates a single container failure', async () => {
+    routeByContainer((c) => (c === 'A' ? new Response('err', { status: 500 }) : null))
 
     const { events } = await new GctTerminalAdapter().fetchEventsBatch({
       containerNumbers: ['A', 'B'],
-      config,
+      config: cfg(),
     })
+    // A's 500 is isolated; only B maps to an event.
     expect(events).toHaveLength(1)
     expect(events[0].containerNumber).toBe('B')
+  })
+
+  it('processes every container in a batch larger than the concurrency cap', async () => {
+    routeByContainer(() => null)
+    const containerNumbers = Array.from({ length: 10 }, (_, i) => `C${i}`)
+
+    const { events } = await new GctTerminalAdapter().fetchEventsBatch({ containerNumbers, config: cfg() })
+    expect(new Set(events.map((e) => e.containerNumber))).toEqual(new Set(containerNumbers))
+  })
+
+  it('aborts the whole batch when a container returns 401 (token revoked mid-run)', async () => {
+    routeByContainer((c) => (c === 'A' ? new Response('unauth', { status: 401 }) : null))
+    await expect(
+      new GctTerminalAdapter().fetchEventsBatch({ containerNumbers: ['A', 'B'], config: cfg() }),
+    ).rejects.toThrow()
   })
 
   it('fails the whole batch when the up-front token acquire fails', async () => {

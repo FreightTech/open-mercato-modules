@@ -4,6 +4,8 @@ import {
   directionFromStatus,
   parseGctDateTime,
   isLandTransport,
+  arrivalMovement,
+  departureMovement,
 } from '../gct-semantics'
 import type { GctContainer } from '../types'
 import type { ResolvedTerminalConfig } from '../../../terminal-adapter'
@@ -53,6 +55,37 @@ describe('isLandTransport', () => {
   })
 })
 
+describe('arrivalMovement / departureMovement', () => {
+  it('resolves the arrival milestone + mode per direction and land flag', () => {
+    expect(arrivalMovement('import', false)).toEqual({
+      spec: { eventType: 'EQUIPMENT', eventCode: 'DISC', classifier: 'ACT' },
+      mode: 'VESSEL',
+    })
+    expect(arrivalMovement('export', false)).toEqual({
+      spec: { eventType: 'EQUIPMENT', eventCode: 'GTIN', classifier: 'ACT' },
+      mode: 'TRUCK',
+    })
+    // Land (TLO) always trucks in, regardless of direction.
+    expect(arrivalMovement('import', true).mode).toBe('TRUCK')
+    expect(arrivalMovement('import', true).spec.eventCode).toBe('GTIN')
+    // Unknown direction keeps GTIN with an unknown mode.
+    expect(arrivalMovement(null, false)).toEqual({
+      spec: { eventType: 'EQUIPMENT', eventCode: 'GTIN', classifier: 'ACT' },
+      mode: null,
+    })
+  })
+
+  it('resolves the departure mode per direction (milestone stays DEPA)', () => {
+    expect(departureMovement('export', false).mode).toBe('VESSEL')
+    expect(departureMovement('import', false).mode).toBe('TRUCK')
+    expect(departureMovement('import', true).mode).toBe('TRUCK')
+    expect(departureMovement(null, false).mode).toBeNull()
+    for (const d of ['import', 'export', null] as const) {
+      expect(departureMovement(d, false).spec.eventCode).toBe('DEPA')
+    }
+  })
+})
+
 describe('parseGctDateTime', () => {
   it('parses ISO-8601', () => {
     expect(parseGctDateTime('2026-08-10T09:30:00Z')?.toISOString()).toBe('2026-08-10T09:30:00.000Z')
@@ -69,8 +102,8 @@ describe('parseGctDateTime', () => {
 })
 
 describe('mapContainerToEvents', () => {
-  // TC-TRACK-302
-  it('emits one gate_in (GTIN) event from GroundingDateTime, keyed on VisitNo', () => {
+  // TC-TRACK-302: a non-land import arrival is a vessel discharge (DISC/VESSEL).
+  it('emits one discharge (DISC) event from GroundingDateTime for a vessel import, keyed on VisitNo', () => {
     const events = mapContainerToEvents(
       container({ GroundingDateTime: '2026-08-10T09:30:00Z', CntrStatus: 'IF', VGMWeight: 24000 }),
       config,
@@ -78,15 +111,50 @@ describe('mapContainerToEvents', () => {
     expect(events).toHaveLength(1)
     const ev = events[0]
     expect(ev.eventType).toBe('EQUIPMENT')
-    expect(ev.eventCode).toBe('GTIN')
+    expect(ev.eventCode).toBe('DISC')
     expect(ev.eventClassifierCode).toBe('ACT')
+    expect(ev.modeOfTransport).toBe('VESSEL')
     expect(ev.ufvGkey).toBe('V-001')
-    expect(ev.sourceEventId).toBe('gct:V-001:GTIN')
+    expect(ev.sourceEventId).toBe('gct:V-001:DISC')
     expect(ev.containerNumber).toBe('GCTU1234567')
     expect(ev.unlocode).toBe('PLGDY')
     expect(ev.vgmWeightKg).toBe(24000)
     expect(ev.transitState).toBe('IF')
     expect(ev.eventDateTime.toISOString()).toBe('2026-08-10T09:30:00.000Z')
+  })
+
+  // Mode/milestone matrix: a non-land export arrival is a truck gate-in, and its
+  // pickup is a vessel load; the real vessel/voyage are kept on both legs.
+  it('maps a vessel export to a TRUCK gate-in arrival and a VESSEL departure', () => {
+    const events = mapContainerToEvents(
+      container({
+        CntrStatus: 'XF',
+        GroundingDateTime: '2026-08-10T09:30:00Z',
+        PickupDateTime: '2026-08-12T14:00:00Z',
+        VesselName: 'MSC ISABELLA',
+        GCTVoyage: 'V123',
+      }),
+      config,
+    )
+    expect(events.map((e) => [e.eventCode, e.modeOfTransport])).toEqual([
+      ['GTIN', 'TRUCK'],
+      ['DEPA', 'VESSEL'],
+    ])
+    for (const ev of events) {
+      expect(ev.vesselName).toBe('MSC ISABELLA')
+      expect(ev.voyageNumber).toBe('V123')
+    }
+  })
+
+  // An import pickup (gate-out) is by truck even though the arrival was a vessel.
+  it('maps a vessel import pickup to a TRUCK departure', () => {
+    const events = mapContainerToEvents(
+      container({ CntrStatus: 'IF', PickupDateTime: '2026-08-12T14:00:00Z' }),
+      config,
+    )
+    expect(events).toHaveLength(1)
+    expect(events[0].eventCode).toBe('DEPA')
+    expect(events[0].modeOfTransport).toBe('TRUCK')
   })
 
   // TC-TRACK-303
@@ -128,9 +196,11 @@ describe('mapContainerToEvents', () => {
     )
     const ev = events[0]
     expect(ev.seals).toEqual([{ number: 'SEAL1', source: 'gct' }])
+    // Real vessel/voyage are kept even though this export arrival leg is by truck.
     expect(ev.vesselName).toBe('MSC ISABELLA')
     expect(ev.voyageNumber).toBe('V123')
-    expect(ev.modeOfTransport).toBe('VESSEL')
+    expect(ev.eventCode).toBe('GTIN')
+    expect(ev.modeOfTransport).toBe('TRUCK')
     expect((ev.rawData as Record<string, unknown>).Category).toBe('export')
     expect((ev.rawData as Record<string, unknown>).CntrID).toBe('GCTU1234567')
   })
