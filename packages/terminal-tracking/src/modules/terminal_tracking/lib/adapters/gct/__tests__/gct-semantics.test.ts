@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { mapContainerToEvents, directionFromStatus, parseGctDateTime } from '../gct-semantics'
+import {
+  mapContainerToEvents,
+  directionFromStatus,
+  parseGctDateTime,
+  isLandTransport,
+} from '../gct-semantics'
 import type { GctContainer } from '../types'
 import type { ResolvedTerminalConfig } from '../../../terminal-adapter'
 
@@ -33,6 +38,18 @@ describe('directionFromStatus', () => {
   })
   it('does not crash on the undocumented XI status', () => {
     expect(directionFromStatus('XI')).toBe('export')
+  })
+})
+
+describe('isLandTransport', () => {
+  it('detects the TLO sentinel in VesselName or GCTVoyage', () => {
+    expect(isLandTransport(container({ VesselName: 'Transport lądowy wym. odprawy (TLO)' }))).toBe(true)
+    expect(isLandTransport(container({ GCTVoyage: 'GCT-TLO-2023' }))).toBe(true)
+    expect(isLandTransport(container({ VesselName: 'transport lądowy' }))).toBe(true)
+  })
+  it('is false for a real vessel visit', () => {
+    expect(isLandTransport(container({ VesselName: 'MSC ISABELLA', GCTVoyage: 'V123' }))).toBe(false)
+    expect(isLandTransport(container({}))).toBe(false)
   })
 })
 
@@ -116,6 +133,45 @@ describe('mapContainerToEvents', () => {
     expect(ev.modeOfTransport).toBe('VESSEL')
     expect((ev.rawData as Record<string, unknown>).Category).toBe('export')
     expect((ev.rawData as Record<string, unknown>).CntrID).toBe('GCTU1234567')
+  })
+
+  // TC-TRACK-305: real GCT test-env row — a land (TLO) import gate-in.
+  it('maps a land-transport (TLO) box to a TRUCK gate-in and drops the placeholder vessel/voyage', () => {
+    const events = mapContainerToEvents(
+      container({
+        CntrID: 'BMOU1419729',
+        VisitNo: '23460014',
+        CntrStatus: 'IF',
+        GroundingDateTime: '2023-11-19 21:20',
+        PickupDateTime: null,
+        VesselName: 'Transport lądowy wym. odprawy (TLO)',
+        GCTVoyage: 'GCT-TLO-2023',
+        OwnerVoyage: '2023',
+        HoldCodesList: ['DT'],
+        SealList: ['PCC0392160', 'UCP1015'],
+        VGMWeight: null,
+      }),
+      config,
+    )
+    expect(events.map((e) => e.eventCode)).toEqual(['GTIN'])
+    const ev = events[0]
+    expect(ev.modeOfTransport).toBe('TRUCK')
+    // The TLO sentinel must not leak downstream as a real vessel/voyage…
+    expect(ev.vesselName).toBeNull()
+    expect(ev.voyageNumber).toBeNull()
+    // …but the verbatim snapshot still carries the original value.
+    expect((ev.rawData as Record<string, unknown>).VesselName).toBe(
+      'Transport lądowy wym. odprawy (TLO)',
+    )
+    expect((ev.rawData as Record<string, unknown>).Category).toBe('import')
+    expect(ev.impediments).toEqual(['DT'])
+    expect(ev.seals).toEqual([
+      { number: 'PCC0392160', source: 'gct' },
+      { number: 'UCP1015', source: 'gct' },
+    ])
+    expect(ev.vgmWeightKg).toBeNull()
+    // naive terminal-local "yyyy-mm-dd hh:mm" → 21:20 CET (+01:00) in November.
+    expect(ev.eventDateTime.toISOString()).toBe('2023-11-19T20:20:00.000Z')
   })
 
   it('falls back to CntrID for the dedup key when VisitNo is missing', () => {

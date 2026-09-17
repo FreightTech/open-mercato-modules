@@ -24,11 +24,18 @@ export type GctContainer = {
   CntrID: string
   /** Per-visit terminal key — the dedup anchor (→ `ufvGkey`). */
   VisitNo?: string | null
-  /** Container status: XF/EM/XM/IF/XI (export/import, full/empty). */
+  /**
+   * Container status: XF/EM/XM/IF/XI. First letter is the direction (X=export,
+   * I=import); test data confirms `IF` = **Import Full** (full inbound box).
+   */
   CntrStatus?: string | null
   CntrSize?: string | null
   CntrType?: string | null
-  /** Grounding (gate-in) instant — the container's arrival on the terminal. */
+  /**
+   * Grounding (gate-in) instant — the container's arrival on the terminal.
+   * Test data uses the naive terminal-local form `yyyy-mm-dd hh:mm` (no offset,
+   * no seconds), e.g. `2023-11-19 21:20` — see `parseGctDateTime`.
+   */
   GroundingDateTime?: string | null
   /** Pickup (gate-out) instant — the container left the terminal. */
   PickupDateTime?: string | null
