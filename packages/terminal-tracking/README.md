@@ -117,5 +117,3 @@ coupling only — no cross-module imports).
 - IP-whitelisted terminals must be reached from a whitelisted egress IP
   (deployment prerequisite; for local dev, route through a SOCKS tunnel).
 - The OAuth token endpoint is public and stays direct.
-
-See the spec: `.ai/specs/2026-06-08-n4-terminal-tracking-adapter.md`.
