@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   ShieldAlert,
   Ban,
+  Flame,
 } from 'lucide-react'
 
 type TerminalSeal = { number: string; type?: string | null; source?: string | null }
@@ -120,6 +121,24 @@ function fmt(date: string | null): string {
   } catch {
     return date
   }
+}
+
+/** A finite number from a raw-data field (tolerating numeric strings), else null. */
+function rawNumber(raw: Record<string, unknown> | null | undefined, key: string): number | null {
+  const v = raw?.[key]
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
+/** Non-blank string codes from a raw-data array field (e.g. GCT `DGs`/`Damages`). */
+function rawStringList(raw: Record<string, unknown> | null | undefined, key: string): string[] {
+  const v = raw?.[key]
+  if (!Array.isArray(v)) return []
+  return v.filter((x): x is string => typeof x === 'string' && x.trim() !== '')
 }
 
 function val(v: unknown): string {
@@ -223,6 +242,12 @@ export function ContainerDetailsDrawer({ open, onOpenChange, jobId }: ContainerD
   const latest = events.length ? events[events.length - 1] : null
   const vgm = latest?.vgmWeightKg ?? null
   const seals = latest?.seals ?? null
+  // Operational extras preserved verbatim in rawData (e.g. GCT GrossWeight/DGs);
+  // surfaced when present so they render for terminals that report them.
+  const grossWeight = rawNumber(latest?.rawData, 'GrossWeight')
+  const netWeight = rawNumber(latest?.rawData, 'NetWeight')
+  const dangerousGoods = rawStringList(latest?.rawData, 'DGs')
+  const damages = rawStringList(latest?.rawData, 'Damages')
   // The load timestamp of whichever leg reported one (last non-null wins).
   const loadedAt = events.map((e) => e.loadedAt).filter(Boolean).pop() ?? null
   // Per-mode load/pickup restrictions (Stop-Vsl/Road/Rail), read from the raw
@@ -353,14 +378,52 @@ export function ContainerDetailsDrawer({ open, onOpenChange, jobId }: ContainerD
                 </div>
               ) : null}
 
+              {/* Dangerous goods */}
+              {dangerousGoods.length > 0 ? (
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-amber-800">
+                    <Flame className="h-4 w-4" />
+                    {t('terminal_tracking.event.dangerousGoods', 'Dangerous goods')}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {dangerousGoods.map((code) => (
+                      <span
+                        key={code}
+                        className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800"
+                      >
+                        {code}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               {/* Summary */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 <SummaryItem label={t('terminal_tracking.tracking_job.lastPollAt', 'Last polled')} value={fmt(job?.lastPollAt ?? null)} />
                 <SummaryItem label={t('terminal_tracking.event.vgm', 'VGM (kg)')} value={vgm != null ? String(vgm) : '—'} />
+                {grossWeight != null ? (
+                  <SummaryItem
+                    label={t('terminal_tracking.event.grossWeight', 'Gross weight (kg)')}
+                    value={grossWeight.toLocaleString()}
+                  />
+                ) : null}
+                {netWeight != null ? (
+                  <SummaryItem
+                    label={t('terminal_tracking.event.netWeight', 'Net weight (kg)')}
+                    value={netWeight.toLocaleString()}
+                  />
+                ) : null}
                 <SummaryItem
                   label={t('terminal_tracking.event.seals', 'Seals')}
                   value={seals && seals.length ? seals.map((s) => s.number).join(', ') : '—'}
                 />
+                {damages.length > 0 ? (
+                  <SummaryItem
+                    label={t('terminal_tracking.event.damages', 'Damages')}
+                    value={damages.join(', ')}
+                  />
+                ) : null}
                 <SummaryItem label={t('terminal_tracking.event.loadedAt', 'Loaded at')} value={fmt(loadedAt)} />
                 <SummaryItem label={t('common.created', 'Created')} value={fmt(job?.createdAt ?? null)} />
               </div>

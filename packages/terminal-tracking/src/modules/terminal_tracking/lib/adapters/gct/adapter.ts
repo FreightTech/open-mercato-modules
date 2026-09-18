@@ -16,6 +16,34 @@ function joinUrl(base: string, path: string): string {
 }
 
 /**
+ * Max GCT requests in flight at once within a single batch. The service's rate
+ * limiter gates the batch as a whole, not each container call, so this is the
+ * only guard against bursting GCT's bespoke API — kept deliberately low.
+ */
+const GCT_BATCH_CONCURRENCY = 4
+
+/** A synthetic, never-real container id used only to probe the data endpoint. */
+const GCT_HEALTHCHECK_CONTAINER = 'HEALTHCHECK'
+
+/**
+ * Run `fn` over `items` with at most `limit` in flight. Resolves once all have
+ * settled; `fn` is expected to handle its own errors (it never rejects here).
+ */
+async function mapWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  const queue = items.slice()
+  const runners = Array.from({ length: Math.min(limit, queue.length) }, async () => {
+    while (queue.length) {
+      await fn(queue.shift()!)
+    }
+  })
+  await Promise.all(runners)
+}
+
+/**
  * Config-driven adapter for the GCT (Gdynia Container Terminal) API. One
  * instance serves every GCT terminal; per-terminal differences live in the
  * TerminalConfig.
@@ -120,33 +148,88 @@ export class GctTerminalAdapter implements TerminalAdapter {
     await acquireGctToken(config)
 
     const events: TerminalFetchedEvent[] = []
-    for (const containerNumber of containerNumbers) {
+    // A single container's auth error is fatal to the whole batch (token revoked/
+    // expired mid-run); captured here and rethrown once the in-flight workers
+    // drain. Data/transport errors are isolated so one bad container can't sink
+    // the poll for the rest.
+    let authError: GctAuthError | null = null
+
+    await mapWithConcurrency(containerNumbers, GCT_BATCH_CONCURRENCY, async (containerNumber) => {
+      if (authError) return // token already known dead — skip remaining work
       try {
         const result = await this.fetchEvents({ containerNumber, config })
         events.push(...result.events)
       } catch (err) {
-        // An auth error is fatal to the batch (token revoked/expired mid-run);
-        // let it propagate. Data/transport errors are isolated so one bad
-        // container can't sink the poll for the rest.
-        if (err instanceof GctAuthError) throw err
+        if (err instanceof GctAuthError) {
+          authError = err
+          return
+        }
         terminalLogger.warn('gct fetchEventsBatch: container failed', {
           terminalCode: config.terminalCode,
           container: containerNumber,
           message: err instanceof Error ? err.message : String(err),
         })
       }
-    }
+    })
+
+    if (authError) throw authError
     return { events }
+  }
+
+  /**
+   * Probe GetContainerDetails with a synthetic container to confirm the whole
+   * data path — base URL, endpoint path, and token replay — not just that a token
+   * can be minted. Returns the HTTP status, or null on a transport failure, and
+   * never throws so {@link testConnection} can report it without masking a
+   * working token.
+   */
+  private async probeDetails(config: ResolvedTerminalConfig, token: string): Promise<number | null> {
+    try {
+      const { status } = await n4Request(
+        this.detailsUrl(config),
+        {
+          method: 'POST',
+          headers: {
+            Authorization: token,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ CntrID: GCT_HEALTHCHECK_CONTAINER, pageno: 1, pagesize: 1 }),
+        },
+        { proxyUrl: config.proxyUrl, label: `${config.terminalCode} GetContainerDetails probe` },
+      )
+      return status
+    } catch {
+      return null
+    }
   }
 
   async testConnection(config: ResolvedTerminalConfig): Promise<TerminalAdapterTestResult> {
     const started = Date.now()
+    let token: string
     try {
-      await acquireGctToken(config)
-      return { success: true, message: 'Token acquired', latencyMs: Date.now() - started }
+      token = await acquireGctToken(config)
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       return { success: false, message, latencyMs: Date.now() - started }
+    }
+
+    // Token minted; now confirm the data endpoint actually accepts it. A good
+    // token against a wrong base URL / endpoint path would otherwise pass silently.
+    const status = await this.probeDetails(config, token)
+    const latencyMs = Date.now() - started
+    if (status === 401) {
+      invalidateGctToken(config)
+      return { success: false, message: 'Token rejected by GetContainerDetails (401)', latencyMs }
+    }
+    if (status === null) {
+      // Mint already proved credentials + connectivity; only the probe leg failed.
+      return { success: true, message: 'Token acquired; data endpoint probe did not respond', latencyMs }
+    }
+    return {
+      success: true,
+      message: `Token acquired; GetContainerDetails responded ${status}`,
+      latencyMs,
     }
   }
 }

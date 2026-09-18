@@ -23,7 +23,11 @@ type MilestoneSpec = {
 }
 
 const GATE_IN: MilestoneSpec = { eventType: 'EQUIPMENT', eventCode: 'GTIN', classifier: 'ACT' }
+const DISCHARGED: MilestoneSpec = { eventType: 'EQUIPMENT', eventCode: 'DISC', classifier: 'ACT' }
 const DEPARTED: MilestoneSpec = { eventType: 'TRANSPORT', eventCode: 'DEPA', classifier: 'ACT' }
+
+/** A resolved movement: which milestone to emit and by what mode of transport. */
+type Movement = { spec: MilestoneSpec; mode: TerminalModeOfTransport | null }
 
 /** The container's direction of travel, inferred from the GCT status prefix. */
 export type GctCargoDirection = 'import' | 'export'
@@ -51,10 +55,8 @@ export function directionFromStatus(status: string | null | undefined): GctCargo
  * not real vessel identifiers, so when the sentinel is present we treat the
  * movement as TRUCK and suppress the placeholder vessel/voyage downstream.
  *
- * Everything else defaults to VESSEL: GCT is a maritime container terminal and,
- * absent a vessel/export sample confirming the finer direction×milestone mode
- * matrix (import-discharge vs export-load), VESSEL is the correct default for a
- * real, named vessel visit.
+ * The finer per-movement mode is then inferred from the maritime flow — see
+ * {@link arrivalMovement} / {@link departureMovement}.
  */
 const LAND_TRANSPORT_RE = /\bTLO\b|transport\s+l[aą]dowy/i
 
@@ -63,6 +65,49 @@ export function isLandTransport(container: GctContainer): boolean {
     LAND_TRANSPORT_RE.test(container.VesselName ?? '') ||
     LAND_TRANSPORT_RE.test(container.GCTVoyage ?? '')
   )
+}
+
+/**
+ * Resolve the **arrival** (grounding) movement — milestone + mode — from the
+ * container's direction and whether it is a land (TLO) move. GCT gives no
+ * per-movement mode field, so we infer it from how a maritime terminal actually
+ * handles the box, mirroring the INCOS/BCT adapter (which picks discharge vs
+ * gate-in from the yard type):
+ *  - land (TLO):        trucked in, never touched a vessel → GATE_IN  / TRUCK
+ *  - import (non-land):  discharged off the arriving vessel → DISCHARGED / VESSEL
+ *  - export (non-land):  delivered by road/rail for loading → GATE_IN  / TRUCK
+ *  - unknown direction:  keep GATE_IN with an unknown (null) mode — we cannot
+ *                        assert discharge without knowing the direction.
+ *
+ * NOTE: a confirmed import arrival is therefore keyed `DISC`, not `GTIN`; because
+ * `sourceEventId` embeds the eventCode, this re-keys import gate-in events — safe
+ * while GCT is new (little/no emitted history) and correct going forward.
+ */
+export function arrivalMovement(
+  direction: GctCargoDirection | null,
+  land: boolean,
+): Movement {
+  if (land) return { spec: GATE_IN, mode: 'TRUCK' }
+  if (direction === 'import') return { spec: DISCHARGED, mode: 'VESSEL' }
+  if (direction === 'export') return { spec: GATE_IN, mode: 'TRUCK' }
+  return { spec: GATE_IN, mode: null }
+}
+
+/**
+ * Resolve the **departure** (pickup) movement. The milestone stays DEPARTED (the
+ * service maps it to `transport.departed`); only the mode varies:
+ *  - export (non-land): loaded onto the departing vessel → VESSEL
+ *  - import / land:     gated out by road/rail            → TRUCK
+ *  - unknown direction: null
+ */
+export function departureMovement(
+  direction: GctCargoDirection | null,
+  land: boolean,
+): Movement {
+  if (land) return { spec: DEPARTED, mode: 'TRUCK' }
+  if (direction === 'import') return { spec: DEPARTED, mode: 'TRUCK' }
+  if (direction === 'export') return { spec: DEPARTED, mode: 'VESSEL' }
+  return { spec: DEPARTED, mode: null }
 }
 
 /**
@@ -101,6 +146,7 @@ function baseEvent(
   ufvGkey: string,
   spec: MilestoneSpec,
   eventDateTime: Date,
+  modeOfTransport: TerminalModeOfTransport | null,
 ): TerminalFetchedEvent {
   const seals = (container.SealList ?? [])
     .filter((n): n is string => typeof n === 'string' && n.trim() !== '')
@@ -109,11 +155,11 @@ function baseEvent(
     (c): c is string => typeof c === 'string' && c.trim() !== '',
   )
   const direction = directionFromStatus(container.CntrStatus)
-  // GCT signals a land (truck) movement via a TLO sentinel in the vessel/voyage
-  // fields rather than a per-movement mode field; when present, the movement is
-  // by truck and the "vessel"/"voyage" are placeholders, not real identifiers.
+  // GCT stuffs a TLO sentinel into the vessel/voyage fields for a purely land
+  // move; those are placeholders, not real identifiers, so suppress them. A real
+  // vessel visit (import discharge or export load) keeps its name/voyage even
+  // when the arrival leg itself is by truck.
   const land = isLandTransport(container)
-  const modeOfTransport: TerminalModeOfTransport = land ? 'TRUCK' : 'VESSEL'
   const vesselName = land ? null : container.VesselName ?? null
   const voyageNumber = land ? null : container.GCTVoyage ?? container.OwnerVoyage ?? null
 
@@ -149,9 +195,11 @@ function baseEvent(
 }
 
 /**
- * Turn one GCT container snapshot into zero, one, or two normalized events:
- * a gate-in when `GroundingDateTime` is set, and a departed when
- * `PickupDateTime` is set. A snapshot with neither timestamp yields no events
+ * Turn one GCT container snapshot into zero, one, or two normalized events: an
+ * arrival when `GroundingDateTime` is set and a departure when `PickupDateTime`
+ * is set. The milestone and mode of each leg are resolved from the container's
+ * direction and land/vessel nature (see {@link arrivalMovement} /
+ * {@link departureMovement}). A snapshot with neither timestamp yields no events
  * (nothing has provably happened yet).
  */
 export function mapContainerToEvents(
@@ -160,12 +208,20 @@ export function mapContainerToEvents(
 ): TerminalFetchedEvent[] {
   if (!container.CntrID) return []
   const ufvGkey = (container.VisitNo && container.VisitNo.trim()) || container.CntrID
+  const direction = directionFromStatus(container.CntrStatus)
+  const land = isLandTransport(container)
 
   const events: TerminalFetchedEvent[] = []
   const grounded = parseGctDateTime(container.GroundingDateTime)
-  if (grounded) events.push(baseEvent(container, config, ufvGkey, GATE_IN, grounded))
+  if (grounded) {
+    const { spec, mode } = arrivalMovement(direction, land)
+    events.push(baseEvent(container, config, ufvGkey, spec, grounded, mode))
+  }
   const pickedUp = parseGctDateTime(container.PickupDateTime)
-  if (pickedUp) events.push(baseEvent(container, config, ufvGkey, DEPARTED, pickedUp))
+  if (pickedUp) {
+    const { spec, mode } = departureMovement(direction, land)
+    events.push(baseEvent(container, config, ufvGkey, spec, pickedUp, mode))
+  }
 
   return events
 }
