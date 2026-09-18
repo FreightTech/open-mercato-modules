@@ -70,12 +70,11 @@ entities. Core packages stay untouched and upgradeable.
 
 ## 🧩 Module List
 
-No modules published yet; this repo currently holds the registry skeleton. The
-first module lands here once it's built and reviewed.
-
 | Package | Description | Author |
 |---------|-------------|--------|
-| – | – | – |
+| [`@freighttech/shipment-tracking`](packages/shipment-tracking) | Carrier shipment tracking — DCSA carrier adapters (Maersk, MSC, CMA CGM, Hapag-Lloyd, ZIM, COSCO, Evergreen), a ShipsGo aggregator fallback, a Journey Timeline, and an optional live vessel/POI map | [FreightTech.org](https://freighttech.org) |
+| [`@freighttech/terminal-tracking`](packages/terminal-tracking) | Container-terminal tracking — Navis N4, GCT (Gdynia), and BCT (INCOS) adapters that normalize terminal APIs into events, with per-terminal config, batched polling, and terminal matching | [FreightTech.org](https://freighttech.org) |
+| [`@freighttech/ui`](packages/ui) | Composable UI toolkit for Open Mercato backoffice and business apps — backend UI patterns (DynamicTable, forms, dialogs, detail sections, injections, notifications) and reusable primitives | [FreightTech.org](https://freighttech.org) |
 
 ## 🏗️ Building a Module
 
