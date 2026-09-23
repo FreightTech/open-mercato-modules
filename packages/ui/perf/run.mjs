@@ -50,7 +50,7 @@ const cpu = Number(arg('cpu', 4))
 const only = arg('only', null)?.split(',')
 const headed = flag('headed')
 // --cpuprofile <scenario>: after the timed runs, profile ONE extra run of that
-// scenario (scrollY_slow | scrollY_fast | scrollX) and print the hottest functions.
+// scenario (scrollY_slow | scrollY_fast | scrollX | keyDown | keyRight) and print the hottest functions.
 const cpuProfileScenario = arg('cpuprofile', null)
 
 // ---- build + serve -----------------------------------------------------------
@@ -166,12 +166,18 @@ async function runOnce(browser, wl, opts = {}) {
   if (opts.screenshot) await page.screenshot({ path: opts.screenshot })
 
   if (opts.profile) {
-    const [axis, step, frames] = SCROLLS[opts.profile]
     await page.evaluate(() => window.__bench.scrollTo(0, 0))
+    const key = { keyDown: 'ArrowDown', keyRight: 'ArrowRight' }[opts.profile]
+    if (key) await page.locator('td[data-row="2"][data-col="1"]').click()
     await cdp.send('Profiler.enable')
     await cdp.send('Profiler.setSamplingInterval', { interval: 100 })
     await cdp.send('Profiler.start')
-    await page.evaluate(([a, s, f]) => window.__bench.scrollRun(a, s, f), [axis, step, frames])
+    if (key) {
+      for (let i = 0; i < 30; i++) await page.keyboard.press(key)
+    } else {
+      const [axis, step, frames] = SCROLLS[opts.profile]
+      await page.evaluate(([a, s, f]) => window.__bench.scrollRun(a, s, f), [axis, step, frames])
+    }
     const { profile } = await cdp.send('Profiler.stop')
     await context.close()
     return profile
@@ -200,24 +206,31 @@ async function runOnce(browser, wl, opts = {}) {
   // move the column window (column virtualisation) — measured apart so one
   // cannot hide in the other's p95.
   const settle = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
-  const c0 = await page.evaluate(() => window.__bench.commits.count)
-  for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowDown')
-  await settle()
-  const downEvents = await page.evaluate(() => window.__bench.events)
-  const c1 = await page.evaluate(() => window.__bench.commits.count)
-  await page.evaluate(() => window.__bench.resetEvents())
-  for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
-  await settle()
-  const rightEvents = await page.evaluate(() => window.__bench.events)
-  const c2 = await page.evaluate(() => window.__bench.commits.count)
-  const down = eventStats(downEvents, 'keydown')
-  const right = eventStats(rightEvents, 'keydown')
-  out.keyNav = {
-    n: down.n + right.n,
-    p95: Math.max(down.p95 || 0, right.p95 || 0),
-    down: { ...down, reactCommits: c1 - c0 },
-    right: { ...right, reactCommits: c2 - c1 },
+  // Event Timing is quantised to 8 ms and drops events < 16 ms, so with 30
+  // presses its p95 is often just the max. The continuous signal is Chrome's
+  // own main-thread counters per press (script / task ms) — judge by those.
+  const PRESSES = 30
+  const keyRun = async (key) => {
+    await page.evaluate(() => window.__bench.resetEvents())
+    const c0 = await page.evaluate(() => window.__bench.commits.count)
+    const m0 = await cdpMetrics(cdp)
+    for (let i = 0; i < PRESSES; i++) await page.keyboard.press(key)
+    await settle()
+    const m1 = await cdpMetrics(cdp)
+    const events = await page.evaluate(() => window.__bench.events)
+    const c1 = await page.evaluate(() => window.__bench.commits.count)
+    const kd = events.filter((e) => e.name === 'keydown').map((e) => e.duration)
+    return {
+      ...eventStats(events, 'keydown'),
+      slowPresses: kd.filter((d) => d >= 48).length,
+      scriptMsPerPress: round(((m1.ScriptDuration - m0.ScriptDuration) * 1000) / PRESSES),
+      taskMsPerPress: round(((m1.TaskDuration - m0.TaskDuration) * 1000) / PRESSES),
+      reactCommits: c1 - c0,
+    }
   }
+  const down = await keyRun('ArrowDown')
+  const right = await keyRun('ArrowRight')
+  out.keyNav = { n: down.n + right.n, p95: Math.max(down.p95 || 0, right.p95 || 0), down, right }
 
   // Edit: open an editor on a text column, type, commit with Enter. Ten cells.
   await page.evaluate(() => window.__bench.scrollTo(0, 0))

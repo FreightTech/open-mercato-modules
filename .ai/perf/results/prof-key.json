@@ -1,0 +1,746 @@
+{
+  "env": {
+    "label": "prof-key",
+    "variant": "head",
+    "date": "2026-09-23T21:35:09.769Z",
+    "gitSha": "9e7ef0d",
+    "gitBranch": "dynamictables-performance",
+    "gitDirty": false,
+    "cpuThrottle": 4,
+    "runs": 1,
+    "interleaved": false,
+    "host": {
+      "cpu": "Apple M4",
+      "cores": 10,
+      "memGB": 24,
+      "platform": "darwin 24.1.0"
+    },
+    "loadAvgAtStart": [
+      5.05,
+      5.28,
+      7.76
+    ],
+    "profilingBuild": true,
+    "chromium": "153.0.8010.12"
+  },
+  "workloads": {
+    "app-transport": {
+      "workload": {
+        "id": "app-transport",
+        "rows": 100,
+        "cols": 120,
+        "frozen": 2,
+        "colVirt": true
+      },
+      "metrics": {
+        "mountMs": {
+          "median": 302.4,
+          "min": 302.4,
+          "max": 302.4,
+          "values": [
+            302.4
+          ]
+        },
+        "afterMount.mountedRows": {
+          "median": 29,
+          "min": 29,
+          "max": 29,
+          "values": [
+            29
+          ]
+        },
+        "afterMount.mountedCells": {
+          "median": 464,
+          "min": 464,
+          "max": 464,
+          "values": [
+            464
+          ]
+        },
+        "afterMount.domNodes": {
+          "median": 1441,
+          "min": 1441,
+          "max": 1441,
+          "values": [
+            1441
+          ]
+        },
+        "afterMount.commits.count": {
+          "median": 4,
+          "min": 4,
+          "max": 4,
+          "values": [
+            4
+          ]
+        },
+        "afterMount.commits.actualMs": {
+          "median": 123.2,
+          "min": 123.2,
+          "max": 123.2,
+          "values": [
+            123.19999980926514
+          ]
+        },
+        "afterMount.commits.mount": {
+          "median": 1,
+          "min": 1,
+          "max": 1,
+          "values": [
+            1
+          ]
+        },
+        "afterMount.commits.update": {
+          "median": 2,
+          "min": 2,
+          "max": 2,
+          "values": [
+            2
+          ]
+        },
+        "afterMount.commits.nestedUpdate": {
+          "median": 1,
+          "min": 1,
+          "max": 1,
+          "values": [
+            1
+          ]
+        },
+        "scrollY_slow.p50": {
+          "median": 16.7,
+          "min": 16.7,
+          "max": 16.7,
+          "values": [
+            16.7
+          ]
+        },
+        "scrollY_slow.p95": {
+          "median": 16.7,
+          "min": 16.7,
+          "max": 16.7,
+          "values": [
+            16.7
+          ]
+        },
+        "scrollY_slow.p99": {
+          "median": 16.8,
+          "min": 16.8,
+          "max": 16.8,
+          "values": [
+            16.8
+          ]
+        },
+        "scrollY_slow.max": {
+          "median": 16.8,
+          "min": 16.8,
+          "max": 16.8,
+          "values": [
+            16.8
+          ]
+        },
+        "scrollY_slow.dropped": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollY_slow.blankFrames": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollY_slow.loafCount": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollY_slow.loafBlockingMs": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollY_slow.reactCommits": {
+          "median": 475,
+          "min": 475,
+          "max": 475,
+          "values": [
+            475
+          ]
+        },
+        "scrollY_slow.reactNestedCommits": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollY_slow.reactCommitMs": {
+          "median": 723.8,
+          "min": 723.8,
+          "max": 723.8,
+          "values": [
+            723.8
+          ]
+        },
+        "scrollY_slow.scriptMsPerFrame": {
+          "median": 6.05,
+          "min": 6.05,
+          "max": 6.05,
+          "values": [
+            6.05
+          ]
+        },
+        "scrollY_slow.styleMsPerFrame": {
+          "median": 1.53,
+          "min": 1.53,
+          "max": 1.53,
+          "values": [
+            1.53
+          ]
+        },
+        "scrollY_slow.layoutMsPerFrame": {
+          "median": 0.91,
+          "min": 0.91,
+          "max": 0.91,
+          "values": [
+            0.91
+          ]
+        },
+        "scrollY_slow.taskMsPerFrame": {
+          "median": 13.64,
+          "min": 13.64,
+          "max": 13.64,
+          "values": [
+            13.64
+          ]
+        },
+        "scrollY_slow.layoutsPerFrame": {
+          "median": 0.99,
+          "min": 0.99,
+          "max": 0.99,
+          "values": [
+            0.99
+          ]
+        },
+        "scrollY_fast.p50": {
+          "median": 33.4,
+          "min": 33.4,
+          "max": 33.4,
+          "values": [
+            33.4
+          ]
+        },
+        "scrollY_fast.p95": {
+          "median": 50.1,
+          "min": 50.1,
+          "max": 50.1,
+          "values": [
+            50.1
+          ]
+        },
+        "scrollY_fast.p99": {
+          "median": 66.7,
+          "min": 66.7,
+          "max": 66.7,
+          "values": [
+            66.7
+          ]
+        },
+        "scrollY_fast.max": {
+          "median": 66.7,
+          "min": 66.7,
+          "max": 66.7,
+          "values": [
+            66.7
+          ]
+        },
+        "scrollY_fast.dropped": {
+          "median": 193,
+          "min": 193,
+          "max": 193,
+          "values": [
+            193
+          ]
+        },
+        "scrollY_fast.blankFrames": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollY_fast.loafCount": {
+          "median": 10,
+          "min": 10,
+          "max": 10,
+          "values": [
+            10
+          ]
+        },
+        "scrollY_fast.loafBlockingMs": {
+          "median": 12.1,
+          "min": 12.1,
+          "max": 12.1,
+          "values": [
+            12.1
+          ]
+        },
+        "scrollY_fast.reactCommits": {
+          "median": 480,
+          "min": 480,
+          "max": 480,
+          "values": [
+            480
+          ]
+        },
+        "scrollY_fast.reactNestedCommits": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollY_fast.reactCommitMs": {
+          "median": 2216.1,
+          "min": 2216.1,
+          "max": 2216.1,
+          "values": [
+            2216.1
+          ]
+        },
+        "scrollY_fast.scriptMsPerFrame": {
+          "median": 15.13,
+          "min": 15.13,
+          "max": 15.13,
+          "values": [
+            15.13
+          ]
+        },
+        "scrollY_fast.styleMsPerFrame": {
+          "median": 7.99,
+          "min": 7.99,
+          "max": 7.99,
+          "values": [
+            7.99
+          ]
+        },
+        "scrollY_fast.layoutMsPerFrame": {
+          "median": 3.22,
+          "min": 3.22,
+          "max": 3.22,
+          "values": [
+            3.22
+          ]
+        },
+        "scrollY_fast.taskMsPerFrame": {
+          "median": 36.44,
+          "min": 36.44,
+          "max": 36.44,
+          "values": [
+            36.44
+          ]
+        },
+        "scrollY_fast.layoutsPerFrame": {
+          "median": 1,
+          "min": 1,
+          "max": 1,
+          "values": [
+            1
+          ]
+        },
+        "scrollX.p50": {
+          "median": 16.7,
+          "min": 16.7,
+          "max": 16.7,
+          "values": [
+            16.7
+          ]
+        },
+        "scrollX.p95": {
+          "median": 33.3,
+          "min": 33.3,
+          "max": 33.3,
+          "values": [
+            33.3
+          ]
+        },
+        "scrollX.p99": {
+          "median": 33.4,
+          "min": 33.4,
+          "max": 33.4,
+          "values": [
+            33.4
+          ]
+        },
+        "scrollX.max": {
+          "median": 33.4,
+          "min": 33.4,
+          "max": 33.4,
+          "values": [
+            33.4
+          ]
+        },
+        "scrollX.dropped": {
+          "median": 23,
+          "min": 23,
+          "max": 23,
+          "values": [
+            23
+          ]
+        },
+        "scrollX.blankFrames": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollX.loafCount": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollX.loafBlockingMs": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollX.reactCommits": {
+          "median": 354,
+          "min": 354,
+          "max": 354,
+          "values": [
+            354
+          ]
+        },
+        "scrollX.reactNestedCommits": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "scrollX.reactCommitMs": {
+          "median": 448.9,
+          "min": 448.9,
+          "max": 448.9,
+          "values": [
+            448.9
+          ]
+        },
+        "scrollX.scriptMsPerFrame": {
+          "median": 5.34,
+          "min": 5.34,
+          "max": 5.34,
+          "values": [
+            5.34
+          ]
+        },
+        "scrollX.styleMsPerFrame": {
+          "median": 1.34,
+          "min": 1.34,
+          "max": 1.34,
+          "values": [
+            1.34
+          ]
+        },
+        "scrollX.layoutMsPerFrame": {
+          "median": 0.82,
+          "min": 0.82,
+          "max": 0.82,
+          "values": [
+            0.82
+          ]
+        },
+        "scrollX.taskMsPerFrame": {
+          "median": 12.24,
+          "min": 12.24,
+          "max": 12.24,
+          "values": [
+            12.24
+          ]
+        },
+        "scrollX.layoutsPerFrame": {
+          "median": 0.24,
+          "min": 0.24,
+          "max": 0.24,
+          "values": [
+            0.24
+          ]
+        },
+        "keyNav.n": {
+          "median": 46,
+          "min": 46,
+          "max": 46,
+          "values": [
+            46
+          ]
+        },
+        "keyNav.p95": {
+          "median": 104,
+          "min": 104,
+          "max": 104,
+          "values": [
+            104
+          ]
+        },
+        "keyNav.down.n": {
+          "median": 16,
+          "min": 16,
+          "max": 16,
+          "values": [
+            16
+          ]
+        },
+        "keyNav.down.p50": {
+          "median": 16,
+          "min": 16,
+          "max": 16,
+          "values": [
+            16
+          ]
+        },
+        "keyNav.down.p95": {
+          "median": 104,
+          "min": 104,
+          "max": 104,
+          "values": [
+            104
+          ]
+        },
+        "keyNav.down.max": {
+          "median": 104,
+          "min": 104,
+          "max": 104,
+          "values": [
+            104
+          ]
+        },
+        "keyNav.down.reactCommits": {
+          "median": 31,
+          "min": 31,
+          "max": 31,
+          "values": [
+            31
+          ]
+        },
+        "keyNav.right.n": {
+          "median": 30,
+          "min": 30,
+          "max": 30,
+          "values": [
+            30
+          ]
+        },
+        "keyNav.right.p50": {
+          "median": 32,
+          "min": 32,
+          "max": 32,
+          "values": [
+            32
+          ]
+        },
+        "keyNav.right.p95": {
+          "median": 72,
+          "min": 72,
+          "max": 72,
+          "values": [
+            72
+          ]
+        },
+        "keyNav.right.max": {
+          "median": 72,
+          "min": 72,
+          "max": 72,
+          "values": [
+            72
+          ]
+        },
+        "keyNav.right.reactCommits": {
+          "median": 51,
+          "min": 51,
+          "max": 51,
+          "values": [
+            51
+          ]
+        },
+        "edit.keydown.n": {
+          "median": 11,
+          "min": 11,
+          "max": 11,
+          "values": [
+            11
+          ]
+        },
+        "edit.keydown.p50": {
+          "median": 16,
+          "min": 16,
+          "max": 16,
+          "values": [
+            16
+          ]
+        },
+        "edit.keydown.p95": {
+          "median": 24,
+          "min": 24,
+          "max": 24,
+          "values": [
+            24
+          ]
+        },
+        "edit.keydown.max": {
+          "median": 24,
+          "min": 24,
+          "max": 24,
+          "values": [
+            24
+          ]
+        },
+        "edit.keypress.n": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "values": [
+            0
+          ]
+        },
+        "edit.keypress.p50": {
+          "median": null,
+          "min": null,
+          "max": null,
+          "values": []
+        },
+        "edit.keypress.p95": {
+          "median": null,
+          "min": null,
+          "max": null,
+          "values": []
+        },
+        "edit.keypress.max": {
+          "median": null,
+          "min": null,
+          "max": null,
+          "values": []
+        },
+        "memory.jsHeapMB": {
+          "median": 10.01,
+          "min": 10.01,
+          "max": 10.01,
+          "values": [
+            10.01
+          ]
+        },
+        "memory.domNodes": {
+          "median": 2533,
+          "min": 2533,
+          "max": 2533,
+          "values": [
+            2533
+          ]
+        },
+        "memory.layoutCount": {
+          "median": 587,
+          "min": 587,
+          "max": 587,
+          "values": [
+            587
+          ]
+        },
+        "memory.recalcStyleCount": {
+          "median": 687,
+          "min": 687,
+          "max": 687,
+          "values": [
+            687
+          ]
+        },
+        "final.mountedRows": {
+          "median": 39,
+          "min": 39,
+          "max": 39,
+          "values": [
+            39
+          ]
+        },
+        "final.mountedCells": {
+          "median": 624,
+          "min": 624,
+          "max": 624,
+          "values": [
+            624
+          ]
+        },
+        "final.domNodes": {
+          "median": 1857,
+          "min": 1857,
+          "max": 1857,
+          "values": [
+            1857
+          ]
+        },
+        "final.commits.count": {
+          "median": 1429,
+          "min": 1429,
+          "max": 1429,
+          "values": [
+            1429
+          ]
+        },
+        "final.commits.actualMs": {
+          "median": 3788.4,
+          "min": 3788.4,
+          "max": 3788.4,
+          "values": [
+            3788.3999853134155
+          ]
+        },
+        "final.commits.mount": {
+          "median": 1,
+          "min": 1,
+          "max": 1,
+          "values": [
+            1
+          ]
+        },
+        "final.commits.update": {
+          "median": 1427,
+          "min": 1427,
+          "max": 1427,
+          "values": [
+            1427
+          ]
+        },
+        "final.commits.nestedUpdate": {
+          "median": 1,
+          "min": 1,
+          "max": 1,
+          "values": [
+            1
+          ]
+        }
+      },
+      "errors": []
+    }
+  }
+}
