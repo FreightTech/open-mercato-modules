@@ -29,7 +29,11 @@ export type TableDisplayToggle = {
 }
 
 export type TableDisplayHost = {
-  /** Alternating row fills for this pane. */
+  /**
+   * Alternating row fills for this pane. `undefined` = the table's own
+   * default (many tables are striped by config); a boolean is the user's
+   * explicit choice and overrides it either way.
+   */
   striped?: boolean
   /** The switches the ⚙ panel lists under the density control. */
   toggles: TableDisplayToggle[]

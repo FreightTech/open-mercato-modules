@@ -112,6 +112,14 @@ export function SharePanel({
       role="dialog"
       aria-label={t('splitView.share.title', 'Share “{name}”', { name: layoutName })}
       className="!flex !flex-col !p-2"
+      // Cmd/Ctrl+Enter shares, as every dialog's primary action does.
+      onKeyDown={(event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+          event.preventDefault()
+          event.stopPropagation()
+          void send()
+        }
+      }}
       data-split-share=""
     >
       <div className="px-1 pb-1.5 text-body-medium-sm text-[var(--m3-on-surface)]">

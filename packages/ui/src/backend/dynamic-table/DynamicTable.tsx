@@ -677,7 +677,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // Per-pane display choices from a host (split view): zebra rows and the
   // switches the ⚙ panel shows. Null outside a host — nothing changes then.
   const displayHost = useTableDisplayHost();
-  const effectiveStriped = striped || displayHost?.striped === true;
+  // A pane's explicit zebra choice overrides the table's own default in BOTH
+  // directions; no choice keeps the default.
+  const effectiveStriped = displayHost?.striped ?? striped;
+  // The ⚙ switch shows what the grid actually does, not only what the pane
+  // stored — a table striped by config reads "on" until the user says otherwise.
+  const displayToggles = React.useMemo(
+    () =>
+      displayHost?.toggles.map((toggle) =>
+        toggle.key === 'striped' ? { ...toggle, checked: effectiveStriped } : toggle,
+      ) ?? [],
+    [displayHost, effectiveStriped],
+  );
   // The card wrapper renders unless this is an embedded sub-table with no
   // tabs. A host that hides the tabs row still wants the card.
   const hasCard = !(hidePerspectiveTabs && !displayHost);
@@ -3731,7 +3742,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           hover, or hiding the toolbar would hide the way to bring it back. */}
       {hideToolbar && displayHost && (
         <div className="hot-pane-float-actions" data-pane-float-actions="">
-          <TableSettingsMenu densityTableKey={tableId} toggles={displayHost.toggles} showDensity={!hideDensityControl} />
+          <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
           <ToolbarOverflow showDensity={false} extras={toolbarOverflowExtras} />
         </div>
       )}
@@ -3838,7 +3849,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
             ) : (
               <>
               {displayHost && (
-                <TableSettingsMenu densityTableKey={tableId} toggles={displayHost.toggles} showDensity={!hideDensityControl} />
+                <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
               )}
               <ToolbarOverflow
                 onExport={hideExportButton ? undefined : handleExportAll}

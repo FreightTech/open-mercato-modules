@@ -442,6 +442,14 @@ export function CustomizeDrawer({
         hideCloseButton
         className="hot-config-panel hot-appearance-v2"
         overlayClassName="hot-config-overlay !backdrop-blur-none"
+        // The dialog contract: Cmd/Ctrl+Enter is "Gotowe", Escape cancels
+        // (Radix closes the sheet on Escape itself).
+        onKeyDown={(event) => {
+          if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+            event.preventDefault()
+            onOpenChange(false)
+          }
+        }}
         data-split-customize=""
       >
         <MenuPortalContext.Provider value={portalTarget}>
@@ -585,8 +593,11 @@ export function CustomizeDrawer({
                   value={saveName}
                   onChange={(event) => setSaveName(event.target.value)}
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter' || ((event.metaKey || event.ctrlKey) && event.key === 'Enter')) {
+                    if (event.key === 'Enter') {
+                      // Enter (with or without Cmd/Ctrl) saves this field — it
+                      // must not bubble up and close the drawer as well.
                       event.preventDefault()
+                      event.stopPropagation()
                       void saveCurrent()
                     }
                   }}

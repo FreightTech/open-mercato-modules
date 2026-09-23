@@ -117,7 +117,9 @@ function useTableDisplay(
   const toolbar = chrome?.toolbar !== false
   const tabs = chrome?.viewsBar !== false && chrome?.tabs !== false
   const pagination = chrome?.viewsBar !== false && chrome?.pagination !== false
-  const striped = chrome?.striped === true
+  // `undefined` = the table's own default; the grid reports the effective
+  // state back to the switch (see `displayToggles` in DynamicTable).
+  const striped = chrome?.striped
   return React.useMemo<TableDisplayHost>(
     () => ({
       striped,
@@ -127,7 +129,7 @@ function useTableDisplay(
         // back on clears it, or the row would stay hidden with both "on".
         { key: 'tabs', label: t('splitView.tableSettings.tabs', 'Tabs bar'), checked: tabs, onChange: (next) => toggleRef.current({ tabs: next, ...(next ? { viewsBar: true } : {}) }) },
         { key: 'pagination', label: t('splitView.tableSettings.pagination', 'Pagination'), checked: pagination, onChange: (next) => toggleRef.current({ pagination: next, ...(next ? { viewsBar: true } : {}) }) },
-        { key: 'striped', label: t('splitView.tableSettings.striped', 'Zebra rows'), checked: striped, onChange: (next) => toggleRef.current({ striped: next }) },
+        { key: 'striped', label: t('splitView.tableSettings.striped', 'Zebra rows'), checked: striped === true, onChange: (next) => toggleRef.current({ striped: next }) },
       ],
     }),
     [t, toolbar, tabs, pagination, striped],
