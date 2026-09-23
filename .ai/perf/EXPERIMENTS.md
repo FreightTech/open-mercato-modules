@@ -18,3 +18,7 @@ fast-scroll frame from Chrome's own counters.
 - Column virtualisation is decisive at 120 cols: vertical fast scroll 168 → 38 ms/frame, heap 19.5 → 9.3 MB, DOM 9.7k → 1.4k nodes. Frozen columns cost little. (`diag-x120`)
 - Horizontal scroll WITH column virtualisation: ~29 ms/frame, ~2 React commits/frame vs ~6 ms and 5 commits total without it. (`diag-x120`)
 - All scroll-time React work enters via TanStack Virtual `onChange → flushSync` (range change). Scheduler-task commits ≈ 5%. (`perf/why-render.mjs` on the profiles)
+
+## Cumulative (branch head vs original main)
+`cumulative-1` — 7e4ee1b vs 8da590f, all 5 workloads, 5 interleaved runs, 4x CPU: **31 better, 0 worse**.
+Highlights: app-transport horizontal pan 36.7 → 16.1 ms/frame (−56%, dropped 169 → 46); arrow-key script per press −45…−68% on every shape; 100x80 slow scroll 47.4 → 30.1 ms/frame (−36%); fast-scroll style recalc −15…−27%. DOM nodes and heap unchanged — no density traded.
