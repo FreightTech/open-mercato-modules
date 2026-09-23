@@ -42,8 +42,10 @@ const dist = join(here, 'dist')
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
 const server = createServer(async (req, res) => {
   const p = new URL(req.url, 'http://x').pathname
-  try { res.writeHead(200, { 'content-type': MIME[extname(p)] ?? 'text/html' }).end(await readFile(join(dist, p === '/' ? 'index.html' : p))) }
-  catch { res.writeHead(404).end() }
+  try {
+    const body = await readFile(join(dist, p === '/' ? 'index.html' : p))
+    res.writeHead(200, { 'content-type': MIME[extname(p)] ?? 'text/html' }).end(body)
+  } catch { res.writeHead(404).end() }
 })
 await new Promise((r) => server.listen(0, '127.0.0.1', r))
 

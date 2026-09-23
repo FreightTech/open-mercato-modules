@@ -15,4 +15,9 @@ export const WORKLOADS = [
   { id: '1000x30', rows: 1000, cols: 30 },
   { id: '10000x50', rows: 10000, cols: 50 },
   { id: 'app-transport', rows: 100, cols: 120, frozen: 2, colVirt: true },
+  // Diagnostic: isolate what app-transport's cost comes from. Run with
+  // --only; excluded from the default matrix.
+  { id: 'x120-plain', rows: 100, cols: 120, diagnostic: true },
+  { id: 'x120-frozen', rows: 100, cols: 120, frozen: 2, diagnostic: true },
+  { id: 'x120-virt', rows: 100, cols: 120, colVirt: true, diagnostic: true },
 ]

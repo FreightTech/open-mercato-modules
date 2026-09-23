@@ -99,6 +99,10 @@ async function scrollRun(axis: 'y' | 'x', step: number, frames: number) {
   const c0 = { ...commits }
   const deltas: number[] = []
   let blank = 0
+  // Bounds read ONCE: reading scrollHeight/scrollWidth inside the loop would
+  // force a synchronous layout right after each scroll-driven React commit and
+  // pin that layout's cost on this function in every profile.
+  const max = axis === 'y' ? el.scrollHeight - el.clientHeight : el.scrollWidth - el.clientWidth
   let last = await nextFrame()
   for (let i = 0; i < frames; i++) {
     if (axis === 'y') el.scrollTop += step
@@ -110,7 +114,6 @@ async function scrollRun(axis: 'y' | 'x', step: number, frames: number) {
     // doing that every frame would move (and slightly inflate) the very work
     // being measured. 30 samples per run is plenty to catch checkerboarding.
     if (i % 8 === 7 && !centreIsCell(el)) blank++
-    const max = axis === 'y' ? el.scrollHeight - el.clientHeight : el.scrollWidth - el.clientWidth
     const pos = axis === 'y' ? el.scrollTop : el.scrollLeft
     if (pos >= max - 1) step = -Math.abs(step)
     if (pos <= 0) step = Math.abs(step)

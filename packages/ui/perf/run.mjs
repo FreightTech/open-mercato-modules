@@ -196,12 +196,28 @@ async function runOnce(browser, wl, opts = {}) {
   await page.evaluate(() => window.__bench.scrollTo(0, 0))
   await page.locator('td[data-row="2"][data-col="1"]').click()
   await page.evaluate(() => window.__bench.resetEvents())
+  // Down and Right are separate paths: Down moves the row selection, Right can
+  // move the column window (column virtualisation) — measured apart so one
+  // cannot hide in the other's p95.
+  const settle = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
   const c0 = await page.evaluate(() => window.__bench.commits.count)
   for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowDown')
-  for (let i = 0; i < 15; i++) await page.keyboard.press('ArrowRight')
-  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
-  const navEvents = await page.evaluate(() => window.__bench.events)
-  out.keyNav = { ...eventStats(navEvents, 'keydown'), reactCommits: (await page.evaluate(() => window.__bench.commits.count)) - c0 }
+  await settle()
+  const downEvents = await page.evaluate(() => window.__bench.events)
+  const c1 = await page.evaluate(() => window.__bench.commits.count)
+  await page.evaluate(() => window.__bench.resetEvents())
+  for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
+  await settle()
+  const rightEvents = await page.evaluate(() => window.__bench.events)
+  const c2 = await page.evaluate(() => window.__bench.commits.count)
+  const down = eventStats(downEvents, 'keydown')
+  const right = eventStats(rightEvents, 'keydown')
+  out.keyNav = {
+    n: down.n + right.n,
+    p95: Math.max(down.p95 || 0, right.p95 || 0),
+    down: { ...down, reactCommits: c1 - c0 },
+    right: { ...right, reactCommits: c2 - c1 },
+  }
 
   // Edit: open an editor on a text column, type, commit with Enter. Ten cells.
   await page.evaluate(() => window.__bench.scrollTo(0, 0))
@@ -288,7 +304,7 @@ const envFor = (variant) => ({
 const browser = await chromium.launch({ headless: !headed, channel: 'chromium', args: ['--disable-renderer-backgrounding', '--disable-background-timer-throttling'] })
 const names = Object.keys(variants) // ['head'] or ['head', 'base']
 const results = Object.fromEntries(names.map((v) => [v, { env: { ...envFor(v), chromium: browser.version() }, workloads: {} }]))
-const selected = WORKLOADS.filter((w) => !only || only.includes(w.id))
+const selected = WORKLOADS.filter((w) => (only ? only.includes(w.id) : !w.diagnostic))
 const outDir = join(repoRoot, '.ai/perf/results')
 await mkdir(outDir, { recursive: true })
 console.log(`bench ${label}: ${selected.length} workloads × ${runs} runs (+1 warm-up)${baseRef ? ` × A/B vs ${baseRef} (${baseSha})` : ''}, cpu ${cpu}x, chromium ${browser.version()}, load ${os.loadavg()[0].toFixed(1)}`)

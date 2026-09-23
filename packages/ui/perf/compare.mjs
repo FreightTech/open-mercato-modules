@@ -33,7 +33,7 @@ const HEADLINE = [
   'scrollY_slow.p95', 'scrollY_slow.taskMsPerFrame', 'scrollY_slow.dropped',
   'scrollY_fast.p95', 'scrollY_fast.taskMsPerFrame', 'scrollY_fast.scriptMsPerFrame', 'scrollY_fast.styleMsPerFrame', 'scrollY_fast.layoutMsPerFrame', 'scrollY_fast.dropped', 'scrollY_fast.blankFrames', 'scrollY_fast.reactCommits',
   'scrollX.p95', 'scrollX.taskMsPerFrame', 'scrollX.dropped', 'scrollX.blankFrames',
-  'keyNav.p95', 'edit.keydown.p95',
+  'keyNav.down.p95', 'keyNav.right.p95', 'keyNav.p95', 'edit.keydown.p95',
   'memory.jsHeapMB', 'afterMount.domNodes',
 ]
 // Informational: more or fewer is not "better" by itself.
