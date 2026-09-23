@@ -29,26 +29,26 @@
 // Spec: .ai/specs/2026-08-17-split-view-workspace-composition.md (Phase 2)
 
 import * as React from 'react'
-import ReactDOM from 'react-dom'
-import { Loader2, MoreHorizontal, RefreshCw } from 'lucide-react'
+import { Loader2, MoreVertical, RefreshCw } from 'lucide-react'
+import { useT } from '@open-mercato/shared/lib/i18n/context'
 import type {
   DashboardLayoutItem,
   DashboardWidgetModule,
   DashboardWidgetRenderContext,
 } from '@open-mercato/shared/modules/dashboard/widgets'
 import { loadDashboardWidgetModule } from '../../dashboard/widgetRegistry'
-import { ToolbarOverflowCloseProvider } from '../components/ToolbarOverflow'
-// The one piece of chrome this file shares with its host. Importing it back
-// from `SplitViewHost` is a cycle, and a safe one: the binding is read at
-// RENDER time, long after both module bodies have initialised.
-import { M3_MENU_PANEL } from './SplitViewHost'
-import { computeAnchoredPosition } from '../utils/anchoredPosition'
+import { AnchoredMenu } from './AnchoredMenu'
+import { ICON_BUTTON } from './chrome'
+import { contentTitle } from './ContentPicker'
+import { widgetPresentation } from '../registry/widgetPresentation'
 import {
   useContentById,
   useWidgetRenderContext,
   type WidgetContentItem,
 } from '../registry/ContentRegistryContext'
 import type { PaneContentRef } from './types'
+import type { FilterRow } from '../types/index'
+import { WORKSPACE_FILTERS_SETTINGS_KEY } from './sharedCriteria'
 
 type WidgetRef = Extract<PaneContentRef, { kind: 'widget' }>
 type LoadedModule = DashboardWidgetModule<any>
@@ -78,6 +78,19 @@ export type WidgetPaneProps = {
   overflowExtras?: React.ReactNode
   /** Mirrors a table pane's `hideToolbar` chrome toggle — hides the header row. */
   hideToolbar?: boolean
+  /**
+   * Show the footer link to the widget's section ("Pokaż wszystko"). A
+   * per-widget choice stored on the slot; default on. Ignored when the widget
+   * has nowhere to link to.
+   */
+  showCta?: boolean
+  /**
+   * The workspace's filters, already in this widget's own field names
+   * (`mapCriteriaForWidget`). Handed to the widget in its settings under
+   * `WORKSPACE_FILTERS_SETTINGS_KEY`; a widget that does not read them is
+   * reported as "not filtered" by the bar, never silently skipped.
+   */
+  sharedFilters?: FilterRow[]
 }
 
 function PaneMessage({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
@@ -97,7 +110,10 @@ export function WidgetPane({
   onSettingsChange,
   overflowExtras,
   hideToolbar,
+  showCta = true,
+  sharedFilters,
 }: WidgetPaneProps) {
+  const t = useT()
   const { item, status } = useContentById(content)
 
   if (status === 'loading') {
@@ -109,13 +125,17 @@ export function WidgetPane({
   }
   if (status === 'unknown') {
     return (
-      <PaneMessage data-pane-status="unknown">This widget is no longer available.</PaneMessage>
+      <PaneMessage data-pane-status="unknown">
+        {t('splitView.pane.widgetUnknown', 'This widget is no longer available.')}
+      </PaneMessage>
     )
   }
   if (status === 'denied' || !item || item.kind !== 'widget') {
     return (
       <PaneMessage data-pane-status="denied">
-        You don’t have access to {item?.title ?? 'this widget'}.
+        {t('splitView.pane.denied', 'You don’t have access to {title}.', {
+          title: item ? contentTitle(t, item) : t('splitView.pane.thisWidget', 'this widget'),
+        })}
       </PaneMessage>
     )
   }
@@ -128,6 +148,8 @@ export function WidgetPane({
       onSettingsChange={onSettingsChange}
       overflowExtras={overflowExtras}
       hideToolbar={hideToolbar}
+      showCta={showCta}
+      sharedFilters={sharedFilters}
     />
   )
 }
@@ -139,6 +161,8 @@ function WidgetPaneBody({
   onSettingsChange,
   overflowExtras,
   hideToolbar,
+  showCta,
+  sharedFilters,
 }: {
   item: WidgetContentItem
   content: WidgetRef
@@ -146,7 +170,15 @@ function WidgetPaneBody({
   onSettingsChange?: (next: unknown) => void
   overflowExtras?: React.ReactNode
   hideToolbar?: boolean
+  showCta?: boolean
+  sharedFilters?: FilterRow[]
 }) {
+  const t = useT()
+  const title = contentTitle(t, item)
+  const description = item.description
+    ? t(`splitView.widgetDescription.${item.id}`, item.description)
+    : null
+  const href = widgetPresentation(item.id).href
   const renderContext = useWidgetRenderContext()
   const [module, setModule] = React.useState<LoadedModule | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -203,6 +235,12 @@ function WidgetPaneBody({
 
   const handleSettingsChange = React.useCallback(
     (next: unknown) => {
+      // A widget that spreads its settings back would echo the workspace
+      // filters; they are the workspace's, not the slot's, so they never persist.
+      if (next && typeof next === 'object' && WORKSPACE_FILTERS_SETTINGS_KEY in (next as object)) {
+        const { [WORKSPACE_FILTERS_SETTINGS_KEY]: _omit, ...rest } = next as Record<string, unknown>
+        next = rest
+      }
       let raw = next
       if (module?.dehydrateSettings) {
         try {
@@ -234,44 +272,81 @@ function WidgetPaneBody({
 
   const Widget = module?.Widget ?? null
 
+  // The settings the widget SEES: its own, plus the workspace filters on top.
+  // Never written back — `handleSettingsChange` persists what the widget sends,
+  // and a widget echoing this key would only re-store the same rows.
+  const widgetSettings = React.useMemo(() => {
+    if (!sharedFilters || sharedFilters.length === 0) return hydratedSettings
+    const base = hydratedSettings && typeof hydratedSettings === 'object' ? hydratedSettings : {}
+    return { ...(base as Record<string, unknown>), [WORKSPACE_FILTERS_SETTINGS_KEY]: sharedFilters }
+  }, [hydratedSettings, sharedFilters])
+
   return (
+    // The Figma widget card (549:542, "Widżet"): a header with the title, the
+    // supporting line and one ⋮ — every widget action lives in that menu, never
+    // as header buttons — then the content, then an optional footer link to the
+    // widget's section. 16px insets, the compact reference (696:19056).
     <div
       className="flex h-full min-h-0 min-w-0 flex-1 flex-col"
       data-pane-widget-body={content.widgetId}
     >
       {!hideToolbar && (
         <div
-          // A tinted container step instead of a hairline: M3 separates by
-          // surface role wherever both would read, and this band is the card's
-          // own top edge — the pane's `overflow-hidden` clips it to the radius.
-          className="flex h-7 shrink-0 items-center gap-1 bg-[var(--m3-surface-container-low)] px-2 text-[var(--m3-on-surface)]"
+          className="flex shrink-0 items-start gap-2 px-4 pb-2 pt-3 text-[var(--m3-on-surface)]"
           data-pane-widget-header=""
         >
-          <span className="min-w-0 flex-1 truncate text-label-semibold-xs" title={item.title}>
-            {item.title}
-          </span>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-body-medium-sm" title={title}>
+              {title}
+            </span>
+            {description && (
+              <span
+                className="truncate text-body-regular-sm text-[var(--m3-on-surface-variant)]"
+                title={description}
+                data-pane-widget-description=""
+              >
+                {description}
+              </span>
+            )}
+          </div>
           {supportsRefresh && (
             <button
               type="button"
               onClick={triggerRefresh}
               disabled={loading || loadFailed}
-              aria-label="Refresh"
-              title="Refresh"
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-m3-full text-[var(--m3-on-surface-variant)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)] active:bg-[var(--m3-state-layer-pressed)] disabled:opacity-[var(--m3-disabled-content-opacity)]"
+              aria-label={t('splitView.pane.refresh', 'Refresh')}
+              title={t('splitView.pane.refresh', 'Refresh')}
+              className={ICON_BUTTON}
               data-pane-widget-refresh=""
             >
-              {refreshing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="h-3.5 w-3.5" />
-              )}
+              {refreshing ? <Loader2 className="animate-spin" /> : <RefreshCw />}
             </button>
           )}
-          {overflowExtras ? <WidgetPaneMenu>{overflowExtras}</WidgetPaneMenu> : null}
+          {overflowExtras ? (
+            <AnchoredMenu
+              placement={{ width: 232, preferredHeight: 560, align: 'end' }}
+              panelProps={{ 'data-pane-widget-menu': '' }}
+              renderTrigger={({ ref, open, toggle }) => (
+                <button
+                  ref={ref}
+                  type="button"
+                  onClick={toggle}
+                  aria-label={t('splitView.pane.options', 'Pane options')}
+                  aria-expanded={open}
+                  className={ICON_BUTTON}
+                  data-pane-widget-menu-btn=""
+                >
+                  <MoreVertical />
+                </button>
+              )}
+            >
+              {() => overflowExtras}
+            </AnchoredMenu>
+          ) : null}
         </div>
       )}
 
-      <div className="min-h-0 flex-1 overflow-auto p-2" data-pane-widget-content="">
+      <div className="min-h-0 flex-1 overflow-auto px-4 pb-3" data-pane-widget-content="">
         {loading && (
           <div className="flex h-full items-center justify-center" data-pane-widget-loading="">
             <Loader2 className="h-4 w-4 animate-spin text-[var(--m3-on-surface-variant)]" aria-hidden="true" />
@@ -283,14 +358,14 @@ function WidgetPaneBody({
             role="alert"
             data-pane-widget-error=""
           >
-            This widget could not be loaded.
+            {t('splitView.pane.widgetFailed', 'This widget could not be loaded.')}
           </div>
         )}
         {!loading && !loadFailed && Widget && (
           <Widget
             mode="view"
             layout={layout}
-            settings={hydratedSettings}
+            settings={widgetSettings}
             context={renderContext ?? ANONYMOUS_CONTEXT}
             onSettingsChange={handleSettingsChange}
             refreshToken={refreshToken}
@@ -298,92 +373,23 @@ function WidgetPaneBody({
           />
         )}
       </div>
-    </div>
-  )
-}
 
-/**
- * The pane's overflow menu.
- *
- * Portalled to `document.body` and positioned with `computeAnchoredPosition`,
- * like every other menu in the grid — a pane clips its overflow, so an
- * absolutely-positioned panel would be painted over and unclickable (the bug
- * `PaneRestoreMenu` documents). `ToolbarOverflowCloseProvider` is what lets the
- * host's rows close the menu after acting, so they behave identically to the
- * rows a table pane puts in its own toolbar overflow.
- */
-function WidgetPaneMenu({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false)
-  const triggerRef = React.useRef<HTMLButtonElement>(null)
-  const panelRef = React.useRef<HTMLDivElement>(null)
-  const [placement, setPlacement] = React.useState({ top: 0, left: 0, maxHeight: 720 })
-
-  const reposition = React.useCallback(() => {
-    const trigger = triggerRef.current
-    if (!trigger) return
-    const next = computeAnchoredPosition(
-      trigger.getBoundingClientRect(),
-      { width: window.innerWidth, height: window.innerHeight },
-      { width: 216, preferredHeight: 720, align: 'end', minHeight: 180 },
-    )
-    setPlacement({ top: next.top, left: next.left, maxHeight: next.maxHeight })
-  }, [])
-
-  React.useLayoutEffect(() => {
-    if (open) reposition()
-  }, [open, reposition])
-
-  React.useEffect(() => {
-    if (!open) return
-    const onDown = (event: MouseEvent) => {
-      const target = event.target as Node
-      if (!panelRef.current?.contains(target) && !triggerRef.current?.contains(target)) setOpen(false)
-    }
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
-    }
-    const onScroll = () => reposition()
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', onScroll)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-      window.removeEventListener('scroll', onScroll, true)
-      window.removeEventListener('resize', onScroll)
-    }
-  }, [open, reposition])
-
-  const close = React.useCallback(() => setOpen(false), [])
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-label="Pane options"
-        aria-expanded={open}
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-m3-full text-[var(--m3-on-surface-variant)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)] active:bg-[var(--m3-state-layer-pressed)]"
-        data-pane-widget-menu-btn=""
-      >
-        <MoreHorizontal className="h-3.5 w-3.5" />
-      </button>
-      {open &&
-        typeof document !== 'undefined' &&
-        ReactDOM.createPortal(
-          <div
-            ref={panelRef}
-            className={M3_MENU_PANEL}
-            style={{ top: placement.top, left: placement.left, width: 216, maxHeight: placement.maxHeight }}
-            data-pane-widget-menu=""
+      {showCta && href && (
+        // Figma: a hairline, then a 48px row with one text button on the right.
+        <div
+          className="flex h-12 shrink-0 items-center justify-end border-t border-[var(--m3-outline-variant)] px-2"
+          data-pane-widget-footer=""
+        >
+          <a
+            href={href}
+            className="inline-flex h-8 items-center rounded-m3-full px-3 text-label-medium-md text-[var(--m3-on-surface)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] active:bg-[var(--m3-state-layer-pressed)]"
+            data-pane-widget-cta=""
           >
-            <ToolbarOverflowCloseProvider value={close}>{children}</ToolbarOverflowCloseProvider>
-          </div>,
-          document.body,
-        )}
-    </>
+            {t('splitView.pane.showAll', 'Show all')}
+          </a>
+        </div>
+      )}
+    </div>
   )
 }
 

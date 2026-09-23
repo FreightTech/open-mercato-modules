@@ -72,6 +72,10 @@
       "types": "./src/backend/dynamic-table/index.ts",
       "default": "./dist/backend/dynamic-table/index.js"
     },
+    "./backend/dynamic-table/__e2e__/*": {
+      "types": "./src/backend/dynamic-table/__e2e__/*.ts",
+      "default": "./dist/backend/dynamic-table/__e2e__/*.js"
+    },
     "./backend/document-viewer": {
       "types": "./src/backend/document-viewer/index.ts",
       "default": "./dist/backend/document-viewer/index.js"

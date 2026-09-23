@@ -1,32 +1,50 @@
 export { SplitViewHost } from './SplitViewHost'
 export type { SplitViewHostProps } from './SplitViewHost'
 export { EmptySlot } from './EmptySlot'
+export { CustomizeDrawer } from './CustomizeDrawer'
+export type { CustomizeDrawerProps } from './CustomizeDrawer'
 export {
   ARRANGE_PRESETS,
+  BOX_MAX_SLOTS,
   GRID_TEMPLATES,
   GRID_TEMPLATE_LIST,
   PANE_MIN_HEIGHT_PX,
   PANE_MIN_WIDTH_PX,
   SPLIT_LAYOUT_VERSION,
+  addBox,
+  addContent,
+  applyBoxTemplate,
   applyGridTemplate,
   applyPreset,
+  columnsOf,
   countPanes,
   countSlots,
+  emptySlotAt,
   evenAll,
   evenSizes,
   fillSlot,
   getNode,
+  isDefaultLayout,
+  layoutSignature,
+  listAllPanes,
+  listAllSlots,
   listPanes,
   listSlots,
   makePaneId,
   normalizeLayout,
   paneTableId,
+  removeBox,
   removePane,
+  replaceContent,
+  resetLayout,
   resizeAt,
+  rowsOf,
   setAllPaneChrome,
   setPaneChrome,
+  shapeSignature,
   splitPane,
   tableContent,
+  templateOf,
 } from './types'
 export type {
   EmptyNode,
@@ -43,6 +61,7 @@ export type {
   SplitDirection,
   SplitLayout,
   SplitNode,
+  WorkspaceBox,
 } from './types'
 export { useSplitViewLayouts } from './useSplitViewLayouts'
 export type { SavedSplitLayout } from './useSplitViewLayouts'

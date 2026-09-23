@@ -18,6 +18,8 @@
 
 import * as React from 'react'
 import { Plus, X } from 'lucide-react'
+import { useT } from '@open-mercato/shared/lib/i18n/context'
+import { ICON_BUTTON } from './chrome'
 
 export function EmptySlot({
   slotId,
@@ -32,31 +34,40 @@ export function EmptySlot({
   onAdd: (anchor: DOMRect) => void
   onRemove: () => void
 }) {
+  const t = useT()
+  const labelRef = React.useRef<HTMLSpanElement>(null)
   return (
     // No padding of its own: the pane area is padded and the gutter is the
     // gutter, so an empty cell occupies EXACTLY the box a filled pane would.
     <div className="relative flex h-full min-h-0 min-w-0 flex-1" data-pane-empty={slotId}>
       <button
         type="button"
-        onClick={(event) => onAdd(event.currentTarget.getBoundingClientRect())}
+        // Anchor the picker to the "+ Dodaj" label in the middle of the cell,
+        // not to the cell: a cell is half a screen tall, and a menu opened
+        // below it lands far from where the user clicked.
+        onClick={(event) => onAdd((labelRef.current ?? event.currentTarget).getBoundingClientRect())}
         // Same 16px corner as a filled pane card, so an empty cell and a
         // filled one agree on shape. The border stays DASHED — here "nothing
         // yet" genuinely is a placeholder — and hover raises a state layer
         // rather than swapping the border colour.
-        className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-m3-lg border border-dashed border-[var(--m3-outline-variant)] bg-transparent text-[var(--m3-on-surface-variant)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)]"
+        // The prototype's "AddTile": a dashed placeholder on a faintly tinted
+        // ground, and on hover the border takes the accent — "drop it here".
+        className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-m3-lg border border-dashed border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-low)] text-[var(--m3-on-surface-variant)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:border-[var(--m3-accent)] hover:bg-[var(--m3-surface-container)] hover:text-[var(--m3-on-surface)]"
         data-pane-empty-add={slotId}
       >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        <span className="text-body-regular-sm">Add table or widget</span>
+        <span ref={labelRef} className="flex flex-col items-center gap-2">
+          <Plus className="h-5 w-5" aria-hidden="true" />
+          <span className="text-label-medium-md">{t('splitView.slot.add', 'Add table or widget')}</span>
+        </span>
       </button>
 
       {canRemove && (
         <button
           type="button"
           onClick={onRemove}
-          aria-label="Remove this slot"
-          title="Remove this slot"
-          className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-m3-full text-[var(--m3-on-surface-variant)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)] active:bg-[var(--m3-state-layer-pressed)]"
+          aria-label={t('splitView.slot.remove', 'Remove this slot')}
+          title={t('splitView.slot.remove', 'Remove this slot')}
+          className={`absolute right-2 top-2 ${ICON_BUTTON}`}
           data-pane-empty-remove={slotId}
         >
           <X className="h-3.5 w-3.5" />

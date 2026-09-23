@@ -4,6 +4,7 @@ import * as React from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiCall } from '../../utils/apiCall'
 import { flash } from '../../FlashMessages'
+import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/useOrganizationScope'
 import { SPLIT_LAYOUT_VERSION, normalizeLayout, type SplitLayout } from './types'
 
@@ -17,11 +18,19 @@ export type SavedSplitLayout = {
   layoutVersion: number
   anchorTableId: string | null
   isDefault: boolean
+  /**
+   * Set on a copy a colleague shared with this user: who sent it. The copy is
+   * the recipient's own from then on — editing or deleting it never touches
+   * the sender's original.
+   */
+  sharedByName?: string | null
+  sharedAt?: string | null
 }
 
 type IndexResponse = { layouts: SavedSplitLayout[]; defaultLayoutId: string | null }
 
 export function useSplitViewLayouts(anchorTableId: string) {
+  const t = useT()
   const queryClient = useQueryClient()
   // Layouts are per organization; switching org must not show the previous
   // org's saved layouts.
@@ -57,28 +66,88 @@ export function useSplitViewLayouts(anchorTableId: string) {
         }),
       })
       if (!res.ok) {
-        flash('Could not save this layout', 'error')
+        flash(t('splitView.layouts.saveFailed', 'Could not save this layout'), 'error')
         return null
       }
-      flash('Layout saved', 'success')
+      flash(t('splitView.layouts.saved', 'Layout saved'), 'success')
       invalidate()
       return res.result?.layout ?? null
     },
-    [anchorTableId, invalidate],
+    [anchorTableId, invalidate, t],
   )
 
   const remove = React.useCallback(
     async (id: string) => {
       const res = await apiCall<{ ok: boolean }>(`${BASE}/${id}`, { method: 'DELETE' })
       if (!res.ok) {
-        flash('Could not delete this layout', 'error')
+        flash(t('splitView.layouts.deleteFailed', 'Could not delete this layout'), 'error')
         return false
       }
-      flash('Layout deleted', 'success')
+      flash(t('splitView.layouts.deleted', 'Layout deleted'), 'success')
       invalidate()
       return true
     },
-    [invalidate],
+    [invalidate, t],
+  )
+
+  const rename = React.useCallback(
+    async (id: string, name: string) => {
+      const res = await apiCall<{ layout: SavedSplitLayout }>(`${BASE}/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name }),
+      })
+      if (!res.ok) {
+        flash(t('splitView.layouts.renameFailed', 'Could not rename this layout'), 'error')
+        return false
+      }
+      invalidate()
+      return true
+    },
+    [invalidate, t],
+  )
+
+  /** Overwrite a saved layout with what is on screen now. */
+  const update = React.useCallback(
+    async (id: string, layout: SplitLayout) => {
+      const res = await apiCall<{ layout: SavedSplitLayout }>(`${BASE}/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ layout, layoutVersion: SPLIT_LAYOUT_VERSION }),
+      })
+      if (!res.ok) {
+        flash(t('splitView.layouts.saveFailed', 'Could not save this layout'), 'error')
+        return false
+      }
+      flash(t('splitView.layouts.saved', 'Layout saved'), 'success')
+      invalidate()
+      return true
+    },
+    [invalidate, t],
+  )
+
+  /**
+   * Send a COPY of a saved layout to colleagues. Each recipient gets their own
+   * row they can apply, rename or delete; the sender's layout is untouched.
+   */
+  const share = React.useCallback(
+    async (id: string, userIds: string[]) => {
+      const res = await apiCall<{ shared: number }>(`${BASE}/${id}/share`, {
+        method: 'POST',
+        // The page the recipient's notification opens — the one this layout
+        // belongs to, which is the page the user is on.
+        body: JSON.stringify({
+          userIds,
+          linkHref: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        }),
+      })
+      if (!res.ok) {
+        flash(t('splitView.share.failed', 'Could not share this layout'), 'error')
+        return 0
+      }
+      const count = res.result?.shared ?? userIds.length
+      flash(t('splitView.share.done', 'Shared with {count}', { count: String(count) }), 'success')
+      return count
+    },
+    [t],
   )
 
   return {
@@ -93,5 +162,8 @@ export function useSplitViewLayouts(anchorTableId: string) {
     isFetched,
     save,
     remove,
+    rename,
+    update,
+    share,
   }
 }

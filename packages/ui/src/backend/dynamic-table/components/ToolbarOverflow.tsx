@@ -124,7 +124,10 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
       // trigger would close here and immediately reopen via onClick.
       const insidePanel = boxRef.current?.contains(target)
       const onTrigger = triggerRef.current?.contains(target)
-      if (!insidePanel && !onTrigger) {
+      // A host row can open its own portalled flyout ("Podmień na…"). A click
+      // in it is a click in THIS menu's content, not outside it.
+      const inChildMenu = (target as Element).closest?.('[data-split-menu-panel]')
+      if (!insidePanel && !onTrigger && !inChildMenu) {
         setOpen(false)
         setExportOpen(false)
       }

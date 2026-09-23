@@ -186,11 +186,20 @@ describe('TC-SPLIT-623 — disabling the toggle emits zero shared rules', () => 
 })
 
 describe('TC-SPLIT-624 — a widget with no entry reports unmapped, still renders', () => {
-  it('ships with no invented mappings', () => {
-    // An entry is earned by reading the widget and confirming it accepts the
-    // value through `settings`. A guessed one produces a pane that claims to be
-    // filtered and is not.
-    expect(WIDGET_SHARED_FILTERS).toEqual({})
+  it('maps exactly the widgets whose endpoints apply the workspace filters', () => {
+    // An entry is earned by making the widget read `settings.workspaceFilters`
+    // and its endpoint apply them (offers + invoicing, 2026-09-23). A guessed
+    // one produces a pane that claims to be filtered and is not — so this list
+    // is pinned, and growing it means changing the widget too.
+    expect(Object.keys(WIDGET_SHARED_FILTERS).sort()).toEqual([
+      'invoicing.dashboard.inflows',
+      'invoicing.dashboard.outflows',
+      'invoicing.dashboard.toBook',
+      'offers.dashboard.pendingResponseOffers',
+      'offers.dashboard.unsentOffers',
+    ])
+    // The cash-flow charts are fixed time windows: customer only, no dates.
+    expect(WIDGET_SHARED_FILTERS['invoicing.dashboard.inflows']).toEqual({ customer: 'counterpartyName' })
   })
 
   it('reports the criterion and hands the pane nothing to apply', () => {

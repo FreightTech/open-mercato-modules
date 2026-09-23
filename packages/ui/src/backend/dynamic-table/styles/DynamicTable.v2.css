@@ -2650,3 +2650,73 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Floating pane actions (toolbar hidden) ─────────────────────────────────
+   A pane whose toolbar the user switched off still needs its ⚙ and ⋯, or the
+   switch that hid the toolbar is unreachable. They float in the top-right
+   corner and appear on hover (or keyboard focus), like the prototype's
+   floating gear. Rendered only when a host hides the toolbar, so this never
+   applies to a page's own table. */
+.hot-appearance-v2 .hot-pane-float-actions {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--m3-shape-full);
+  background: var(--m3-surface-container-lowest);
+  box-shadow: var(--m3-elevation-1, 0 1px 2px rgb(0 0 0 / 0.12), 0 1px 3px 1px rgb(0 0 0 / 0.06));
+  opacity: 0;
+  transition: opacity var(--m3-duration-short3, 150ms) var(--m3-ease-standard, ease);
+}
+
+.hot-appearance-v2.hot-container:hover .hot-pane-float-actions,
+.hot-appearance-v2 .hot-pane-float-actions:focus-within {
+  opacity: 1;
+}
+
+/* The floating actions sit over the top-right corner, which with the toolbar
+   gone is where the tabs row's pagination lives. Reserve the corner on that
+   row (the prototype's `.noToolbar .views { padding-right }`), so the page-size
+   select is never under the ⚙. A sibling selector — no `:has()`. */
+[data-split-view] .hot-appearance-v2.hot-container .hot-pane-float-actions ~ .hot-tabs-row {
+  /* Out-specifies the pane's own tabs-row padding rules above. */
+  padding-right: 80px;
+}
+
+/* View tabs never wrap their own labels — at ANY width, not only under the
+   720px pane breakpoint above. Between ~720px and the width the tabs actually
+   need (a two-column workspace, a pane in full screen) they used to shrink and
+   break "Widok domyślny" onto two lines, doubling the row's height. Each tab
+   holds its natural width and the list scrolls, exactly as it does in a narrow
+   pane; pagination and the row's other controls hold their size. */
+.hot-appearance-v2.hot-container .hot-top-tabs-v2 {
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hot-appearance-v2.hot-container .hot-top-tabs-v2::-webkit-scrollbar {
+  display: none;
+}
+.hot-appearance-v2.hot-container .hot-top-tabs-v2 > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* In a workspace a table pane has no header of its own any more — the pane
+   IS the card — so its toolbar title is the only thing naming it. The 720px
+   container rule above hides the title for narrow grids; inside a split view
+   it stays, truncating before anything else in the row gives way. */
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar .hot-toolbar-title {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

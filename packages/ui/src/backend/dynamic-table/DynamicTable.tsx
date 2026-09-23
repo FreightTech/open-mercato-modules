@@ -44,6 +44,8 @@ import { useDensityPreference } from './hooks/useDensityPreference';
 import { DENSITY_ATTRIBUTE, resolveDensityRowHeight } from './types/density';
 import { DensityControl } from './components/DensityControl';
 import { ToolbarOverflow } from './components/ToolbarOverflow';
+import { TableDisplayContext, useTableDisplayHost } from './components/TableDisplayContext';
+import { TableSettingsMenu } from './components/TableSettingsMenu';
 import { dispatch, useEventHandlers } from './events/events';
 import {
   ColumnDef,
@@ -672,6 +674,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // footer/summary rows need `locale` for number formatting.
   const t = useT();
   const locale = useLocale();
+  // Per-pane display choices from a host (split view): zebra rows and the
+  // switches the ⚙ panel shows. Null outside a host — nothing changes then.
+  const displayHost = useTableDisplayHost();
+  const effectiveStriped = striped || displayHost?.striped === true;
+  // The card wrapper renders unless this is an embedded sub-table with no
+  // tabs. A host that hides the tabs row still wants the card.
+  const hasCard = !(hidePerspectiveTabs && !displayHost);
 
   // -------------------- REFS --------------------
   const storeRef = useRef<CellStore | null>(null);
@@ -3677,14 +3686,14 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       data-readonly-style={readOnlyStyle}
       data-density={density || undefined}
       {...densityAttribute}
-      data-striped={striped ? 'true' : undefined}
+      data-striped={effectiveStriped ? 'true' : undefined}
       // What the container holds, as attributes — NOT discovered by CSS
       // `:has(.hot-toolbar)` / `:has(.hot-card)`. A container-level `:has()`
       // with a descendant argument makes every DOM insertion inside the grid
       // (i.e. every row the virtualiser mounts while scrolling) a candidate
       // for re-matching the container. React already knows the answer.
       data-has-toolbar={!hideToolbar ? 'true' : undefined}
-      data-has-card={!hidePerspectiveTabs ? 'true' : undefined}
+      data-has-card={hasCard ? 'true' : undefined}
       data-actions-scroll-shadow={actionsScrollShadow ? 'true' : undefined}
       data-firstcol-scroll-shadow={firstColScrollShadow ? 'true' : undefined}
       data-frozen-shadow={frozenColShadow ? 'true' : undefined}
@@ -3714,7 +3723,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           the lead row (category tabs) above stays OUTSIDE this card. Embedded
           sub-tables (no perspective tabs) use `display:contents` so the wrapper
           is inert and they keep rendering flush. */}
-      <div className={hidePerspectiveTabs ? 'contents' : `hot-card${shouldFillHeight ? ' flex flex-col flex-1 min-h-0' : ''}`}>
+      {/* A host that hides the tabs row still wants the card: the tabs are a
+          user choice there, not a sign that this is an embedded sub-table. */}
+      <div className={!hasCard ? 'contents' : `hot-card${shouldFillHeight ? ' flex flex-col flex-1 min-h-0' : ''}`}>
+
+      {/* Toolbar hidden inside a host: the ⚙ and ⋯ float in the corner on
+          hover, or hiding the toolbar would hide the way to bring it back. */}
+      {hideToolbar && displayHost && (
+        <div className="hot-pane-float-actions" data-pane-float-actions="">
+          <TableSettingsMenu densityTableKey={tableId} toggles={displayHost.toggles} showDensity={!hideDensityControl} />
+          <ToolbarOverflow showDensity={false} extras={toolbarOverflowExtras} />
+        </div>
+      )}
 
       {!hideToolbar && (
         <div className="hot-toolbar">
@@ -3815,14 +3835,19 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 )}
               </>
             ) : (
+              <>
+              {displayHost && (
+                <TableSettingsMenu densityTableKey={tableId} toggles={displayHost.toggles} showDensity={!hideDensityControl} />
+              )}
               <ToolbarOverflow
                 onExport={hideExportButton ? undefined : handleExportAll}
                 exportDisabled={isExportingAll}
-                showDensity={!hideDensityControl}
+                showDensity={!hideDensityControl && !displayHost}
                 densityTableKey={tableId}
                 onFullscreen={enableFullscreen && !isFullscreen ? handleEnterFullscreen : undefined}
                 extras={toolbarOverflowExtras}
               />
+              </>
             )}
           </div>
 
@@ -4405,6 +4430,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   );
 
   return (
+      // Reset for the subtree: a grid nested in this one (a drawer's sub-table)
+      // must not pick up the pane's display settings.
+      <TableDisplayContext.Provider value={null}>
       <TableDateFormatContext.Provider value={dateFormat}>
       <CellStoreContext.Provider value={store}>
         {isFullscreen ? (
@@ -4420,6 +4448,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         )}
       </CellStoreContext.Provider>
       </TableDateFormatContext.Provider>
+      </TableDisplayContext.Provider>
   );
 };
 

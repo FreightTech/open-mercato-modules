@@ -27,6 +27,25 @@ export type PaneChrome = {
    * space back.
    */
   viewsBar?: boolean
+  /**
+   * The saved-view tabs and the pagination, separately.
+   *
+   * `viewsBar` above still hides the WHOLE row and wins when it is `false` —
+   * that is the density switch. These two are the finer ones the table
+   * settings panel (⚙) exposes: a user who never pages but lives in saved views
+   * turns pagination off and keeps the tabs, and vice versa. When both are off
+   * the row goes too, so the space comes back either way.
+   */
+  tabs?: boolean
+  pagination?: boolean
+  /** Alternating row fills. Default OFF — a table setting, not a pane one. */
+  striped?: boolean
+  /**
+   * Widget panes only: the footer link that opens the widget's section
+   * ("Pokaż wszystko"). Default ON when the widget has somewhere to go.
+   * A per-widget choice, because not every widget needs a way out.
+   */
+  cta?: boolean
 }
 
 /**
@@ -110,6 +129,17 @@ export type SlotNode = PaneNode | EmptyNode
  */
 export type SplitLayout = {
   root: LayoutNode
+  /**
+   * Further SECTIONS below the main grid, each holding at most
+   * `BOX_MAX_SLOTS` slots in its own arrangement.
+   *
+   * They exist so that nothing the user placed is ever thrown away by the
+   * shape of the main grid: switching a 2×2 to "two columns" used to DROP the
+   * two panes that no longer fitted, and adding a fifth widget to a full 2×2
+   * had nowhere to go. Overflow now lands in a section of its own, which the
+   * user can re-arrange (its own template) or remove. Absent = none.
+   */
+  boxes?: WorkspaceBox[]
   version?: number
   /**
    * Workspace-level shared search + rules, and the toggle that arms them.
@@ -123,7 +153,21 @@ export type SplitLayout = {
   sharedFiltersEnabled?: boolean
 }
 
-export const SPLIT_LAYOUT_VERSION = 3
+/** One extra section of the workspace — a small tree of its own. */
+export type WorkspaceBox = {
+  /** Stable, so React keeps the section's panes mounted across edits. */
+  id: string
+  root: LayoutNode
+}
+
+/** A section holds at most this many slots — the designer's "max four per box". */
+export const BOX_MAX_SLOTS = 4
+
+/**
+ *   4 — `boxes` (sections below the main grid). A v3 document is a v4 document
+ *       with no sections, so it reads unchanged.
+ */
+export const SPLIT_LAYOUT_VERSION = 4
 
 /** The shape v1 persisted. Kept so saved layouts remain readable. */
 export type LegacySplitLayoutV1 = {
@@ -259,6 +303,20 @@ function readNode(value: unknown): LayoutNode | null {
   return null
 }
 
+/** Sections below the main grid. Unreadable ones are dropped, never half-kept. */
+function readBoxes(value: unknown): WorkspaceBox[] {
+  if (!Array.isArray(value)) return []
+  const boxes: WorkspaceBox[] = []
+  for (const raw of value) {
+    if (!raw || typeof raw !== 'object') continue
+    const box = raw as Record<string, unknown>
+    const root = readNode(box.root)
+    if (!root) continue
+    boxes.push({ id: typeof box.id === 'string' && box.id ? box.id : makePaneId(), root })
+  }
+  return boxes
+}
+
 /**
  * Accepts a v3 tree, a v2 tree, a v1 flat document, or junk; always yields a
  * usable tree.
@@ -282,6 +340,8 @@ export function normalizeLayout(input: unknown, fallbackTableId: string): SplitL
 
   const carry = (layout: SplitLayout): SplitLayout => {
     const next: SplitLayout = { ...layout, version: SPLIT_LAYOUT_VERSION }
+    const boxes = readBoxes(doc.boxes)
+    if (boxes.length > 0) next.boxes = boxes
     if (doc.sharedCriteria !== undefined) next.sharedCriteria = doc.sharedCriteria
     if (typeof doc.sharedFiltersEnabled === 'boolean') next.sharedFiltersEnabled = doc.sharedFiltersEnabled
     return next
@@ -385,17 +445,93 @@ function findSlotPath(root: LayoutNode, slotId: string, path: NodePath = []): No
 }
 
 // ── Mutation ───────────────────────────────────────────────────────────────
+//
+// Every op below is addressed by SLOT ID and works on whichever tree holds that
+// slot — the main grid or one of the sections under it. The layout-level
+// wrappers find the tree; the tree-level functions never know sections exist.
+
+/** Every tree in the layout: the main grid first, then each section. */
+function trees(layout: SplitLayout): LayoutNode[] {
+  return [layout.root, ...(layout.boxes ?? []).map((box) => box.root)]
+}
+
+/**
+ * Apply `edit` to the tree that holds `slotId`. Returns the layout unchanged
+ * when no tree holds it, so a stale click after a concurrent edit is a no-op
+ * rather than a corruption.
+ */
+function editTreeHolding(
+  layout: SplitLayout,
+  slotId: string,
+  edit: (root: LayoutNode, path: NodePath) => LayoutNode,
+): SplitLayout {
+  const rootPath = findSlotPath(layout.root, slotId)
+  if (rootPath) return { ...layout, root: edit(layout.root, rootPath) }
+  const boxes = layout.boxes ?? []
+  for (let index = 0; index < boxes.length; index++) {
+    const path = findSlotPath(boxes[index].root, slotId)
+    if (!path) continue
+    const next = [...boxes]
+    next[index] = { ...boxes[index], root: edit(boxes[index].root, path) }
+    return { ...layout, boxes: next }
+  }
+  return layout
+}
+
+/** Every pane across the main grid AND the sections, in reading order. */
+export function listAllPanes(layout: SplitLayout): PaneNode[] {
+  return trees(layout).flatMap(listPanes)
+}
+
+/** Every slot across the main grid AND the sections, in reading order. */
+export function listAllSlots(layout: SplitLayout): SlotNode[] {
+  return trees(layout).flatMap(listSlots)
+}
 
 /** Fill an EMPTY slot in place — same id, same share, siblings untouched. */
 export function fillSlot(layout: SplitLayout, slotId: string, content: PaneContentRef): SplitLayout {
-  const path = findSlotPath(layout.root, slotId)
-  if (!path) return layout
-  const node = getNode(layout.root, path)
-  if (!node || node.kind !== 'empty') return layout
-  // The id survives the fill: it is this slot's `storageScope`, so a template
-  // slot keeps its column widths if it is emptied and refilled.
-  const pane: PaneNode = { kind: 'pane', id: node.id, content }
-  return { ...layout, root: replaceNode(layout.root, path, pane) }
+  return editTreeHolding(layout, slotId, (root, path) => {
+    const node = getNode(root, path)
+    if (!node || node.kind !== 'empty') return root
+    // The id survives the fill: it is this slot's `storageScope`, so a template
+    // slot keeps its column widths if it is emptied and refilled.
+    return replaceNode(root, path, { kind: 'pane', id: node.id, content })
+  })
+}
+
+/**
+ * Put different content in a slot — filled or empty — keeping the slot.
+ *
+ * The designer's "Podmień na…": the cell stays where it is, at the size the
+ * user gave it, and only what is in it changes. Widget settings are NOT
+ * carried over — they belonged to the previous widget and mean nothing to the
+ * next one. Pane chrome is kept, because it describes the CELL (is its header
+ * shown), not its content.
+ */
+export function replaceContent(layout: SplitLayout, slotId: string, content: PaneContentRef): SplitLayout {
+  return editTreeHolding(layout, slotId, (root, path) => {
+    const node = getNode(root, path)
+    if (!node || node.kind === 'split') return root
+    const pane: PaneNode = { kind: 'pane', id: node.id, content }
+    if (node.kind === 'pane' && node.chrome) pane.chrome = node.chrome
+    return replaceNode(root, path, pane)
+  })
+}
+
+/**
+ * Empty a slot without collapsing it — "Usuń panel" in a grid.
+ *
+ * In a template the CELL is the user's decision and its content a separate
+ * one; removing a widget should leave the hole it was in, ready for the next
+ * one, rather than silently re-flowing every other pane. Collapsing the cell
+ * itself is `removePane`, offered on the empty slot.
+ */
+export function emptySlotAt(layout: SplitLayout, slotId: string): SplitLayout {
+  return editTreeHolding(layout, slotId, (root, path) => {
+    const node = getNode(root, path)
+    if (!node || node.kind !== 'pane') return root
+    return replaceNode(root, path, { kind: 'empty', id: node.id })
+  })
 }
 
 /**
@@ -418,30 +554,36 @@ export function splitPane(
   /** Insert on the leading side — left of a row, above a column. */
   before = false,
 ): SplitLayout {
-  const path = findSlotPath(layout.root, targetSlotId)
-  if (!path) return layout
+  return editTreeHolding(layout, targetSlotId, (root, path) =>
+    splitInTree(root, path, { kind: 'pane', id: makePaneId(), content }, direction, before),
+  )
+}
 
-  const target = getNode(layout.root, path)
-  if (target?.kind === 'empty') return fillSlot(layout, targetSlotId, content)
-
-  const newPane: PaneNode = { kind: 'pane', id: makePaneId(), content }
+function splitInTree(
+  root: LayoutNode,
+  path: NodePath,
+  newPane: PaneNode,
+  direction: SplitDirection,
+  before: boolean,
+): LayoutNode {
+  const target = getNode(root, path)
+  if (target?.kind === 'empty') {
+    return replaceNode(root, path, { ...newPane, id: target.id })
+  }
 
   if (path.length === 0) {
     return {
-      ...layout,
-      root: {
-        kind: 'split',
-        direction,
-        sizes: [0.5, 0.5],
-        children: before ? [newPane, layout.root] : [layout.root, newPane],
-      },
+      kind: 'split',
+      direction,
+      sizes: [0.5, 0.5],
+      children: before ? [newPane, root] : [root, newPane],
     }
   }
 
   const parentPath = path.slice(0, -1)
   const indexInParent = path[path.length - 1]
-  const parent = getNode(layout.root, parentPath)
-  if (!parent || parent.kind !== 'split') return layout
+  const parent = getNode(root, parentPath)
+  if (!parent || parent.kind !== 'split') return root
 
   if (parent.direction === direction) {
     const children = [...parent.children]
@@ -451,10 +593,7 @@ export function splitPane(
     const at = before ? indexInParent : indexInParent + 1
     children.splice(at, 0, newPane)
     sizes.splice(at, 0, share / 2)
-    return {
-      ...layout,
-      root: replaceNode(layout.root, parentPath, { ...parent, children, sizes: normalize(sizes) }),
-    }
+    return replaceNode(root, parentPath, { ...parent, children, sizes: normalize(sizes) })
   }
 
   // Different axis — wrap the target in a nested split. THIS is what makes
@@ -465,33 +604,42 @@ export function splitPane(
     sizes: [0.5, 0.5],
     children: before ? [newPane, parent.children[indexInParent]] : [parent.children[indexInParent], newPane],
   }
-  return { ...layout, root: replaceNode(layout.root, parentPath.concat(indexInParent), wrapped) }
+  return replaceNode(root, parentPath.concat(indexInParent), wrapped)
 }
 
 /**
  * Remove a slot; its share goes to a sibling, and a split left with one child
  * collapses into that child.
  *
- * Removing the LAST pane leaves an empty slot rather than refusing: with
- * templates in play "close this table but keep the cell" is a real intent, and
- * an empty slot is recoverable from the UI whereas a childless split is not
- * representable at all.
+ * Removing the LAST pane of the MAIN grid leaves an empty slot rather than
+ * refusing: with templates in play "close this table but keep the cell" is a
+ * real intent, and an empty slot is recoverable from the UI whereas a
+ * childless split is not representable at all.
+ *
+ * Removing the last slot of a SECTION removes the section — a section with no
+ * cells has nothing to show and no control to fill it from.
  */
 export function removePane(layout: SplitLayout, slotId: string): SplitLayout {
-  const path = findSlotPath(layout.root, slotId)
-  if (!path) return layout
+  const boxIndex = (layout.boxes ?? []).findIndex((box) => findSlotPath(box.root, slotId) !== null)
+  if (boxIndex >= 0) {
+    const box = layout.boxes![boxIndex]
+    if (box.root.kind !== 'split') return removeBox(layout, box.id)
+  }
+  return editTreeHolding(layout, slotId, (root, path) => removeInTree(root, path))
+}
 
+function removeInTree(root: LayoutNode, path: NodePath): LayoutNode {
   if (path.length === 0) {
     // The root slot. A pane becomes an empty slot; an already-empty root has
     // nothing to remove (the tree must always have a node).
-    if (layout.root.kind !== 'pane') return layout
-    return { ...layout, root: { kind: 'empty', id: layout.root.id } }
+    if (root.kind !== 'pane') return root
+    return { kind: 'empty', id: root.id }
   }
 
   const parentPath = path.slice(0, -1)
   const indexInParent = path[path.length - 1]
-  const parent = getNode(layout.root, parentPath)
-  if (!parent || parent.kind !== 'split') return layout
+  const parent = getNode(root, parentPath)
+  if (!parent || parent.kind !== 'split') return root
 
   const children = parent.children.filter((_, index) => index !== indexInParent)
   const sizes = [...parent.sizes]
@@ -507,32 +655,47 @@ export function removePane(layout: SplitLayout, slotId: string): SplitLayout {
       : children.length === 1
         ? children[0]
         : { ...parent, children, sizes: normalize(sizes) }
-  return { ...layout, root: replaceNode(layout.root, parentPath, next) }
+  return replaceNode(root, parentPath, next)
 }
 
-/** Resize the boundary between children `index` and `index + 1` of one split node. */
+/**
+ * Resize the boundary between children `index` and `index + 1` of one split
+ * node. `boxId` names the section the split lives in; absent = the main grid.
+ */
 export function resizeAt(
   layout: SplitLayout,
   splitPath: NodePath,
   index: number,
   deltaFraction: number,
+  boxId?: string,
 ): SplitLayout {
-  const node = getNode(layout.root, splitPath)
-  if (!node || node.kind !== 'split') return layout
-  const sizes = [...node.sizes]
-  if (index < 0 || index >= sizes.length - 1) return layout
-  const next = sizes[index] + deltaFraction
-  const nextSibling = sizes[index + 1] - deltaFraction
-  // Guard both sides so a fast drag cannot invert a pane into a negative share.
-  // Empty slots clamp exactly like filled ones: a hole you cannot see is a hole
-  // you cannot drop anything into.
-  if (next <= 0.05 || nextSibling <= 0.05) return layout
-  sizes[index] = next
-  sizes[index + 1] = nextSibling
-  return {
-    ...layout,
-    root: replaceNode(layout.root, splitPath, { ...node, sizes: normalize(sizes) }),
+  const resize = (root: LayoutNode): LayoutNode => {
+    const node = getNode(root, splitPath)
+    if (!node || node.kind !== 'split') return root
+    const sizes = [...node.sizes]
+    if (index < 0 || index >= sizes.length - 1) return root
+    const next = sizes[index] + deltaFraction
+    const nextSibling = sizes[index + 1] - deltaFraction
+    // Guard both sides so a fast drag cannot invert a pane into a negative share.
+    // Empty slots clamp exactly like filled ones: a hole you cannot see is a hole
+    // you cannot drop anything into.
+    if (next <= 0.05 || nextSibling <= 0.05) return root
+    sizes[index] = next
+    sizes[index + 1] = nextSibling
+    return replaceNode(root, splitPath, { ...node, sizes: normalize(sizes) })
   }
+  if (!boxId) {
+    const root = resize(layout.root)
+    return root === layout.root ? layout : { ...layout, root }
+  }
+  const boxes = layout.boxes ?? []
+  const at = boxes.findIndex((box) => box.id === boxId)
+  if (at < 0) return layout
+  const root = resize(boxes[at].root)
+  if (root === boxes[at].root) return layout
+  const next = [...boxes]
+  next[at] = { ...boxes[at], root }
+  return { ...layout, boxes: next }
 }
 
 /** Toggle one chrome row on a single pane. */
@@ -541,12 +704,11 @@ export function setPaneChrome(
   paneId: string,
   patch: Partial<PaneChrome>,
 ): SplitLayout {
-  const path = findSlotPath(layout.root, paneId)
-  if (!path) return layout
-  const node = getNode(layout.root, path)
-  if (!node || node.kind !== 'pane') return layout
-  const next: PaneNode = { ...node, chrome: { ...node.chrome, ...patch } }
-  return { ...layout, root: replaceNode(layout.root, path, next) }
+  return editTreeHolding(layout, paneId, (root, path) => {
+    const node = getNode(root, path)
+    if (!node || node.kind !== 'pane') return root
+    return replaceNode(root, path, { ...node, chrome: { ...node.chrome, ...patch } })
+  })
 }
 
 /**
@@ -569,12 +731,11 @@ export function setPaneContentSettings(
   paneId: string,
   settings: unknown,
 ): SplitLayout {
-  const path = findSlotPath(layout.root, paneId)
-  if (!path) return layout
-  const node = getNode(layout.root, path)
-  if (!node || node.kind !== 'pane' || node.content.kind !== 'widget') return layout
-  const next: PaneNode = { ...node, content: { ...node.content, settings } }
-  return { ...layout, root: replaceNode(layout.root, path, next) }
+  return editTreeHolding(layout, paneId, (root, path) => {
+    const node = getNode(root, path)
+    if (!node || node.kind !== 'pane' || node.content.kind !== 'widget') return root
+    return replaceNode(root, path, { ...node, content: { ...node.content, settings } })
+  })
 }
 
 /** Turn every chrome row off across the whole layout — the "maximum rows" shortcut. */
@@ -590,13 +751,43 @@ export function evenAll(node: LayoutNode): LayoutNode {
   return { ...node, sizes: evenSizes(node.children.length), children: node.children.map(evenAll) }
 }
 
+// ── Measuring a tree ───────────────────────────────────────────────────────
+
+/** How many cells deep a tree is — a stacked pair is 2, a 2×2 is 2, a row is 1. */
+export function rowsOf(node: LayoutNode): number {
+  if (node.kind !== 'split') return 1
+  const rows = node.children.map(rowsOf)
+  return node.direction === 'column' ? rows.reduce((a, b) => a + b, 0) : Math.max(...rows)
+}
+
+/** How many cells wide a tree is — a row of three is 3, a 2×2 is 2. */
+export function columnsOf(node: LayoutNode): number {
+  if (node.kind !== 'split') return 1
+  const cols = node.children.map(columnsOf)
+  return node.direction === 'row' ? cols.reduce((a, b) => a + b, 0) : Math.max(...cols)
+}
+
 // ── Grid templates ─────────────────────────────────────────────────────────
 //
 // Templates CREATE slots; the arrange presets below RE-SHAPE panes that already
 // exist. Two concepts, one menu, two labelled sections — the distinction is
 // "how many cells" versus "where the cells go".
 
-export type GridTemplateId = '2x1' | '1x2' | '2x2' | '3-up' | 'two-top-one-below' | '1+2'
+/**
+ * The six grids of the "Dostosowanie widoku" drawer, in its order.
+ *
+ * `1+2` is kept readable for anything that still names it (a saved setting, an
+ * older test), but it is no longer offered: the designer's set replaced it
+ * with "one on top, two below".
+ */
+export type GridTemplateId =
+  | '2x1'
+  | '1x2'
+  | '2x2'
+  | '3-up'
+  | 'one-top-two-below'
+  | 'two-top-one-below'
+  | '1+2'
 
 function emptySlot(): EmptyNode {
   return { kind: 'empty', id: makePaneId() }
@@ -649,6 +840,13 @@ export const GRID_TEMPLATES: Record<GridTemplateId, GridTemplate> = {
     slots: 3,
     build: () => splitOf('row', [emptySlot(), emptySlot(), emptySlot()]),
   },
+  'one-top-two-below': {
+    id: 'one-top-two-below',
+    label: 'One on top, two below',
+    hint: 'Full width above, pair beneath',
+    slots: 3,
+    build: () => splitOf('column', [emptySlot(), splitOf('row', [emptySlot(), emptySlot()])]),
+  },
   'two-top-one-below': {
     id: 'two-top-one-below',
     label: 'Two on top, one below',
@@ -665,7 +863,80 @@ export const GRID_TEMPLATES: Record<GridTemplateId, GridTemplate> = {
   },
 }
 
-export const GRID_TEMPLATE_LIST: GridTemplate[] = Object.values(GRID_TEMPLATES)
+/** What the drawer and the layout menu offer, in the designer's order. */
+export const GRID_TEMPLATE_LIST: GridTemplate[] = (
+  ['2x1', '1x2', '2x2', '3-up', 'one-top-two-below', 'two-top-one-below'] as GridTemplateId[]
+).map((id) => GRID_TEMPLATES[id])
+
+/**
+ * A layout's SHAPE, ignoring what fills it — `p`, `r(p,p)`, `c(p,r(p,p))`.
+ *
+ * Two layouts with the same signature occupy the same grid, which is exactly
+ * what makes a template "the one you are currently in".
+ */
+export function shapeSignature(node: LayoutNode): string {
+  if (node.kind !== 'split') return 'p'
+  return `${node.direction === 'row' ? 'r' : 'c'}(${node.children.map(shapeSignature).join(',')})`
+}
+
+/** The template whose shape this tree is in, if any. */
+export function templateOf(node: LayoutNode): GridTemplateId | null {
+  const shape = shapeSignature(node)
+  for (const template of GRID_TEMPLATE_LIST) {
+    if (shapeSignature(template.build()) === shape) return template.id
+  }
+  return null
+}
+
+/** Pour `panes` into `shape` in order; returns the tree and whatever did not fit. */
+function pour(shape: LayoutNode, panes: SlotNode[]): { root: LayoutNode; rest: SlotNode[] } {
+  let next = 0
+  const fill = (node: LayoutNode): LayoutNode => {
+    if (node.kind === 'split') return { ...node, children: node.children.map(fill) }
+    const pane = panes[next]
+    next += 1
+    return pane ? { ...pane } : node
+  }
+  const root = fill(shape)
+  return { root, rest: panes.slice(next) }
+}
+
+/** The arrangement a section takes for `count` cells when the user has not chosen one. */
+function autoShape(count: number): LayoutNode {
+  if (count <= 1) return emptySlot()
+  if (count === 2) return GRID_TEMPLATES['2x1'].build()
+  if (count === 3) return GRID_TEMPLATES['3-up'].build()
+  return GRID_TEMPLATES['2x2'].build()
+}
+
+/**
+ * Put `panes` into sections, filling holes in the existing ones first and
+ * opening new 2×2 sections for the remainder. A new section shows its unused
+ * cells as empty slots, so "there is room for more here" is visible without a
+ * trip to the drawer.
+ */
+function placeInBoxes(boxes: WorkspaceBox[], panes: PaneNode[]): WorkspaceBox[] {
+  let queue = [...panes]
+  const out = boxes.map((box) => {
+    if (queue.length === 0) return box
+    const fillHoles = (node: LayoutNode): LayoutNode => {
+      if (node.kind === 'split') return { ...node, children: node.children.map(fillHoles) }
+      if (node.kind === 'empty' && queue.length > 0) {
+        const [pane, ...rest] = queue
+        queue = rest
+        return { ...pane }
+      }
+      return node
+    }
+    return { ...box, root: fillHoles(box.root) }
+  })
+  while (queue.length > 0) {
+    const chunk = queue.slice(0, BOX_MAX_SLOTS)
+    queue = queue.slice(BOX_MAX_SLOTS)
+    out.push({ id: makePaneId(), root: pour(GRID_TEMPLATES['2x2'].build(), chunk).root })
+  }
+  return out
+}
 
 /**
  * Adopt a template's SHAPE, keeping what is already on screen.
@@ -675,21 +946,147 @@ export const GRID_TEMPLATE_LIST: GridTemplate[] = Object.values(GRID_TEMPLATES)
  * from a page that is showing your table closes your table — the layout-first,
  * fill-after flow only works if choosing a shape is non-destructive.
  *
- * Panes beyond the template's slot count are dropped: the user asked for that
- * many cells.
+ * Panes that do NOT fit are no longer dropped: they move to the sections below
+ * the grid. The designer's rule is that switching grids never deletes what the
+ * user placed. `primaryPaneId` goes first so the page's own table keeps the
+ * first, biggest cell — the same promise the drawer's "· główna" label makes.
  */
-export function applyGridTemplate(layout: SplitLayout, templateId: GridTemplateId): SplitLayout {
+export function applyGridTemplate(
+  layout: SplitLayout,
+  templateId: GridTemplateId,
+  primaryPaneId?: string,
+): SplitLayout {
   const template = GRID_TEMPLATES[templateId]
   if (!template) return layout
   const existing = listPanes(layout.root)
-  let next = 0
-  const fill = (node: LayoutNode): LayoutNode => {
-    if (node.kind === 'split') return { ...node, children: node.children.map(fill) }
-    const pane = existing[next]
-    next += 1
-    return pane ? { ...pane } : node
+  const ordered = primaryPaneId
+    ? [
+        ...existing.filter((pane) => pane.id === primaryPaneId),
+        ...existing.filter((pane) => pane.id !== primaryPaneId),
+      ]
+    : existing
+  const { root, rest } = pour(template.build(), ordered)
+  const boxes = placeInBoxes(layout.boxes ?? [], rest as PaneNode[])
+  return withBoxes({ ...layout, root }, boxes)
+}
+
+/** Re-shape one SECTION to a template; what no longer fits moves to the next section. */
+export function applyBoxTemplate(layout: SplitLayout, boxId: string, templateId: GridTemplateId): SplitLayout {
+  const template = GRID_TEMPLATES[templateId]
+  const boxes = layout.boxes ?? []
+  const at = boxes.findIndex((box) => box.id === boxId)
+  if (!template || at < 0) return layout
+  const { root, rest } = pour(template.build(), listPanes(boxes[at].root))
+  const before = boxes.slice(0, at + 1).map((box, index) => (index === at ? { ...box, root } : box))
+  const after = placeInBoxes(boxes.slice(at + 1), rest as PaneNode[])
+  return withBoxes(layout, [...before, ...after])
+}
+
+/** Drop a whole section, and everything in it. */
+export function removeBox(layout: SplitLayout, boxId: string): SplitLayout {
+  return withBoxes(layout, (layout.boxes ?? []).filter((box) => box.id !== boxId))
+}
+
+function withBoxes(layout: SplitLayout, boxes: WorkspaceBox[]): SplitLayout {
+  const next: SplitLayout = { ...layout }
+  if (boxes.length > 0) next.boxes = boxes
+  else delete next.boxes
+  return next
+}
+
+/**
+ * Place `content` wherever it fits — the "Dodaj widget" button.
+ *
+ *  1. The first empty slot, main grid first, then the sections.
+ *  2. A page still showing one table splits into two columns — the shortest
+ *     path from "a page" to "a workspace".
+ *  3. The last section, when it has fewer than four cells, grows by one and
+ *     re-arranges itself for the new count.
+ *  4. Otherwise a new 2×2 section opens with the content in its first cell and
+ *     three empty slots beside it, so the next additions have somewhere to go.
+ *
+ * Returns the id of the slot the content landed in, so the caller can point
+ * the user at it.
+ */
+export function addContent(
+  layout: SplitLayout,
+  content: PaneContentRef,
+): { layout: SplitLayout; slotId: string } {
+  const hole = listAllSlots(layout).find((slot) => slot.kind === 'empty')
+  if (hole) return { layout: fillSlot(layout, hole.id, content), slotId: hole.id }
+
+  const pane: PaneNode = { kind: 'pane', id: makePaneId(), content }
+
+  if (layout.root.kind === 'pane' && !(layout.boxes?.length)) {
+    return {
+      layout: { ...layout, root: splitOf('row', [layout.root, pane]) },
+      slotId: pane.id,
+    }
   }
-  return { ...layout, root: fill(template.build()) }
+
+  const boxes = layout.boxes ?? []
+  const last = boxes[boxes.length - 1]
+  if (last && countSlots(last.root) < BOX_MAX_SLOTS) {
+    const panes = [...listPanes(last.root), pane]
+    const root = pour(autoShape(panes.length), panes).root
+    return { layout: withBoxes(layout, [...boxes.slice(0, -1), { ...last, root }]), slotId: pane.id }
+  }
+
+  const root = pour(GRID_TEMPLATES['2x2'].build(), [pane]).root
+  return { layout: withBoxes(layout, [...boxes, { id: makePaneId(), root }]), slotId: pane.id }
+}
+
+/** Open an EMPTY section (2×2 of holes) — "Dodaj sekcję" in the drawer. */
+export function addBox(layout: SplitLayout): SplitLayout {
+  return withBoxes(layout, [...(layout.boxes ?? []), { id: makePaneId(), root: GRID_TEMPLATES['2x2'].build() }])
+}
+
+/**
+ * Back to the page on its own — "Wyczyść układ" and "Widok domyślny".
+ *
+ * The page's own table keeps its pane id (and with it the unscoped storage
+ * keys), so column widths and the last-used view survive the reset. Shared
+ * criteria are cleared too: a single table has no workspace to share them with.
+ */
+export function resetLayout(layout: SplitLayout, primaryTableId: string): SplitLayout {
+  const own = listAllPanes(layout).find(
+    (pane) => pane.content.kind === 'table' && pane.content.tableId === primaryTableId,
+  )
+  return {
+    root: {
+      kind: 'pane',
+      id: own?.id ?? makePaneId(),
+      content: tableContent(primaryTableId),
+      ...(own?.chrome ? { chrome: own.chrome } : {}),
+    },
+    version: SPLIT_LAYOUT_VERSION,
+  }
+}
+
+/** True when the layout is the page's table alone — the default view. */
+export function isDefaultLayout(layout: SplitLayout, primaryTableId: string): boolean {
+  return (
+    !(layout.boxes?.length) &&
+    layout.root.kind === 'pane' &&
+    layout.root.content.kind === 'table' &&
+    layout.root.content.tableId === primaryTableId
+  )
+}
+
+/**
+ * What a layout IS, for "which saved layout am I looking at": shape and
+ * content, ignoring slot ids, divider positions, chrome and widget settings —
+ * dragging a divider does not make a saved layout stop being itself.
+ */
+export function layoutSignature(layout: SplitLayout): string {
+  const sig = (node: LayoutNode): string => {
+    if (node.kind === 'empty') return '_'
+    if (node.kind === 'pane') {
+      return node.content.kind === 'table' ? `t:${node.content.tableId}` : `w:${node.content.widgetId}`
+    }
+    return `${node.direction === 'row' ? 'r' : 'c'}(${node.children.map(sig).join(',')})`
+  }
+  return trees(layout).map(sig).join('|')
 }
 
 // ── Presets ────────────────────────────────────────────────────────────────

@@ -16,18 +16,31 @@
  *   [data-pane-widget]          widget id held by a pane
  *   [data-pane-status]          "unknown" | "denied" on a degraded pane
  *   [data-split-divider]        one per boundary between siblings
- *   [data-split-template]       a grid template in the gallery
- *   [data-split-arrange-preset] an arrange preset
- *   [data-split-shared-filters] the shared-filter toggle row
+ *   [data-split-customize-tab]  the "Dostosuj" tab that opens the drawer
+ *   [data-split-customize]      the "Dostosowanie widoku" drawer
+ *   [data-split-template]       a grid tile in the drawer (step 1)
+ *   [data-split-main]           the main grid, as opposed to the sections
+ *   [data-workspace-box]        a section below the main grid
+ *   [data-workspace-filter-bar] the workspace bar (split only)
+ *   [data-table-settings]       a table's ⚙
+ *   [data-table-setting=key]    one switch in it: toolbar | tabs | pagination | striped
+ *   [data-pane-menu-rows]       a pane's own rows inside its ⋯ / ⋮
  *
- * Specs: .ai/specs/2026-08-17-split-view-workspace-composition.md
+ * Specs: .ai/specs/2026-09-23-split-view-workspace-customize.md
+ *        .ai/specs/2026-08-17-split-view-workspace-composition.md
  *        .ai/specs/2026-08-04-dynamic-table-split-view.md
  */
 
 import { expect, type Locator, type Page } from '@playwright/test'
 import { GridHarness } from './GridHarness'
 
-export type TemplateId = '2x1' | '1x2' | '2x2' | '3-up' | 'two-top-one-below' | '1+2'
+// Re-exported so a consuming spec gets the layout's geometry from the same
+// module as its driver — `split-view/types` is pure (no React), so this keeps
+// the harness loadable in plain Node.
+export { PANE_MIN_HEIGHT_PX, PANE_MIN_WIDTH_PX, BOX_MAX_SLOTS } from '../split-view/types'
+
+/** The six grids of the "Dostosowanie widoku" drawer, in its order. */
+export type TemplateId = '2x1' | '1x2' | '2x2' | '3-up' | 'one-top-two-below' | 'two-top-one-below'
 
 /** How many slots each template is contracted to produce. */
 export const TEMPLATE_SLOTS: Record<TemplateId, number> = {
@@ -35,8 +48,8 @@ export const TEMPLATE_SLOTS: Record<TemplateId, number> = {
   '1x2': 2,
   '2x2': 4,
   '3-up': 3,
+  'one-top-two-below': 3,
   'two-top-one-below': 3,
-  '1+2': 3,
 }
 
 const READY_TIMEOUT = 30_000
@@ -200,60 +213,110 @@ export class SplitViewHarness {
     )
   }
 
-  // ── The overflow menu ──────────────────────────────────────────────────────
+  // ── Pane menus, the drawer, the ⚙ ──────────────────────────────────────────
 
-  /**
-   * Open a pane's overflow menu. Every workspace control lives here — there is
-   * deliberately no second button and no extra chrome row.
-   */
+  /** Open a TABLE pane's ⋯ menu, which carries the pane's own rows. */
   async openMenu(paneIndex = 0): Promise<void> {
     await this.dismissOverlays()
     const button = this.page.getByRole('button', { name: /More table actions/i }).nth(paneIndex)
     await button.click()
-    await expect(this.page.locator('[data-split-arrange]').first()).toBeVisible({ timeout: 10_000 })
+    await expect(this.page.locator('[data-pane-menu-rows]').first()).toBeVisible({ timeout: 10_000 })
   }
 
   async closeMenu(): Promise<void> {
     await this.page.keyboard.press('Escape')
   }
 
-  /** Apply a named grid template, then wait for its contracted slot count. */
-  async applyTemplate(id: TemplateId, paneIndex = 0): Promise<void> {
-    await this.openMenu(paneIndex)
-    await this.page.getByRole('button', { name: /Grid template/i }).first().click()
-    await this.page.locator(`[data-split-template="${id}"]`).click()
-    await expect.poll(() => this.slotCount(), { timeout: 15_000 }).toBe(TEMPLATE_SLOTS[id])
+  /** Open the "Dostosowanie widoku" drawer from the Dostosuj tab. */
+  async openCustomize(): Promise<Locator> {
+    await this.dismissOverlays()
+    await this.page.locator('[data-split-customize-tab]').first().click()
+    const drawer = this.page.locator('[data-split-customize]').first()
+    await expect(drawer).toBeVisible({ timeout: 10_000 })
+    return drawer
   }
 
-  /** Re-shape existing panes with an arrange preset (does NOT create slots). */
-  async applyArrangePreset(presetId: string, paneIndex = 0): Promise<void> {
-    await this.openMenu(paneIndex)
-    await this.page.getByRole('button', { name: /^Arrange$/i }).first().click()
-    await this.page.locator(`[data-split-arrange-preset="${presetId}"]`).click()
+  async closeCustomize(): Promise<void> {
+    await this.page.locator('[data-customize-done]').first().click()
+    await expect(this.page.locator('[data-split-customize]')).toHaveCount(0, { timeout: 10_000 })
   }
 
-  /** Toggle one chrome row (Toolbar / Search / Views bar) on one pane. */
-  async toggleChrome(label: 'Toolbar' | 'Search' | 'Views bar', paneIndex = 0): Promise<void> {
-    await this.openMenu(paneIndex)
-    await this.page.getByRole('button', { name: new RegExp(`^${label}$`, 'i') }).first().click()
+  /** Slots of the MAIN grid only — sections below it are counted separately. */
+  async mainSlotCount(): Promise<number> {
+    const main = this.page.locator('[data-split-main]').first()
+    if ((await main.count()) === 0) return this.slotCount()
+    return (await main.locator('[data-pane-id]').count()) + (await main.locator('[data-pane-empty]').count())
+  }
+
+  /** How many sections sit below the main grid. */
+  async boxCount(): Promise<number> {
+    return this.page.locator('[data-workspace-box]').count()
+  }
+
+  /**
+   * Apply a grid from the drawer, then wait for the main grid's contracted slot
+   * count. Panes that do not fit move to sections — nothing is dropped.
+   */
+  async applyTemplate(id: TemplateId): Promise<void> {
+    const drawer = await this.openCustomize()
+    await drawer.locator(`[data-split-template="${id}"]`).first().click()
+    await this.closeCustomize()
+    await expect.poll(() => this.mainSlotCount(), { timeout: 15_000 }).toBe(TEMPLATE_SLOTS[id])
+  }
+
+  /**
+   * Switch one of a table pane's bars on or off from its ⚙.
+   *
+   * 'Views bar' is the row of saved-view tabs AND pagination: both switches go,
+   * which is what reclaims the row.
+   */
+  async toggleChrome(label: 'Toolbar' | 'Views bar' | 'Tabs' | 'Pagination' | 'Striped', paneIndex = 0): Promise<void> {
+    await this.dismissOverlays()
+    const pane = this.panes().nth(paneIndex)
+    // With the toolbar hidden the ⚙ floats in the corner and shows on hover.
+    await pane.hover()
+    await pane.locator('[data-table-settings]').first().click()
+    const keys: Record<typeof label, string[]> = {
+      Toolbar: ['toolbar'],
+      'Views bar': ['tabs', 'pagination'],
+      Tabs: ['tabs'],
+      Pagination: ['pagination'],
+      Striped: ['striped'],
+    }
+    for (const key of keys[label]) {
+      await this.page.locator(`[data-table-settings-menu] [data-table-setting="${key}"]`).click()
+    }
     await this.closeMenu()
   }
 
-  /** Split a pane, choosing the content in the picker that follows. */
+  /** Split a pane ("Dodaj obok"), choosing the content in the picker that follows. */
   async splitPane(
     direction: 'Left' | 'Right' | 'Above' | 'Below',
     content: string,
     paneIndex = 0,
   ): Promise<void> {
     await this.openMenu(paneIndex)
-    await this.page.getByRole('button', { name: new RegExp(`^${direction}$`, 'i') }).first().click()
+    const attr = { Left: 'left', Right: 'right', Above: 'up', Below: 'down' }[direction]
+    await this.page.locator(`[data-pane-split-${attr}]`).first().click()
     await this.pickContent(content)
   }
 
-  /** Close a pane via its overflow menu. */
+  /**
+   * Close a pane: "Usuń panel" empties its cell, then the empty cell's ✕
+   * collapses it — the two steps a user takes to make the tree smaller.
+   */
   async closePane(paneIndex = 0): Promise<void> {
+    const pane = this.panes().nth(paneIndex)
+    const id = await pane.getAttribute('data-pane-id')
     await this.openMenu(paneIndex)
-    await this.page.getByRole('button', { name: /^Close( pane)?$/i }).first().click()
+    await this.page.locator('[data-pane-close]').first().click()
+    const hole = this.page.locator(`[data-pane-empty="${id}"]`)
+    if ((await hole.count()) > 0) {
+      await hole.locator(`[data-pane-empty-remove="${id}"]`).click()
+    }
+    await expect(this.page.locator(`[data-pane-id="${id}"], [data-pane-empty="${id}"]`)).toHaveCount(0, {
+      timeout: 10_000,
+    })
   }
 
   // ── The content picker ─────────────────────────────────────────────────────
@@ -306,17 +369,16 @@ export class SplitViewHarness {
     return value === 'on' ? 'on' : 'off'
   }
 
-  async enableSharedFilters(paneIndex = 0): Promise<void> {
+  /** "Wspólne" in the workspace bar — the default for a workspace. */
+  async enableSharedFilters(): Promise<void> {
     if ((await this.sharedFiltersState()) === 'on') return
-    await this.openMenu(paneIndex)
-    await this.page.getByRole('menuitemcheckbox', { name: /Shared search/i }).click()
+    await this.page.locator('[data-workspace-filter-on]').first().click()
     await expect.poll(() => this.sharedFiltersState(), { timeout: 10_000 }).toBe('on')
-    await this.closeMenu()
   }
 
-  /** Back to per-pane control via the bar's own "Per pane" escape. */
+  /** "Per tabela" — every pane gets its own search back. */
   async disableSharedFilters(): Promise<void> {
-    await this.page.getByRole('button', { name: /Per pane/i }).click()
+    await this.page.locator('[data-workspace-filter-off]').first().click()
     await expect.poll(() => this.sharedFiltersState(), { timeout: 10_000 }).toBe('off')
   }
 
@@ -344,23 +406,40 @@ export class SplitViewHarness {
 
   /** Panes reporting they could not honour a shared criterion. */
   async unmappedMarkers(): Promise<string[]> {
-    return this.page.$$eval('[data-shared-unmapped]', (els) =>
-      els.map((e) => e.getAttribute('data-shared-unmapped') ?? ''),
+    return this.page.$$eval('[data-workspace-unmapped]', (els) =>
+      els.map((e) => e.getAttribute('data-workspace-unmapped') ?? ''),
     )
   }
 
   // ── Named (server-persisted) layouts ───────────────────────────────────────
 
-  async saveLayout(name: string, paneIndex = 0): Promise<void> {
-    await this.openMenu(paneIndex)
-    await this.page.getByRole('button', { name: /^Layouts$/i }).first().click()
-    await this.page.getByPlaceholder(/name/i).first().fill(name)
-    await this.page.getByRole('button', { name: /^Save$/i }).first().click()
+  /** Save what is on screen under a name, from the drawer's step 3. */
+  async saveLayout(name: string): Promise<void> {
+    const drawer = await this.openCustomize()
+    await drawer.locator('[data-split-layout-name]').fill(name)
+    await drawer.locator('[data-split-layout-save]').click()
+    await expect(drawer.locator(`[data-split-layout-row="${name}"]`)).toBeVisible({ timeout: 15_000 })
+    await this.closeCustomize()
   }
 
-  async openLayout(name: string, paneIndex = 0): Promise<void> {
-    await this.openMenu(paneIndex)
-    await this.page.getByRole('button', { name: /^Layouts$/i }).first().click()
-    await this.page.getByRole('button', { name, exact: true }).first().click()
+  /** Apply a saved layout from the drawer's step 3. */
+  async openLayout(name: string): Promise<void> {
+    const drawer = await this.openCustomize()
+    await drawer.locator(`[data-split-layout-open="${name}"]`).click()
+    await this.closeCustomize()
+  }
+
+  /** Back to the page's own table — "Widok domyślny". */
+  async openDefaultView(): Promise<void> {
+    const drawer = await this.openCustomize()
+    await drawer.locator('[data-split-layout-default]').click()
+    await this.closeCustomize()
+  }
+
+  /** "Dodaj widget" in the workspace bar: first free slot, else a new section. */
+  async addFromBar(name: string): Promise<void> {
+    await this.dismissOverlays()
+    await this.page.locator('[data-workspace-add-widget]').first().click()
+    await this.pickContent(name)
   }
 }
