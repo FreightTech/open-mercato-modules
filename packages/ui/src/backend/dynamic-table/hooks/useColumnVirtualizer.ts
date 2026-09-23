@@ -250,7 +250,22 @@ export function useColumnVirtualizer(
 
   const pinnedLeftKey = useIndexListKey(pinnedLeftIndices);
   const pinnedRightKey = useIndexListKey(pinnedRightIndices);
-  const forcedKey = useIndexListKey(forcedIndices);
+  // A forced column (the caret / the editor) only needs forcing when the
+  // window would NOT mount it anyway. Keying the window on the raw list made
+  // every ArrowRight — the caret moving inside an already-mounted range —
+  // rebuild the window and so re-render every mounted row.
+  const rawForcedKey = useIndexListKey(forcedIndices);
+  const outsideForced = React.useMemo(
+    () =>
+      baseRange === null || !forcedIndices
+        ? forcedIndices
+        : forcedIndices.filter(
+            (i) => i < baseRange.startIndex - overscan || i > baseRange.endIndex + overscan,
+          ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawForcedKey, baseRange?.startIndex, baseRange?.endIndex, overscan],
+  );
+  const forcedKey = useIndexListKey(outsideForced);
 
   const columnWindow = React.useMemo<ColumnWindow>(() => {
     const getKey = getColumnKeyRef.current;
@@ -270,7 +285,7 @@ export function useColumnVirtualizer(
       overscan,
       pinnedLeftIndices,
       pinnedRightIndices,
-      forcedIndices,
+      forcedIndices: outsideForced,
       getColumnKey: getKey,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

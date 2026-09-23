@@ -161,6 +161,17 @@ describe('useColumnVirtualizer — force-mounted columns', () => {
     expect(result.current.isColumnMounted(25)).toBe(true);
   });
 
+  it('keeps the SAME window object when a forced column moves inside the mounted range', () => {
+    // Perf contract (.ai/perf/EXPERIMENTS.md #6): the caret stepping across
+    // already-mounted columns must not rebuild the window, because every
+    // mounted row receives the window as a prop and re-renders on a new one.
+    const { result, rerender, initial } = mount({ enabled: true, overscan: 0, forcedIndices: [2] });
+    const before = result.current;
+    act(() => rerender({ ...initial, enabled: true, overscan: 0, forcedIndices: [3] }));
+    expect(result.current).toBe(before);
+    expect(result.current.isColumnMounted(3)).toBe(true);
+  });
+
   it('reports the pinned gutter widths for callers that need to clear them', () => {
     const { result } = mount({
       enabled: true,
