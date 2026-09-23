@@ -399,7 +399,8 @@ export class SplitViewHarness {
     const ids = await this.tableIds()
     const out: Record<string, number> = {}
     for (const id of ids) {
-      out[id] = await this.gridFor(id).rowCount().catch(() => 0)
+      // Rows LOADED, not rows rendered — see `GridHarness.loadedRowCount`.
+      out[id] = await this.gridFor(id).loadedRowCount().catch(() => 0)
     }
     return out
   }

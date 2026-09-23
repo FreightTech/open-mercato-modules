@@ -24,6 +24,14 @@ interface SearchBarProps {
    * anchored, and when it is open.
    */
   renderSuggestions?: SearchSuggestionsRenderer;
+  /**
+   * The search already narrowing the table when this box MOUNTS. The box can
+   * be unmounted while its search stays live — a split-view workspace hides it
+   * while the shared bar drives the pane — and a box that came back empty over
+   * rows it was still filtering left the user narrowed with no visible cause.
+   * Read once, on mount; after that the box is the source of truth again.
+   */
+  initialValue?: string;
 }
 
 /** Gap between the input and the panel, and the viewport margin the panel keeps. */
@@ -44,8 +52,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = 'Search a product',
   debounceMs = 300,
   renderSuggestions,
+  initialValue,
 }) => {
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState(initialValue ?? '');
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);

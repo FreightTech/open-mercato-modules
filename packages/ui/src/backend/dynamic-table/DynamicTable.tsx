@@ -3751,6 +3751,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
               placeholder={searchPlaceholder ?? 'Search...'}
               debounceMs={searchDebounceMs}
               renderSuggestions={searchSuggestions}
+              initialValue={searchQuery}
             />
           )}
 
