@@ -85,6 +85,36 @@ export function useSelection(): SelectionState {
 }
 
 // ============================================
+// ROW RANGE HOOK (per-row slice of the selection)
+// ============================================
+export type RowRangeState = 'none' | 'in' | 'top' | 'bottom' | 'top-bottom';
+
+/**
+ * Whether `row` is inside a row-range selection, and on which edge — as a
+ * PRIMITIVE, so `useSyncExternalStore` bails out for every row whose answer
+ * did not change. Subscribing rows to the whole selection (`useSelection`)
+ * re-rendered every mounted row on every arrow key.
+ */
+export function useRowRangeState(row: number): RowRangeState {
+  const store = useCellStore();
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => store.subscribeToSelection(onStoreChange),
+    [store]
+  );
+  const getSnapshot = useCallback((): RowRangeState => {
+    const selection = store.getSelection();
+    if (selection.type !== 'rowRange' || !selection.anchor || !selection.focus) return 'none';
+    const lo = Math.min(selection.anchor.row, selection.focus.row);
+    const hi = Math.max(selection.anchor.row, selection.focus.row);
+    if (row < lo || row > hi) return 'none';
+    if (row === lo && row === hi) return 'top-bottom';
+    return row === lo ? 'top' : row === hi ? 'bottom' : 'in';
+  }, [store, row]);
+  const getServerSnapshot = useCallback((): RowRangeState => 'none', []);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+// ============================================
 // DRAG HANDLING HOOK
 // ============================================
 export function useDragHandling(
