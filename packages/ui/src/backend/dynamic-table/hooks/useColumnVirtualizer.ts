@@ -131,6 +131,34 @@ function useIndexListKey(list: readonly number[] | undefined): string {
   return React.useMemo(() => (list && list.length ? list.join(',') : ''), [list]);
 }
 
+/**
+ * Hysteresis for the column window: keep the range the window was last built
+ * from while the VISIBLE columns are still inside that window's overscan
+ * margin; rebuild only when a visible column would fall outside it.
+ *
+ * Without this the window changed every time one column crossed the viewport
+ * edge — nearly every frame of a horizontal pan — and a new window re-renders
+ * EVERY mounted row. With it, a pan rebuilds once per `overscan` columns.
+ * The mounted set is never larger than before (it is exactly visible +
+ * overscan at each rebuild, and shrinks toward the pan direction in between),
+ * and every visible column is always mounted, so no blank flash.
+ * A/B in .ai/perf/EXPERIMENTS.md (#4).
+ */
+export function holdColumnRange(
+  previous: ColumnRange | null,
+  visible: ColumnRange,
+  overscan: number,
+): ColumnRange {
+  if (
+    previous &&
+    visible.startIndex >= previous.startIndex - overscan &&
+    visible.endIndex <= previous.endIndex + overscan
+  ) {
+    return previous;
+  }
+  return visible;
+}
+
 export function useColumnVirtualizer(
   options: UseColumnVirtualizerOptions
 ): ColumnVirtualizer {
@@ -203,13 +231,22 @@ export function useColumnVirtualizer(
   }, [enabled, widthRevision, columnCount, virtualizer]);
 
   const virtualItems = enabled ? virtualizer.getVirtualItems() : [];
-  const baseRange: ColumnRange | null =
+  const visibleRange: ColumnRange | null =
     virtualItems.length > 0
       ? {
           startIndex: virtualItems[0].index,
           endIndex: virtualItems[virtualItems.length - 1].index,
         }
       : null;
+  // See `holdColumnRange`. The ref is written during render on purpose: the
+  // value is a pure function of (previous, visible, overscan), so a discarded
+  // render that wrote it would have computed the same thing.
+  // A held range from before the column set shrank is dropped, never clamped.
+  const heldRangeRef = React.useRef<ColumnRange | null>(null);
+  const held = heldRangeRef.current && heldRangeRef.current.endIndex < columnCount ? heldRangeRef.current : null;
+  const baseRange: ColumnRange | null =
+    visibleRange === null ? null : holdColumnRange(held, visibleRange, overscan);
+  heldRangeRef.current = baseRange;
 
   const pinnedLeftKey = useIndexListKey(pinnedLeftIndices);
   const pinnedRightKey = useIndexListKey(pinnedRightIndices);
