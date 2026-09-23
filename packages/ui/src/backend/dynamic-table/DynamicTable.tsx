@@ -3678,6 +3678,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       data-density={density || undefined}
       {...densityAttribute}
       data-striped={striped ? 'true' : undefined}
+      // What the container holds, as attributes — NOT discovered by CSS
+      // `:has(.hot-toolbar)` / `:has(.hot-card)`. A container-level `:has()`
+      // with a descendant argument makes every DOM insertion inside the grid
+      // (i.e. every row the virtualiser mounts while scrolling) a candidate
+      // for re-matching the container. React already knows the answer.
+      data-has-toolbar={!hideToolbar ? 'true' : undefined}
+      data-has-card={!hidePerspectiveTabs ? 'true' : undefined}
       data-actions-scroll-shadow={actionsScrollShadow ? 'true' : undefined}
       data-firstcol-scroll-shadow={firstColScrollShadow ? 'true' : undefined}
       data-frozen-shadow={frozenColShadow ? 'true' : undefined}

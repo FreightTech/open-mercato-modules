@@ -64,7 +64,7 @@
 /* Full list pages wrap the toolbar+tabs+grid in a `.hot-card`; the container
    itself then becomes a transparent layout shell so the page canvas shows
    through behind the lead row (category tabs) and around the floating card. */
-.hot-appearance-v2.hot-container:has(.hot-card) {
+.hot-appearance-v2.hot-container[data-has-card="true"] {
   background: transparent;
 }
 /* The white floating card — toolbar, perspective tabs and grid sit on it.
@@ -397,10 +397,10 @@
    whichever edge still has hidden content, so partial cut-off columns fade out
    and signal "more this way". Driven by the same scroll-state attributes, so it
    auto-DISAPPEARS once that edge is fully scrolled. Scoped to
-   `:not(:has(.hot-toolbar))` so it never paints over a list page's toolbar
+   `:not([data-has-toolbar="true"])` so it never paints over a list page's toolbar
    (those tables use the sticky-column shadows instead). */
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-actions-scroll-shadow="true"]::after,
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-firstcol-scroll-shadow="true"]::before {
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-actions-scroll-shadow="true"]::after,
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-firstcol-scroll-shadow="true"]::before {
   content: "";
   position: absolute;
   top: 0;
@@ -412,12 +412,12 @@
   z-index: 15;
 }
 /* Right edge: more content to the RIGHT → fade out toward the right edge. */
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-actions-scroll-shadow="true"]::after {
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-actions-scroll-shadow="true"]::after {
   right: 0;
   background: linear-gradient(to right, transparent, var(--background-v2));
 }
 /* Left edge: scrolled right (content hidden LEFT) → fade out toward the left. */
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-firstcol-scroll-shadow="true"]::before {
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-firstcol-scroll-shadow="true"]::before {
   left: 0;
   background: linear-gradient(to left, transparent, var(--background-v2));
 }
@@ -485,8 +485,9 @@
 /* Only inset list-page grids (those with a toolbar) — the 16px aligns the grid
    with the toolbar title. Embedded/sub-tables render with `hideToolbar` (no
    `.hot-toolbar`); they should sit flush with their own section title, so they
-   get NO inset. `:has()` scopes the margin to toolbar'd tables only. */
-.hot-appearance-v2.hot-container:has(.hot-toolbar) .hot-virtual-container {
+   get NO inset. `[data-has-toolbar]` (set by DynamicTable, see the container)
+   scopes the margin to toolbar'd tables only. */
+.hot-appearance-v2.hot-container[data-has-toolbar="true"] .hot-virtual-container {
   margin-left: 16px;
   margin-right: 16px;
 }
@@ -2435,7 +2436,7 @@
 
 /* The children stop paying their own horizontal inset now that the card pays it
    once. Without these the two stack and the content sits 32px in. */
-[data-split-view='true'] .hot-appearance-v2.hot-container:has(.hot-toolbar) .hot-virtual-container,
+[data-split-view='true'] .hot-appearance-v2.hot-container[data-has-toolbar="true"] .hot-virtual-container,
 [data-split-view='true'] .hot-appearance-v2 .hot-virtual-container {
   margin-left: 0;
   margin-right: 0;
