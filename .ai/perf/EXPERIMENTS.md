@@ -22,3 +22,6 @@ fast-scroll frame from Chrome's own counters.
 ## Cumulative (branch head vs original main)
 `cumulative-1` — 7e4ee1b vs 8da590f, all 5 workloads, 5 interleaved runs, 4x CPU: **31 better, 0 worse**.
 Highlights: app-transport horizontal pan 36.7 → 16.1 ms/frame (−56%, dropped 169 → 46); arrow-key script per press −45…−68% on every shape; 100x80 slow scroll 47.4 → 30.1 ms/frame (−36%); fast-scroll style recalc −15…−27%. DOM nodes and heap unchanged — no density traded.
+
+## Merged with split-view (dynamictables-split-view)
+`merged-split-view` — 6355150 vs a4ccc44 (100x30, 100x80, app-transport; 5 interleaved runs): **0 better, 0 worse, no page errors** — the split-view work (Cell null guard, SearchBar initialValue, zebra/display host) is performance-neutral on the grid.
