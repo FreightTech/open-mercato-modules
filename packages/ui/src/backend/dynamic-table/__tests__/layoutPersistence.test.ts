@@ -122,7 +122,7 @@ describe('round trip', () => {
 })
 
 describe('migration', () => {
-  it('TC-SPLIT-610 v1 flat doc → v3 tree, panes wrapped in content: {kind:"table"}', () => {
+  it('TC-SPLIT-610 v1 flat doc → current tree, panes wrapped in content: {kind:"table"}', () => {
     seed(
       JSON.stringify({
         panes: [
@@ -135,7 +135,7 @@ describe('migration', () => {
     )
 
     const restored = readStoredLayout(ANCHOR, ALL_KNOWN)!
-    expect(restored.version).toBe(3)
+    expect(restored.version).toBe(SPLIT_LAYOUT_VERSION)
     const root = asSplit(restored)
     expect(root.direction).toBe('column')
     expect(root.sizes).toEqual([0.4, 0.6])
@@ -145,7 +145,7 @@ describe('migration', () => {
     ])
   })
 
-  it('TC-SPLIT-611 v2 tableId pane → v3 content ref, pane id preserved', () => {
+  it('TC-SPLIT-611 v2 tableId pane → current content ref, pane id preserved', () => {
     seed(
       JSON.stringify({
         version: 2,
@@ -162,7 +162,7 @@ describe('migration', () => {
     )
 
     const restored = readStoredLayout(ANCHOR, ALL_KNOWN)!
-    expect(restored.version).toBe(3)
+    expect(restored.version).toBe(SPLIT_LAYOUT_VERSION)
     const children = asSplit(restored).children as PaneNode[]
 
     // The id IS the storage scope. Minting new ones here would hand every
@@ -177,9 +177,9 @@ describe('migration', () => {
     expect('tableId' in children[0]).toBe(false)
   })
 
-  it('TC-SPLIT-612 a v3 doc round-trips byte-identically', () => {
+  it('TC-SPLIT-612 a current-version doc round-trips byte-identically', () => {
     const raw = JSON.stringify(twoPane().root)
-    const doc = `{"root":${raw},"version":3}`
+    const doc = `{"root":${raw},"version":${SPLIT_LAYOUT_VERSION}}`
     seed(doc)
 
     const restored = readStoredLayout(ANCHOR, ALL_KNOWN)!
@@ -188,6 +188,40 @@ describe('migration', () => {
     // And again through the writer, which is the path a live session takes.
     writeStoredLayout(ANCHOR, restored)
     expect(JSON.stringify(readStoredLayout(ANCHOR, ALL_KNOWN))).toBe(doc)
+  })
+
+  it('TC-SPLIT-613 a v3 doc reads as v4 with no sections, tree untouched', () => {
+    const raw = JSON.stringify(twoPane().root)
+    seed(`{"root":${raw},"version":3}`)
+
+    const restored = readStoredLayout(ANCHOR, ALL_KNOWN)!
+    expect(restored.version).toBe(SPLIT_LAYOUT_VERSION)
+    expect(JSON.stringify(restored.root)).toBe(raw)
+    expect(restored.boxes).toBeUndefined()
+  })
+
+  it('TC-SPLIT-614 v4 sections survive a write/read cycle, slot ids and all', () => {
+    const layout = {
+      ...twoPane(),
+      version: SPLIT_LAYOUT_VERSION,
+      boxes: [
+        {
+          id: 'box-1',
+          root: {
+            kind: 'split' as const,
+            direction: 'row' as const,
+            sizes: [0.5, 0.5],
+            children: [
+              { kind: 'pane' as const, id: 'w1', content: { kind: 'widget' as const, widgetId: 'offers.dashboard.unsentOffers', loaderKey: 'offers:unsent' } },
+              { kind: 'empty' as const, id: 'hole' },
+            ],
+          },
+        },
+      ],
+    }
+    writeStoredLayout(ANCHOR, layout)
+    const restored = readStoredLayout(ANCHOR, ALL_KNOWN)!
+    expect(restored.boxes).toEqual(layout.boxes)
   })
 
   it('refuses a document from a FUTURE version instead of half-parsing it', () => {

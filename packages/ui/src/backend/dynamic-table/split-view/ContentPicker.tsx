@@ -1,44 +1,40 @@
 'use client'
 
-// Choose what goes in a slot: a table or a dashboard widget.
+// Choose what goes in a slot: a whole table ("Całe działy") or a widget.
 //
-// The superseded table-only picker with a second kind of thing in it (that file
-// is gone; this replaced it outright). Everything that made the original work is
-// kept deliberately unchanged — a context dropdown anchored to whatever
-// opened it (not a centred modal that hides the layout you are adding to),
-// portalled to `document.body` because panes clip their overflow, positioned by
-// the same `computeAnchoredPosition` every other menu in the grid uses, and
-// already-open entries MARKED rather than hidden, because two panes of one table
-// with different views is a legitimate layout.
+// One catalogue, three entry points — the empty slot's "Dodaj tabelę lub
+// widget", the workspace bar's "Dodaj widget", and a pane's "Podmień na…" — so
+// the list is built ONCE here (`useContentGroups`) and each entry point only
+// decides where it renders.
 //
-// The one addition is a level of hierarchy: KIND first (Tables / Widgets), then
-// the existing per-module group headers inside each. Kind is the axis the user
-// is actually choosing on — "I want a chart here, not another grid" — so it
-// outranks the module, and putting it first keeps the two catalogues from
-// interleaving into one undifferentiated list as the registry grows.
+// Grouping follows the designer's prototype: tables first under one heading,
+// then widgets by KIND (charts, lists, cards…) rather than by owning module.
+// Kind is the axis the user is choosing on — "I want a chart here" — and a
+// module id means nothing to someone who did not write it.
+//
+// Already-open entries are NOT marked any more. The prototype dropped the
+// "OPEN" chip (gt-demo b83f137): two panes of one table with different views is
+// a legitimate layout, and the chip read as "you cannot pick this". The swap
+// menu leaves out only the content already in THAT pane.
 //
 // ACL is not resolved here, in either half: tables come from the host's grant
 // check via the registry context, widgets arrive already filtered server-side.
 //
-// Spec: .ai/specs/2026-08-17-split-view-workspace-composition.md (Phase 2)
+// Spec: .ai/specs/2026-09-23-split-view-workspace-customize.md
 
 import * as React from 'react'
-import ReactDOM from 'react-dom'
 import { Search } from 'lucide-react'
-import { computeAnchoredPosition } from '../utils/anchoredPosition'
-import { useAccessibleContent, type PaneContentItem } from '../registry/ContentRegistryContext'
+import { useT } from '@open-mercato/shared/lib/i18n/context'
+import { useAccessibleContent, useContentRegistry, type PaneContentItem } from '../registry/ContentRegistryContext'
+import { WIDGET_KINDS, widgetPresentation, type WidgetKind } from '../registry/widgetPresentation'
+import { AnchoredPanel } from './AnchoredMenu'
+import { M3_MENU_CAPTION, M3_MENU_ROW } from './chrome'
 import type { PaneContentRef } from './types'
 
-const MENU_WIDTH = 300
-const MENU_MAX_HEIGHT = 340
+type Translate = ReturnType<typeof useT>
 
-const KIND_LABEL: Record<PaneContentItem['kind'], string> = {
-  table: 'Tables',
-  widget: 'Widgets',
-}
-// Tables first: they are the bulk of the catalogue and the thing a split view is
-// usually for. Widgets are the accent, not the headline.
-const KIND_ORDER: Array<PaneContentItem['kind']> = ['table', 'widget']
+const MENU_WIDTH = 300
+const MENU_MAX_HEIGHT = 420
 
 /** The ref a picked item becomes. Widgets carry their loader key so a saved
  *  layout can be reopened without re-deriving it from the catalogue. */
@@ -48,204 +44,203 @@ export function contentRefFor(item: PaneContentItem): PaneContentRef {
     : { kind: 'widget', widgetId: item.id, loaderKey: item.loaderKey }
 }
 
-function isOpen(item: PaneContentItem, open: PaneContentRef[]): boolean {
-  return open.some((ref) =>
-    ref.kind === 'table'
-      ? item.kind === 'table' && ref.tableId === item.id
-      : item.kind === 'widget' && ref.widgetId === item.id,
+/** Is `item` what `ref` points at? */
+export function isSameContent(item: PaneContentItem, ref: PaneContentRef | null | undefined): boolean {
+  if (!ref) return false
+  return ref.kind === 'table'
+    ? item.kind === 'table' && ref.tableId === item.id
+    : item.kind === 'widget' && ref.widgetId === item.id
+}
+
+/** A title in the user's language — tables carry an i18n key, widgets get one here. */
+export function contentTitle(t: Translate, item: PaneContentItem): string {
+  if (item.kind === 'table') {
+    const key = item.definition?.metadata.titleKey
+    return key ? t(key, item.title) : item.title
+  }
+  return t(`splitView.widgetTitle.${item.id}`, item.title)
+}
+
+const KIND_FALLBACK: Record<WidgetKind, string> = {
+  charts: 'Charts',
+  lists: 'Lists',
+  cards: 'Cards',
+  activity: 'Activity',
+  process: 'Process',
+  triage: 'Triage & deadlines',
+  tables: 'Tables',
+  banners: 'Banners',
+  map: 'Map',
+  other: 'Other',
+}
+
+export type ContentGroup = { key: string; label: string; items: Array<{ item: PaneContentItem; title: string }> }
+
+/**
+ * The catalogue as display groups, filtered by `query` and without `exclude`.
+ * Empty groups are dropped, so a search never shows a heading over nothing.
+ */
+export function useContentGroups(query = '', exclude?: PaneContentRef | null): ContentGroup[] {
+  const t = useT()
+  const items = useAccessibleContent()
+  return React.useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    const rows = items
+      .filter((item) => !exclude || !isSameContent(item, exclude))
+      .map((item) => ({ item, title: contentTitle(t, item) }))
+      .filter(({ item, title }) =>
+        !needle || title.toLowerCase().includes(needle) || item.id.toLowerCase().includes(needle),
+      )
+      .sort((a, b) => a.title.localeCompare(b.title))
+
+    const groups: ContentGroup[] = [
+      {
+        key: 'tables',
+        label: t('splitView.picker.tables', 'Whole sections'),
+        items: rows.filter((row) => row.item.kind === 'table'),
+      },
+      ...WIDGET_KINDS.map((kind) => ({
+        key: `widgets:${kind}`,
+        label: t(`splitView.picker.kind.${kind}`, KIND_FALLBACK[kind]),
+        items: rows.filter(
+          (row) => row.item.kind === 'widget' && (widgetPresentation(row.item.id).kind ?? 'other') === kind,
+        ),
+      })),
+    ]
+    return groups.filter((group) => group.items.length > 0)
+  }, [items, query, exclude, t])
+}
+
+/**
+ * The grouped list, with its own search field. Rendered inside any menu panel.
+ */
+export function ContentCatalogList({
+  onPick,
+  exclude,
+  autoFocus = true,
+  showSearch = true,
+}: {
+  onPick: (content: PaneContentRef, item: PaneContentItem) => void
+  /** Leave this one out — the content already in the pane being swapped. */
+  exclude?: PaneContentRef | null
+  autoFocus?: boolean
+  showSearch?: boolean
+}) {
+  const t = useT()
+  const [query, setQuery] = React.useState('')
+  const groups = useContentGroups(query, exclude)
+  // Tables are known at once; the widget catalogue is fetched. Until it lands
+  // the list says so — a picker with no widgets reads as "there are none".
+  const { mounted: hasCatalogue, ready: catalogueReady } = useContentRegistry()
+  const widgetsLoading = hasCatalogue && !catalogueReady
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  // One frame late on purpose: the panel this sits in renders hidden for its
+  // first frame while it measures where to go, and a hidden input cannot take
+  // focus — the field looked focusable and silently was not.
+  React.useEffect(() => {
+    if (!autoFocus) return
+    const frame = requestAnimationFrame(() => inputRef.current?.focus())
+    return () => cancelAnimationFrame(frame)
+  }, [autoFocus])
+
+  return (
+    <div className="flex min-h-0 flex-col" data-split-picker-list="">
+      {showSearch && (
+        // A tinted band rather than a bordered field: the whole row is the
+        // field, and focus lights the band — the input inside is borderless.
+        <div className="mb-1 flex h-8 shrink-0 items-center gap-2 rounded-m3-sm bg-[var(--m3-surface-container-high)] px-2 transition-[background-color,box-shadow] duration-[var(--m3-duration-short2)] ease-m3-standard focus-within:bg-[var(--m3-surface-container-highest)] focus-within:shadow-[var(--m3-focus-ring-inset)]">
+          <Search className="h-3.5 w-3.5 shrink-0 text-[var(--m3-on-surface-variant)]" aria-hidden="true" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('splitView.picker.search', 'Add table or widget…')}
+            aria-label={t('splitView.picker.search', 'Add table or widget…')}
+            className="min-w-0 flex-1 bg-transparent text-body-regular-xs text-[var(--m3-on-surface)] outline-none placeholder:text-[var(--m3-on-surface-variant)]"
+            data-split-picker-search=""
+          />
+        </div>
+      )}
+      <div className="min-h-0 overflow-y-auto">
+        {groups.length === 0 && !widgetsLoading && (
+          <div
+            className="px-2 py-4 text-center text-body-regular-xs text-[var(--m3-on-surface-variant)]"
+            data-split-picker-empty=""
+          >
+            {t('splitView.picker.empty', 'No results')}
+          </div>
+        )}
+        {groups.map((group, index) => (
+          <div
+            key={group.key}
+            // The hairline between groups is the group's own top border, so the
+            // caption stays its first child (specs read the label from it).
+            className={index > 0 ? 'mt-1 border-t border-[var(--m3-outline-variant)] pt-1' : undefined}
+            data-split-picker-kind={group.key === 'tables' ? 'table' : 'widget'}
+            data-split-picker-group={group.key}
+          >
+            <div className={`px-3 pb-1 pt-2 ${M3_MENU_CAPTION}`}>{group.label}</div>
+            {group.items.map(({ item, title }) => (
+              <button
+                key={`${item.kind}:${item.id}`}
+                type="button"
+                onClick={() => onPick(contentRefFor(item), item)}
+                className={M3_MENU_ROW}
+                data-split-picker-item={item.id}
+                data-split-picker-item-kind={item.kind}
+              >
+                <span className="truncate">{title}</span>
+              </button>
+            ))}
+          </div>
+        ))}
+        {widgetsLoading && (
+          <div
+            className={`mt-1 flex h-8 items-center gap-2 border-t border-[var(--m3-outline-variant)] px-3 pt-1 text-body-regular-sm text-[var(--m3-on-surface-variant)]`}
+            role="status"
+            data-split-picker-loading=""
+          >
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--m3-outline)] border-t-[var(--m3-primary)] motion-reduce:animate-none" aria-hidden="true" />
+            {t('splitView.picker.loadingWidgets', 'Loading widgets…')}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
+/**
+ * The picker as a free-standing popup anchored to whatever opened it — the
+ * empty slot, the "Dodaj obok" buttons. Kept under its old name and props so
+ * every existing caller is unchanged.
+ */
 export function ContentPicker({
   anchorRect,
-  openContent,
   onPick,
   onClose,
 }: {
   /** Bounding rect of the control that opened this. */
   anchorRect: DOMRect | null
-  /** What the layout already holds — marked, never hidden. */
-  openContent: PaneContentRef[]
+  /** Kept for API compatibility; open content is no longer marked. */
+  openContent?: PaneContentRef[]
   onPick: (content: PaneContentRef) => void
   onClose: () => void
 }) {
-  const items = useAccessibleContent()
-  const [query, setQuery] = React.useState('')
-  const inputRef = React.useRef<HTMLInputElement>(null)
-  const boxRef = React.useRef<HTMLDivElement>(null)
-
-  const [placement, setPlacement] = React.useState({
-    top: 0,
-    left: 0,
-    maxHeight: MENU_MAX_HEIGHT,
-  })
-
-  React.useLayoutEffect(() => {
-    if (!anchorRect) return
-    const next = computeAnchoredPosition(
-      anchorRect,
-      { width: window.innerWidth, height: window.innerHeight },
-      { width: MENU_WIDTH, preferredHeight: MENU_MAX_HEIGHT, align: 'end', minHeight: 160 },
-    )
-    setPlacement({ top: next.top, left: next.left, maxHeight: next.maxHeight })
-  }, [anchorRect])
-
-  React.useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
-  React.useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation()
-        onClose()
-      }
-    }
-    const onDown = (event: MouseEvent) => {
-      if (boxRef.current && !boxRef.current.contains(event.target as Node)) onClose()
-    }
-    // Scroll/resize move the anchor out from under us; close rather than leave
-    // a menu floating next to nothing.
-    //
-    // But ONLY a scroll that actually moves the anchor counts. This listener is
-    // capture-phase on `window`, so it also hears every inner scroller — and a
-    // pane emits a scroll event one frame after the picker mounts, which
-    // dismissed the menu ~6ms after it opened. The user-visible symptom was
-    // that clicking an empty slot in a workspace that already had a filled pane
-    // "did nothing" — reliably, on the second fill of a 2×2.
-    //
-    // Panes scroll INSIDE the layout; the slot the picker is anchored to does
-    // not move when they do. So element-level scrolls are ignored and only a
-    // document-level scroll dismisses.
-    const onScroll = (event: Event) => {
-      const target = event.target
-      if (target instanceof Element && target !== document.scrollingElement) return
-      onClose()
-    }
-    document.addEventListener('keydown', onKey, true)
-    document.addEventListener('mousedown', onDown, true)
-    window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', onScroll)
-    return () => {
-      document.removeEventListener('keydown', onKey, true)
-      document.removeEventListener('mousedown', onDown, true)
-      window.removeEventListener('scroll', onScroll, true)
-      window.removeEventListener('resize', onScroll)
-    }
-  }, [onClose])
-
-  const sections = React.useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    const matching = needle
-      ? items.filter(
-          (item) =>
-            item.title.toLowerCase().includes(needle) || item.id.toLowerCase().includes(needle),
-        )
-      : items
-
-    return KIND_ORDER.map((kind) => {
-      const byGroup = new Map<string, PaneContentItem[]>()
-      for (const item of matching) {
-        if (item.kind !== kind) continue
-        const key = item.group ?? 'Other'
-        const list = byGroup.get(key) ?? []
-        list.push(item)
-        byGroup.set(key, list)
-      }
-      return {
-        kind,
-        groups: Array.from(byGroup.entries()).sort(([a], [b]) => a.localeCompare(b)),
-      }
-    }).filter((section) => section.groups.length > 0)
-  }, [items, query])
-
-  const menu = (
-    <div
-      ref={boxRef}
+  const t = useT()
+  if (!anchorRect) return null
+  return (
+    <AnchoredPanel
+      anchor={anchorRect}
+      placement={{ width: MENU_WIDTH, preferredHeight: MENU_MAX_HEIGHT, align: 'end' }}
+      onClose={onClose}
       role="dialog"
-      aria-label="Add table or widget"
-      className="fixed z-[1000] overflow-hidden rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] shadow-m3-2"
-      style={{
-        top: placement.top,
-        left: placement.left,
-        width: MENU_WIDTH,
-        maxHeight: placement.maxHeight,
-      }}
+      aria-label={t('splitView.picker.title', 'Add table or widget')}
       data-split-picker=""
     >
-      {/* A tinted band rather than a hairline, and the focus signal is on
-          the whole row — the input inside it is borderless, so a halo on the
-          field alone would float in the middle of nothing.
-          The band steps the container UP from the panel and up again on focus,
-          which reads the same direction in BOTH schemes (light gets greyer,
-          dark gets lighter); stepping DOWN would invert between them. */}
-      <div className="flex items-center gap-2 bg-[var(--m3-surface-container-high)] px-2 py-1.5 transition-[background-color,box-shadow] duration-[var(--m3-duration-short2)] ease-m3-standard focus-within:bg-[var(--m3-surface-container-highest)] focus-within:shadow-[var(--m3-focus-ring-inset)]">
-        <Search className="h-3.5 w-3.5 text-[var(--m3-on-surface-variant)]" aria-hidden="true" />
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Add table or widget…"
-          className="min-w-0 flex-1 bg-transparent text-body-regular-xs text-[var(--m3-on-surface)] outline-none placeholder:text-[var(--m3-on-surface-variant)]"
-          data-split-picker-search=""
-        />
-      </div>
-
-      <div className="overflow-y-auto p-1" style={{ maxHeight: placement.maxHeight - 38 }}>
-        {sections.length === 0 && (
-          <div
-            className="px-2 py-4 text-center text-body-regular-xs text-[var(--m3-on-surface-variant)]"
-            data-split-picker-empty=""
-          >
-            No tables or widgets available.
-          </div>
-        )}
-        {sections.map((section) => (
-          <div key={section.kind} data-split-picker-kind={section.kind}>
-            {/* Section ink is `on-surface`, group ink below is `on-surface-variant`.
-                Both levels used to be 12px in the SAME muted ink, and the group
-                carried uppercase + tracking — so the lower level read as the more
-                emphatic one and the hierarchy inverted. */}
-            <div className="px-2 pb-1 pt-2 text-label-semibold-xs text-[var(--m3-on-surface)]">
-              {KIND_LABEL[section.kind]}
-            </div>
-            {section.groups.map(([group, groupItems]) => (
-              <div key={group}>
-                <div className="px-2 pb-0.5 pt-1.5 text-label-semibold-2xs uppercase tracking-wider text-[var(--m3-on-surface-variant)]">
-                  {group}
-                </div>
-                {groupItems.map((item) => {
-                  const alreadyOpen = isOpen(item, openContent)
-                  return (
-                    <button
-                      key={`${item.kind}:${item.id}`}
-                      type="button"
-                      onClick={() => onPick(contentRefFor(item))}
-                      data-split-picker-item={item.id}
-                      data-split-picker-item-kind={item.kind}
-                      className="flex w-full items-center justify-between gap-2 rounded-m3-xs px-2 py-1 text-left text-body-regular-xs text-[var(--m3-on-surface)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] active:bg-[var(--m3-state-layer-pressed)]"
-                    >
-                      <span className="truncate">{item.title}</span>
-                      {/* A marked entry is not a dimmed one — it is a real
-                          state, so it gets the selection container as a chip. */}
-                      {alreadyOpen && (
-                        <span className="shrink-0 rounded-m3-full bg-[var(--m3-secondary-container)] px-1.5 text-label-semibold-2xs uppercase text-[var(--m3-on-secondary-container)]">
-                          open
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
+      <ContentCatalogList onPick={(content) => onPick(content)} />
+    </AnchoredPanel>
   )
-
-  if (typeof document === 'undefined') return menu
-  return ReactDOM.createPortal(menu, document.body)
 }
 
 export default ContentPicker

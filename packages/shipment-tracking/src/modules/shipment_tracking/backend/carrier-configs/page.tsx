@@ -800,7 +800,6 @@ export default function TrackingAuthConfigPage() {
             <div style={{ height: tableHeight }}>
               <DynamicTable
                 {...table.props}
-                striped
                 density="md"
                 rowActions={rowActions}
                 onRowAction={handleRowAction}

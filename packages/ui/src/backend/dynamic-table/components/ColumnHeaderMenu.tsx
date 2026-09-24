@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10, ArrowUpNarrowWide, ArrowDownWideNarrow, Filter, SlidersHorizontal, Pin, PinOff, EyeOff, ArrowLeftToLine, ArrowRightToLine } from 'lucide-react';
+import { ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10, ArrowUpNarrowWide, ArrowDownWideNarrow, ArrowUpDown, Filter, SlidersHorizontal, Pin, PinOff, EyeOff, ArrowLeftToLine, ArrowRightToLine } from 'lucide-react';
+import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { ColumnDef, ContextMenuAction } from '../types/index';
 import { getSortDirectionLabels } from '../types/perspective';
 
@@ -10,6 +11,8 @@ interface ColumnHeaderMenuProps {
   anchorRect: DOMRect;
   isFrozen: boolean;
   onSortAsc: () => void;
+  /** Present only when this column is the sorted one. */
+  onSortClear?: () => void;
   onSortDesc: () => void;
   /**
    * Opens the per-column quick filter (the funnel dropdown). When supplied it
@@ -40,6 +43,7 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
   isFrozen,
   onSortAsc,
   onSortDesc,
+  onSortClear,
   onQuickFilter,
   onFilterByField,
   onFreezeToggle,
@@ -50,6 +54,7 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
   extraActions,
   onExtraAction,
 }) => {
+  const t = useT();
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -108,12 +113,18 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
     <div ref={menuRef} className={`hot-col-menu ${v2cls}`.trim()} style={style}>
       <button className="hot-col-menu-item" onClick={() => { onSortAsc(); onClose(); }}>
         <AscIcon className="w-4 h-4" />
-        <span>Sort {labels.asc}</span>
+        <span>{t('dynamicTable.columnMenu.sort', 'Sort {direction}', { direction: labels.asc })}</span>
       </button>
       <button className="hot-col-menu-item" onClick={() => { onSortDesc(); onClose(); }}>
         <DescIcon className="w-4 h-4" />
-        <span>Sort {labels.desc}</span>
+        <span>{t('dynamicTable.columnMenu.sort', 'Sort {direction}', { direction: labels.desc })}</span>
       </button>
+      {onSortClear && (
+        <button className="hot-col-menu-item" onClick={() => { onSortClear(); onClose(); }} data-col-menu-sort-clear="">
+          <ArrowUpDown className="w-4 h-4" />
+          <span>{t('dynamicTable.columnMenu.clearSort', 'Clear sort')}</span>
+        </button>
+      )}
       <button
         className="hot-col-menu-item"
         onClick={() => {
@@ -123,21 +134,21 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
         }}
       >
         <Filter className="w-4 h-4" />
-        <span>Filter by this field</span>
+        <span>{t('dynamicTable.columnMenu.filter', 'Filter by this field')}</span>
       </button>
       {onQuickFilter && (
         <button className="hot-col-menu-item" onClick={() => { onFilterByField(); onClose(); }}>
           <SlidersHorizontal className="w-4 h-4" />
-          <span>Advanced filter…</span>
+          <span>{t('dynamicTable.columnMenu.advancedFilter', 'Advanced filter…')}</span>
         </button>
       )}
       <button className="hot-col-menu-item" onClick={() => { onFreezeToggle(); onClose(); }}>
         {isFrozen ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
-        <span>{isFrozen ? 'Unfreeze column' : 'Freeze column'}</span>
+        <span>{isFrozen ? t('dynamicTable.columnMenu.unfreeze', 'Unfreeze column') : t('dynamicTable.columnMenu.freeze', 'Freeze column')}</span>
       </button>
       <button className="hot-col-menu-item" onClick={() => { onHideField(); onClose(); }}>
         <EyeOff className="w-4 h-4" />
-        <span>Hide field</span>
+        <span>{t('dynamicTable.columnMenu.hide', 'Hide field')}</span>
       </button>
       {(onMoveLeft || onMoveRight) && (
         <>
@@ -148,7 +159,7 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
             onClick={() => { onMoveLeft?.(); onClose(); }}
           >
             <ArrowLeftToLine className="w-4 h-4" />
-            <span>Move left</span>
+            <span>{t('dynamicTable.columnMenu.moveLeft', 'Move left')}</span>
           </button>
           <button
             className="hot-col-menu-item"
@@ -156,7 +167,7 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
             onClick={() => { onMoveRight?.(); onClose(); }}
           >
             <ArrowRightToLine className="w-4 h-4" />
-            <span>Move right</span>
+            <span>{t('dynamicTable.columnMenu.moveRight', 'Move right')}</span>
           </button>
         </>
       )}

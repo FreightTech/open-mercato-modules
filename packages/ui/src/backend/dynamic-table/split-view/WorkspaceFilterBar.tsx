@@ -99,8 +99,19 @@ export type WorkspaceFilterBarProps = {
    * `mapCriteriaForWidget`. Omitted or empty ⇒ every pane is filtered.
    */
   unmappedByPane?: UnmappedPaneReport[]
-  /** Back to per-pane control: the bar disappears, each pane's search returns. */
-  onToggleOff: () => void
+  /**
+   * `true` = "Wspólne": this bar drives every pane. `false` = "Per tabela":
+   * each pane keeps its own search and filters, and the bar's search and
+   * criteria are shown disabled rather than removed, so switching back is one
+   * click and the layout does not jump.
+   */
+  shared?: boolean
+  /** Switch between the two modes. */
+  onSharedChange?: (shared: boolean) => void
+  /** Back to per-pane control. Kept for callers that only know "off". */
+  onToggleOff?: () => void
+  /** Host controls on the right end of the bar — add widget, layouts, full screen. */
+  trailing?: React.ReactNode
   className?: string
 }
 
@@ -434,8 +445,16 @@ export function WorkspaceFilterBar({
   onChange,
   unmappedByPane,
   onToggleOff,
+  shared = true,
+  onSharedChange,
+  trailing,
   className,
 }: WorkspaceFilterBarProps) {
+  const setShared = (next: boolean) => {
+    if (next === shared) return
+    if (onSharedChange) onSharedChange(next)
+    else if (!next) onToggleOff?.()
+  }
   const t = useT()
   const [editing, setEditing] = React.useState<{ key: SharedCriterionKey; anchorEl: HTMLElement } | null>(null)
 
@@ -536,62 +555,57 @@ export function WorkspaceFilterBar({
   const editingRule = editing ? rules.find((r) => r.key === editing.key) : undefined
 
   return (
-    // A tinted PILL STRIP, not a full-bleed bar with a rule under it: the
-    // container step is the separation, which is softer than a 1px line and
-    // costs nothing. `mx-2` only — no vertical margin. The 32px is a density
-    // budget (it replaces N per-pane search rows) and must not grow, so every
-    // control inside stays 24px and the roundness comes from the controls.
+    // ONE row on the page surface, above the panes — the prototype's
+    // "pasek nadrzędny". Controls are outlined 32px pills, the same height as
+    // the grid toolbar's icon buttons, so the bar and the toolbars beneath it
+    // line up. No tinted strip behind them: the page surface IS the strip.
     <div
-      className={`mx-2 flex h-8 shrink-0 items-center gap-2 rounded-m3-full bg-[var(--m3-surface-container-low)] px-2 ${className ?? ''}`.trim()}
+      // A size container: when the bar is narrow its secondary labels collapse
+      // to icons (see the `@max-[…]/wsbar:` classes here and in
+      // WorkspaceActions) instead of pushing controls off the right edge.
+      className={`@container/wsbar mb-2 flex h-9 min-w-0 shrink-0 items-center gap-2 ${className ?? ''}`.trim()}
       role="search"
       aria-label={t('splitView.sharedFilter.title', 'Workspace filter')}
       data-workspace-filter-bar=""
+      data-workspace-scope={shared ? 'shared' : 'per-pane'}
     >
       <SearchInput
         /* NOT `type="search"`: Chrome paints its own cancel "×" on a search
            input, right beside the primitive's clear button. */
         type="text"
         inputSize="sm"
-        className="h-6 w-56"
+        className="h-9 min-w-[9rem] flex-1"
         /* The pill overrides go through `style`, not through classes.
            `primitives-v2/utils#cn` is a plain string join with no
            tailwind-merge, so `rounded-m3-full` and the primitive's own
            `rounded-md` would BOTH land on the element and the winner would be
-           whichever Tailwind happened to emit last — not something to bet the
-           look of every workspace on. Inline wins deterministically.
-           The border is dropped, not recoloured: the tint is the affordance,
-           matching the grid toolbar's search pill. The primitive's teal
-           focus ring is left alone — focus is teal, selection is blue. */
+           whichever Tailwind happened to emit last. Inline wins deterministically. */
         style={{
           borderRadius: 'var(--m3-shape-full)',
-          border: 'none',
-          backgroundColor: 'var(--m3-surface-container-high)',
+          borderColor: 'var(--m3-outline-variant)',
+          backgroundColor: 'var(--m3-surface-container-lowest)',
         }}
         value={draft}
+        disabled={!shared}
         onChange={(e) => setDraft(e.target.value)}
         onClear={() => setDraft('')}
         placeholder={t('splitView.sharedFilter.search', 'Search all panes…')}
         aria-label={t('splitView.sharedFilter.search', 'Search all panes…')}
+        title={shared ? undefined : t('splitView.sharedFilter.perPaneHint', 'Each pane searches on its own — switch to “Shared” to search them all')}
         data-workspace-search=""
       />
 
-      {/* ONE chip, not a chip glued to a second bordered button. The split pair
-          drew two outlines around one idea and, at 24px, read as a broken
-          segmented control. M3's input chip puts the trailing "×" INSIDE the
-          container — so the chip is the outer element and the remove button
-          nests in it.
-
-          `data-workspace-chip` MUST stay on that outer element: `addCriterion`
-          looks it up with `document.querySelector` inside a rAF and anchors the
-          editor popover to whatever it finds. The outer element is therefore a
-          `role="button"` span, not a `<button>` — a button cannot legally
-          contain another button, and the remove control has to be focusable in
-          its own right. */}
-      {rules.map((rule) => {
+      {/* ONE chip per live criterion. M3's input chip puts the trailing "×"
+          INSIDE the container — so the chip is the outer element and the
+          remove button nests in it. `data-workspace-chip` MUST stay on that
+          outer element: `addCriterion` anchors the editor popover to it. The
+          outer element is a `role="button"` span, not a `<button>` — a button
+          cannot legally contain another button. */}
+      {shared && rules.map((rule) => {
         // "Active" = the rule actually narrows something. A criterion added
-        // from the dropdown but never filled in is deliberately NOT tinted:
-        // the blue container is the app's one selection signal, and an empty
-        // rule has selected nothing yet.
+        // but never filled in is deliberately NOT tinted: the blue container
+        // is the app's one selection signal, and an empty rule has selected
+        // nothing yet.
         const isActive = rule.values.length > 0 || !needsValueInput(rule.operator)
         const open = (anchorEl: HTMLElement) => setEditing({ key: rule.key, anchorEl })
         return (
@@ -605,20 +619,16 @@ export function WorkspaceFilterBar({
               e.preventDefault()
               open(e.currentTarget)
             }}
-            className={`flex h-6 max-w-56 shrink-0 cursor-pointer items-center gap-1 rounded-m3-full border px-2 transition-colors ${
+            className={`flex h-9 max-w-56 shrink-0 cursor-pointer items-center gap-1 rounded-m3-full border px-3 transition-colors ${
               isActive
                 ? 'border-transparent bg-[var(--m3-secondary-container)] text-[var(--m3-on-secondary-container)] hover:bg-[var(--m3-row-selected-hover)]'
-                : 'border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] text-[var(--m3-on-surface)] hover:bg-[var(--m3-container-hover)]'
+                : 'border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] text-[var(--m3-on-surface)] hover:bg-[var(--m3-container-hover)]'
             }`}
             data-workspace-chip={rule.key}
             title={`${criterionLabel(t, rule.key)}: ${ruleSummary(t, rule)}`}
           >
             <span className="shrink-0 text-label-medium-md">{criterionLabel(t, rule.key)}</span>
-            <span
-              className={`truncate text-body-regular-xs ${
-                isActive ? '' : 'text-[var(--m3-on-surface-variant)]'
-              }`}
-            >
+            <span className={`truncate text-body-regular-xs ${isActive ? '' : 'text-[var(--m3-on-surface-variant)]'}`}>
               {ruleSummary(t, rule)}
             </span>
             <button
@@ -638,76 +648,86 @@ export function WorkspaceFilterBar({
         )
       })}
 
-      {available.length > 0 && (
+      {shared && available.length > 0 && (
         <SelectMenu
-          /* A portal-rendered custom menu, never a native <select> — this app
-             does not use them, and a native popup ignores the theme. */
+          /* A portal-rendered custom menu, never a native <select>. */
           value=""
           onChange={addCriterion}
           options={available.map((key) => ({ value: key, label: criterionLabel(t, key) }))}
           placeholder={t('splitView.sharedFilter.add', 'Filter')}
-          /* `hot-config-filter-select` is GONE: it is the Configure View
-             drawer's field chrome (drawer radius, drawer fill, drawer border)
-             and dragged a piece of a different surface into this strip. What
-             is left — `hot-select-trigger` — only lays out the label and the
-             chevron, so the assist-chip look below is free to own the shape. */
-          className="hot-quick-filter-control h-6 shrink-0 gap-1 rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-high)] pl-2.5 text-body-regular-xs transition-colors hover:bg-[var(--m3-container-hover)]"
+          className="hot-quick-filter-control h-9 shrink-0 gap-1.5 rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] pl-3 pr-2.5 text-label-medium-md transition-colors hover:bg-[var(--m3-container-hover)]"
           ariaLabel={t('splitView.sharedFilter.add', 'Filter')}
           dataAttributes={{ 'data-workspace-add-criterion': '' }}
         />
       )}
-      <span className="flex-1" />
 
-      {/* Degradation as a TONAL chip rather than loose coloured text: it now
-          reads as a thing in the strip, at the same 24px as every other
-          control, instead of a stray warning-coloured sentence floating in it. */}
-      {unmappedSummary.map(([key, panes]) => (
+      {/* Degradation as a TONAL chip rather than loose coloured text: it reads
+          as a thing in the bar, at the same height as every other control. */}
+      {shared && unmappedSummary.map(([key, panes]) => (
         <span
           key={key}
-          className="flex h-6 shrink-0 items-center gap-1 rounded-m3-full bg-[var(--m3-error-container)] px-2 text-[var(--m3-on-error-container)]"
+          className="flex h-9 shrink-0 items-center gap-1 rounded-m3-full bg-[var(--m3-error-container)] px-3 text-[var(--m3-on-error-container)]"
           title={t('splitView.sharedFilter.unmappedPanes', 'Not filtered: {panes}', {
             panes: panes.join(', '),
           })}
           data-workspace-unmapped={key}
         >
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span className="text-body-regular-xs">
+          <span className="text-body-regular-xs @max-[1400px]/wsbar:hidden">
             {t('splitView.sharedFilter.unmapped', '{count} not filtered by {criterion}', {
               count: String(panes.length),
               criterion: criterionLabel(t, key),
             })}
           </span>
+          <span className="hidden text-label-semibold-xs @max-[1400px]/wsbar:inline" aria-hidden="true">
+            {panes.length}
+          </span>
         </span>
       ))}
 
-      {/* A two-segment connected group, not a lone "× Per pane" button. The old
-          control was an action that read like a dismissal — an "×" beside a
-          noun — and never said what the workspace was doing INSTEAD. As a
-          segmented pair the current mode is visible (tinted with the same
-          `secondary-container` every other selection in the app uses) and the
-          other mode is one click away. The click handler is unchanged and stays
-          on the 'Per pane' segment with `data-workspace-filter-off`. */}
+      {/* "Wspólne | Per tabela" — an M3 connected button group. The current
+          mode takes the same `secondary-container` every other selection in
+          the app uses, and the other mode is one click away. */}
       <div
-        className="flex h-6 shrink-0 items-center overflow-hidden rounded-m3-full border border-[var(--m3-outline-variant)]"
-        role="group"
+        className="flex h-9 shrink-0 items-center overflow-hidden rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)]"
+        role="radiogroup"
         aria-label={t('splitView.sharedFilter.scope', 'Filter scope')}
       >
-        <span
-          className="flex h-full items-center bg-[var(--m3-secondary-container)] px-2.5 text-body-regular-xs text-[var(--m3-on-secondary-container)]"
-          aria-current="true"
-        >
-          {t('splitView.sharedFilter.toggleOnLabel', 'Shared')}
-        </span>
-        <button
-          type="button"
-          onClick={onToggleOff}
-          className="flex h-full items-center px-2.5 text-body-regular-xs text-[var(--m3-on-surface-variant)] transition-colors hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)]"
-          title={t('splitView.sharedFilter.toggleOffHint', 'Give every pane its own search back')}
-          data-workspace-filter-off=""
-        >
-          {t('splitView.sharedFilter.toggleOff', 'Per pane')}
-        </button>
+        {([true, false] as const).map((value) => {
+          const on = shared === value
+          return (
+            <button
+              key={String(value)}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => setShared(value)}
+              className={`flex h-full items-center px-3 text-label-medium-md transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard ${
+                value ? '' : 'border-l border-[var(--m3-outline-variant)]'
+              } ${
+                on
+                  ? 'bg-[var(--m3-secondary-container)] text-[var(--m3-on-secondary-container)]'
+                  : 'text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)]'
+              }`}
+              title={value
+                ? t('splitView.sharedFilter.toggleOnHint', 'Drive every pane from this search and filter')
+                : t('splitView.sharedFilter.toggleOffHint', 'Give every pane its own search back')}
+              {...(value ? { 'data-workspace-filter-on': '' } : { 'data-workspace-filter-off': '' })}
+            >
+              {value
+                ? t('splitView.sharedFilter.toggleOnLabel', 'Shared')
+                : t('splitView.sharedFilter.toggleOff', 'Per pane')}
+            </button>
+          )
+        })}
       </div>
+
+      {trailing && (
+        <>
+          <span className="mx-1 h-5 w-px shrink-0 bg-[var(--m3-outline-variant)]" aria-hidden="true" />
+          {trailing}
+        </>
+      )}
 
       {editing && editingRule && (
         <CriterionEditor

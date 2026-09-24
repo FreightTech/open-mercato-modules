@@ -64,7 +64,7 @@
 /* Full list pages wrap the toolbar+tabs+grid in a `.hot-card`; the container
    itself then becomes a transparent layout shell so the page canvas shows
    through behind the lead row (category tabs) and around the floating card. */
-.hot-appearance-v2.hot-container:has(.hot-card) {
+.hot-appearance-v2.hot-container[data-has-card="true"] {
   background: transparent;
 }
 /* The white floating card — toolbar, perspective tabs and grid sit on it.
@@ -99,10 +99,11 @@
   border: none;
   margin-bottom: 8px;
 }
-/* Divider ABOVE the perspectives row, separating the title/search toolbar from
-   the tabs. Drawn as an inset ::before, NOT a full-bleed border: it spans
-   almost the full width with a small gap at each end. */
+/* Divider ABOVE the perspectives row. Off: the design's header is one white
+   band with the tabs, no rule between them (gt-demo, 15.09). Kept as a rule
+   that draws nothing so a host can turn it back on in one place. */
 .hot-appearance-v2.hot-container .hot-tabs-row::before {
+  display: none;
   content: "";
   position: absolute;
   left: 8px;
@@ -397,10 +398,10 @@
    whichever edge still has hidden content, so partial cut-off columns fade out
    and signal "more this way". Driven by the same scroll-state attributes, so it
    auto-DISAPPEARS once that edge is fully scrolled. Scoped to
-   `:not(:has(.hot-toolbar))` so it never paints over a list page's toolbar
+   `:not([data-has-toolbar="true"])` so it never paints over a list page's toolbar
    (those tables use the sticky-column shadows instead). */
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-actions-scroll-shadow="true"]::after,
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-firstcol-scroll-shadow="true"]::before {
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-actions-scroll-shadow="true"]::after,
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-firstcol-scroll-shadow="true"]::before {
   content: "";
   position: absolute;
   top: 0;
@@ -412,12 +413,12 @@
   z-index: 15;
 }
 /* Right edge: more content to the RIGHT → fade out toward the right edge. */
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-actions-scroll-shadow="true"]::after {
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-actions-scroll-shadow="true"]::after {
   right: 0;
   background: linear-gradient(to right, transparent, var(--background-v2));
 }
 /* Left edge: scrolled right (content hidden LEFT) → fade out toward the left. */
-.hot-appearance-v2.hot-container:not(:has(.hot-toolbar))[data-firstcol-scroll-shadow="true"]::before {
+.hot-appearance-v2.hot-container:not([data-has-toolbar="true"])[data-firstcol-scroll-shadow="true"]::before {
   left: 0;
   background: linear-gradient(to left, transparent, var(--background-v2));
 }
@@ -448,15 +449,13 @@
      enough to look like a mistake rather than a decision, and the same
      mismatch that was fixed inside split panes. Vertical is unchanged. */
   margin: 4px 16px;
-  padding: 4px 16px;
-  /* `surface-container`, not `-low`: the tinted pill strip is the most
-     recognisable element of the M3 reference, and `-low` (#F8FAFC) against a
-     #FFFFFF page is a 3-value delta nobody can see. `surface-container`
-     (#F1F5F9 light / #16203A dark) is the step M3 actually specifies for a
-     raised chrome bar and reads clearly in both schemes. Costs no height —
-     the 4px margin is absorbed by the toolbar's own vertical padding. */
-  background-color: var(--m3-surface-container);
-  border-radius: var(--m3-shape-full);
+  padding: 4px 0;
+  /* The design's table header (gt-demo, 15.09) is a WHITE row inside the card:
+     the title and actions sit on the card, no tinted pill strip. With no pill
+     the toolbar needs no inner side padding; its 16px margin puts the title
+     on the table's first column. */
+  background-color: transparent;
+  border-radius: 0;
 }
 .hot-appearance-v2 .hot-toolbar .hot-toolbar-spacer {
   flex: 1;
@@ -485,8 +484,9 @@
 /* Only inset list-page grids (those with a toolbar) — the 16px aligns the grid
    with the toolbar title. Embedded/sub-tables render with `hideToolbar` (no
    `.hot-toolbar`); they should sit flush with their own section title, so they
-   get NO inset. `:has()` scopes the margin to toolbar'd tables only. */
-.hot-appearance-v2.hot-container:has(.hot-toolbar) .hot-virtual-container {
+   get NO inset. `[data-has-toolbar]` (set by DynamicTable, see the container)
+   scopes the margin to toolbar'd tables only. */
+.hot-appearance-v2.hot-container[data-has-toolbar="true"] .hot-virtual-container {
   margin-left: 16px;
   margin-right: 16px;
 }
@@ -2399,14 +2399,29 @@
   /* Horizontal margin dropped to 0: the card owns the pane's inset now, so the
      pill strip spans the full content width and its left edge lines up with the
      table's first column. Vertical margin is unchanged. */
-  margin: 2px 0;
-  padding: 2px 8px;            /* was 4px 8px, minus the 2px margin */
-  gap: 8px;                    /* was 12px */
+  /* The prototype's pane header (gt-demo `tHeadTop`, measured): a WHITE row
+     inside the card, no tinted pill, 8px below the card's top edge — the pill
+     sat 2px under the 16px corner and read as cramped against it. The card
+     owns the 16px sides, so the title lines up with a widget pane's title. */
+  margin: 8px 0 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  gap: 8px;
+  /* One height for every pane's header, CTA or not: without it a pane with a
+     "Utwórz …" button stood 7px taller than its neighbour and their titles,
+     tabs and grids no longer lined up across the row. 36px = the CTA + 2+2. */
+  min-height: 36px;
+  box-sizing: border-box;
+  align-items: center;
 }
+
 
 [data-split-view='true'] .hot-appearance-v2.hot-container .hot-tabs-row {
   margin-bottom: 0;            /* was 8px */
-  padding-right: 8px;          /* was 16px */
+  /* The first tab's pill starts on the card's 16px edge, under the title. */
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* The card's own inset — a pane already has a border and a divider around it,
@@ -2435,7 +2450,7 @@
 
 /* The children stop paying their own horizontal inset now that the card pays it
    once. Without these the two stack and the content sits 32px in. */
-[data-split-view='true'] .hot-appearance-v2.hot-container:has(.hot-toolbar) .hot-virtual-container,
+[data-split-view='true'] .hot-appearance-v2.hot-container[data-has-toolbar="true"] .hot-virtual-container,
 [data-split-view='true'] .hot-appearance-v2 .hot-virtual-container {
   margin-left: 0;
   margin-right: 0;
@@ -2443,9 +2458,15 @@
 
 /* Toolbar title: keep it (nothing else names the table in a pane) but stop it
    reserving a full-size heading's leading. */
+/* A pane's title is a card title, the same as a widget pane's (Figma widget
+   card; WidgetPane `text-body-medium-sm`): 14/20 medium. The page-heading
+   size it kept before made a table pane shout next to a widget pane. */
 [data-split-view='true'] .hot-appearance-v2 .hot-toolbar-title {
   margin: 0;
-  line-height: 1.2;
+  font-size: var(--text-body-medium-sm, 0.875rem);
+  line-height: var(--text-body-medium-sm--line-height, 1.25rem);
+  font-weight: var(--text-body-medium-sm--font-weight, 500);
+  letter-spacing: normal;
 }
 
 /* The page-level bleed margins do not apply inside a host. */
@@ -2648,4 +2669,127 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ── Floating pane actions (toolbar hidden) ─────────────────────────────────
+   A pane whose toolbar the user switched off still needs its ⚙ and ⋯, or the
+   switch that hid the toolbar is unreachable. They float in the top-right
+   corner and appear on hover (or keyboard focus), like the prototype's
+   floating gear. Rendered only when a host hides the toolbar, so this never
+   applies to a page's own table. */
+.hot-appearance-v2 .hot-pane-float-actions {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  /* Above the sticky column header (z-index 10, DynamicTable.css): with the
+     toolbar AND the tabs hidden, the header is the top row and it covered the
+     buttons, leaving an empty white pill. */
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--m3-shape-full);
+  background: var(--m3-surface-container-lowest);
+  box-shadow: var(--m3-elevation-1, 0 1px 2px rgb(0 0 0 / 0.12), 0 1px 3px 1px rgb(0 0 0 / 0.06));
+  opacity: 0;
+  transition: opacity var(--m3-duration-short3, 150ms) var(--m3-ease-standard, ease);
+}
+
+.hot-appearance-v2.hot-container:hover .hot-pane-float-actions,
+.hot-appearance-v2 .hot-pane-float-actions:focus-within {
+  opacity: 1;
+}
+
+/* The floating actions sit over the top-right corner, which with the toolbar
+   gone is where the tabs row's pagination lives. Reserve the corner on that
+   row (the prototype's `.noToolbar .views { padding-right }`), so the page-size
+   select is never under the ⚙. A sibling selector — no `:has()`. */
+[data-split-view] .hot-appearance-v2.hot-container .hot-pane-float-actions ~ .hot-tabs-row {
+  /* Out-specifies the pane's own tabs-row padding rules above. */
+  padding-right: 80px;
+}
+
+/* View tabs never wrap their own labels — at ANY width, not only under the
+   720px pane breakpoint above. Between ~720px and the width the tabs actually
+   need (a two-column workspace, a pane in full screen) they used to shrink and
+   break "Widok domyślny" onto two lines, doubling the row's height. Each tab
+   holds its natural width and the list scrolls, exactly as it does in a narrow
+   pane; pagination and the row's other controls hold their size. */
+.hot-appearance-v2.hot-container .hot-top-tabs-v2 {
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hot-appearance-v2.hot-container .hot-top-tabs-v2::-webkit-scrollbar {
+  display: none;
+}
+.hot-appearance-v2.hot-container .hot-top-tabs-v2 > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* In a workspace a table pane has no header of its own any more — the pane
+   IS the card — so its toolbar title is the only thing naming it. The 720px
+   container rule above hides the title for narrow grids; inside a split view
+   it stays, truncating before anything else in the row gives way. */
+[data-split-view='true'] .hot-appearance-v2 .hot-toolbar .hot-toolbar-title {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROWS AND HEADER — THE DESIGN'S TABLE (gt-demo DataTable, spec of 15.09)
+
+   The prototype separates rows with a 1px DIVIDER, not with a gap between
+   rounded "pill" rows, and not with alternating backgrounds: zebra is an
+   opt-in switch in the table ⚙ and is off by default. The header has no
+   fill; a stronger rule sits under it and thin separators between columns.
+
+   Performance (DynamicTable perf ledger): the rule is ONE border on the row
+   (`tr` is an absolutely positioned flex box of fixed height), not a border
+   per cell, and the row hover is one background on the row — no per-cell
+   work is added. `border-box` keeps the rule inside the row's height, so the
+   virtualizer's row height is unchanged.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.hot-appearance-v2 .hot-virtual-container .hot-table tbody tr {
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--m3-outline-faint);
+}
+
+/* No rounded row ends: rows are bands between rules now. */
+.hot-appearance-v2 .hot-virtual-container tbody tr > td:first-child,
+.hot-appearance-v2 .hot-virtual-container tbody tr > td:last-child {
+  border-radius: 0;
+}
+
+/* Row hover: the M3 state layer on the whole row (prototype: on-surface 8%;
+   the grid's hover token is the same role). */
+.hot-appearance-v2 .hot-virtual-container .hot-table tbody tr:hover {
+  background-color: var(--m3-row-hover);
+}
+
+/* Header: no fill, a stronger rule under it, thin separators between
+   columns — and no rounded bar ends. */
+.hot-appearance-v2.hot-container .hot-table th.hot-col-header,
+.hot-appearance-v2.hot-container .hot-table th.hot-row-header {
+  background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--m3-on-surface-variant) 40%, var(--m3-outline-variant));
+  border-right: 1px solid var(--m3-outline-variant);
+}
+.hot-appearance-v2.hot-container .hot-table thead tr th:first-child,
+.hot-appearance-v2.hot-container .hot-table thead tr th:last-child {
+  border-radius: 0;
+}
+.hot-appearance-v2.hot-container .hot-table thead tr th:last-child {
+  border-right: none;
+}
+.hot-appearance-v2 .hot-headers-sticky {
+  padding-bottom: 0;
 }

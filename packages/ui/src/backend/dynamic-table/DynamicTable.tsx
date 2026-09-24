@@ -44,6 +44,8 @@ import { useDensityPreference } from './hooks/useDensityPreference';
 import { DENSITY_ATTRIBUTE, resolveDensityRowHeight } from './types/density';
 import { DensityControl } from './components/DensityControl';
 import { ToolbarOverflow } from './components/ToolbarOverflow';
+import { TableDisplayContext, useTableDisplayHost } from './components/TableDisplayContext';
+import { TableSettingsMenu } from './components/TableSettingsMenu';
 import { dispatch, useEventHandlers } from './events/events';
 import {
   ColumnDef,
@@ -556,7 +558,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   siblingTableRefs,
   onRowClick,
   highlightedRowId,
-  actionsColumnWidth: actionsColumnWidthProp = 80,
+  actionsColumnWidth: actionsColumnWidthProp,
   enableComments = false,
   commentsEntityType,
   commentsCellTarget,
@@ -628,7 +630,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     onFullscreenChange,
     enableFillHandle = false,
     fillConfirmThreshold = 100,
-    readOnlyStyle = 'muted',
+    // The design's table does not tint read-only columns (gt-demo, 15.09): a
+    // grey column read as a stripe the user could not explain.
+    readOnlyStyle = 'normal',
     rowHoverStyle = 'default',
     disableBuiltinColumnMenu = false,
     borderless = false,
@@ -672,6 +676,24 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // footer/summary rows need `locale` for number formatting.
   const t = useT();
   const locale = useLocale();
+  // Per-pane display choices from a host (split view): zebra rows and the
+  // switches the ⚙ panel shows. Null outside a host — nothing changes then.
+  const displayHost = useTableDisplayHost();
+  // A pane's explicit zebra choice overrides the table's own default in BOTH
+  // directions; no choice keeps the default.
+  const effectiveStriped = displayHost?.striped ?? striped;
+  // The ⚙ switch shows what the grid actually does, not only what the pane
+  // stored — a table striped by config reads "on" until the user says otherwise.
+  const displayToggles = React.useMemo(
+    () =>
+      displayHost?.toggles.map((toggle) =>
+        toggle.key === 'striped' ? { ...toggle, checked: effectiveStriped } : toggle,
+      ) ?? [],
+    [displayHost, effectiveStriped],
+  );
+  // The card wrapper renders unless this is an embedded sub-table with no
+  // tabs. A host that hides the tabs row still wants the card.
+  const hasCard = !(hidePerspectiveTabs && !displayHost);
 
   // -------------------- REFS --------------------
   const storeRef = useRef<CellStore | null>(null);
@@ -682,7 +704,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   });
 
   // -------------------- CONSTANTS --------------------
-  const actionsColumnWidth = actionsColumnWidthProp;
 
   // -------------------- BASE COLUMNS --------------------
   // -------------------- LINKED (LOOKUP) COLUMNS --------------------
@@ -1076,7 +1097,23 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // none of these drop the empty column entirely. Recomputed on every render;
   // adding/removing a new row bumps `storeRevision` (see setStoreRevision),
   // which re-renders and re-reads `store.hasNewRows()` so the column toggles.
-  const showActionsColumn = !hideActionsColumn && (!!rowActions || !!actionsRenderer || store.hasNewRows());
+  // `rowActions` alone is not enough: a table may define it and return nothing
+  // for most rows (transports offer an action on tracked sea legs only), which
+  // left a wide, empty column on every page. The column appears when at least
+  // one loaded row has an action. One cheap call per row, only when the data or
+  // the callback changes.
+  const anyRowHasActions = useMemo(() => {
+    if (!rowActions) return false;
+    for (let index = 0; index < data.length; index++) {
+      if (rowActions(data[index], index).length > 0) return true;
+    }
+    return false;
+  }, [data, rowActions]);
+  const showActionsColumn = !hideActionsColumn && (anyRowHasActions || !!actionsRenderer || store.hasNewRows());
+  // A kebab-only column is the design's narrow trailing column; a custom
+  // renderer, or a new row's "Save" button, keeps the wider default.
+  const actionsColumnWidth =
+    actionsColumnWidthProp ?? (actionsRenderer || store.hasNewRows() ? 80 : ACTIONS_KEBAB_COLUMN_WIDTH);
 
   // Sticky-column scroll shadows (v2 affordance — CSS scopes them):
   //  • Actions column gets a LEFT-edge shadow while there's content still to
@@ -1154,13 +1191,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   const totalWidth = useMemo(() => {
     return (
       cols.reduce((sum, _, idx) => sum + store.getColumnWidth(idx), 0) +
-      (rowHeaders ? 50 : 0) +
+      (rowHeaders ? ROW_HEADER_WIDTH : 0) +
       (showActionsColumn ? actionsColumnWidth : 0)
     );
   }, [cols, store, rowHeaders, actionsColumnWidth, showActionsColumn, storeRevision]);
 
   /** Row furniture that sits outside the column widths. */
-  const furnitureWidth = (rowHeaders ? 50 : 0) + (showActionsColumn ? actionsColumnWidth : 0);
+  const furnitureWidth = (rowHeaders ? ROW_HEADER_WIDTH : 0) + (showActionsColumn ? actionsColumnWidth : 0);
 
   // Stable width getter for the pinned totals row, so its `memo` survives a
   // render that changed nothing it cares about. Widths only move when the store
@@ -1187,18 +1224,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // When grouped, virtualizer count is visual rows length; otherwise original row count
   const virtualizerCount = isGrouped ? groupingResult.visualRows!.length : rowCount;
 
-  // Row height by density: sm=36, md=44; default 32 (Figma 220:2935 — tighter
-  // baseline for all v2 tables). Includes the 4px inter-row gap (2px transparent
-  // border top + bottom) so the visible row pill is ~28px, matching Figma.
-  // The user's density preference wins when they have actually expressed one.
-  // At `comfortable` (the default) this is the ORIGINAL expression, unchanged —
-  // that is what makes shipping density a pixel-level no-op for everyone who
-  // never opens the picker. Row height is the single number CSS cannot own:
-  // rows are absolutely positioned by the virtualizer, so JS has to know it.
-  const dataRowHeight =
-    densityLevel !== 'comfortable'
-      ? resolveDensityRowHeight(densityLevel)
-      : density === 'md' ? 44 : density === 'sm' ? 36 : 32;
+  // Row height is the user's density level — the designer's Roomy 48 /
+  // Medium 44 / Tight 34, Tight by default. The legacy `density` prop no
+  // longer decides it: FMS tables forced 44px through `density="md"`, which is
+  // what kept every list page at Medium however the design said otherwise.
+  // Row height is the single number CSS cannot own: rows are absolutely
+  // positioned by the virtualizer, so JS has to know it.
+  const dataRowHeight = resolveDensityRowHeight(densityLevel);
 
   // Row selection (v2 checkbox column for bulk / grouped actions).
   // Selection identity must be unique per visual row — fall back to
@@ -1593,6 +1625,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
 
   const handleModernSortDesc = useCallback(
     (colIndex: number) => handleSortDirectionChange(colIndex, 'desc'),
+    [handleSortDirectionChange],
+  );
+
+  const handleModernSortClear = useCallback(
+    (colIndex: number) => handleSortDirectionChange(colIndex, null),
     [handleSortDirectionChange],
   );
 
@@ -2004,11 +2041,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     pinnedRightIndices: pinnedColumnIndices.right,
     forcedIndices: forcedColumnIndices,
     overscan: columnOverscan,
-    // ROW_HEADER_WIDTH (32), NOT the 50 that `totalWidth` uses for the same
-    // gutter — the two disagree today (a pre-existing bug). The 18px difference
-    // moves only the scroll-range arithmetic, well inside one overscan column,
-    // and never touches a spacer width. Do NOT "fix" it by swapping `totalWidth`
-    // for the virtualizer's: that visibly narrows every table by 18px.
+    // The same gutter width `totalWidth` and the painted row header use. When
+    // this disagreed (32 vs 50) scrollToColumn revealed a column 18px short of
+    // the right edge.
     leadingWidth: rowHeaders ? ROW_HEADER_WIDTH : 0,
     trailingWidth: showActionsColumn ? actionsColumnWidth : 0,
     widthRevision: storeRevision,
@@ -2080,15 +2115,38 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     const sync = () => {
       const editing = store.getEditingCell();
       const sel = store.getSelection();
+      // A whole-column selection (a header click) spans every row; its focus
+      // is the LAST row by construction, and following it scrolled the grid to
+      // the bottom on every header click. There is no row to keep in view.
+      if (!editing && sel.type === 'colRange') return;
       const target = editing?.row ?? sel.focus?.row ?? sel.anchor?.row;
       if (target == null || target < 0 || target >= store.getRowCount()) return;
       if (target === lastRow) return;
       lastRow = target;
-      // Already painted → nothing to do. A drag-select's focus can only ever be
-      // a mounted cell, so this is also what keeps a drag from auto-scrolling.
-      const mounted = rowVirtualizer.getVirtualItems();
-      if (mounted.length === 0) return;
-      if (target >= mounted[0].index && target <= mounted[mounted.length - 1].index) return;
+      // MOUNTED is not VISIBLE: with overscan the next ~10 rows below the edge
+      // are always mounted, so a mounted-only bail let ArrowDown walk the caret
+      // off-screen for ten rows before anything scrolled (measured: caret
+      // hidden after 38 of 80 arrow presses on a 100-row grid). A mounted row
+      // is measured against the band rows are actually visible in — below the
+      // sticky header, above the bottom edge and a sticky footer — and the
+      // scroller moves just enough. Looked up by `data-row` (the DATA index),
+      // so grouped views measure the right row too. A drag-select's focus is
+      // always under the pointer, hence visible, so a drag never auto-scrolls.
+      const scroller = tableRef.current;
+      const rowEl = scroller?.querySelector<HTMLElement>(`tr[data-row="${target}"]`);
+      if (scroller && rowEl) {
+        const view = scroller.getBoundingClientRect();
+        const header = scroller.querySelector<HTMLElement>('.hot-headers-sticky');
+        const footer = scroller.querySelector<HTMLElement>('.hot-footer-totals');
+        const bandTop = Math.max(view.top, header ? header.getBoundingClientRect().bottom : view.top);
+        const bandBottom =
+          view.top + scroller.clientHeight -
+          (footer && getComputedStyle(footer).position === 'sticky' ? footer.offsetHeight : 0);
+        const row = rowEl.getBoundingClientRect();
+        if (row.top < bandTop) scroller.scrollTop -= bandTop - row.top;
+        else if (row.bottom > bandBottom) scroller.scrollTop += row.bottom - bandBottom;
+        return;
+      }
       rowVirtualizer.scrollToIndex(target, { align: 'auto' });
     };
     const offSelection = store.subscribeToSelection(sync);
@@ -3677,7 +3735,14 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       data-readonly-style={readOnlyStyle}
       data-density={density || undefined}
       {...densityAttribute}
-      data-striped={striped ? 'true' : undefined}
+      data-striped={effectiveStriped ? 'true' : undefined}
+      // What the container holds, as attributes — NOT discovered by CSS
+      // `:has(.hot-toolbar)` / `:has(.hot-card)`. A container-level `:has()`
+      // with a descendant argument makes every DOM insertion inside the grid
+      // (i.e. every row the virtualiser mounts while scrolling) a candidate
+      // for re-matching the container. React already knows the answer.
+      data-has-toolbar={!hideToolbar ? 'true' : undefined}
+      data-has-card={hasCard ? 'true' : undefined}
       data-actions-scroll-shadow={actionsScrollShadow ? 'true' : undefined}
       data-firstcol-scroll-shadow={firstColScrollShadow ? 'true' : undefined}
       data-frozen-shadow={frozenColShadow ? 'true' : undefined}
@@ -3707,7 +3772,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           the lead row (category tabs) above stays OUTSIDE this card. Embedded
           sub-tables (no perspective tabs) use `display:contents` so the wrapper
           is inert and they keep rendering flush. */}
-      <div className={hidePerspectiveTabs ? 'contents' : `hot-card${shouldFillHeight ? ' flex flex-col flex-1 min-h-0' : ''}`}>
+      {/* A host that hides the tabs row still wants the card: the tabs are a
+          user choice there, not a sign that this is an embedded sub-table. */}
+      <div className={!hasCard ? 'contents' : `hot-card${shouldFillHeight ? ' flex flex-col flex-1 min-h-0' : ''}`}>
+
+      {/* Toolbar hidden inside a host: the ⚙ and ⋯ float in the corner on
+          hover, or hiding the toolbar would hide the way to bring it back. */}
+      {hideToolbar && displayHost && (
+        <div className="hot-pane-float-actions" data-pane-float-actions="">
+          <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
+          <ToolbarOverflow showDensity={false} extras={toolbarOverflowExtras} />
+        </div>
+      )}
 
       {!hideToolbar && (
         <div className="hot-toolbar">
@@ -3721,9 +3797,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           {!hideSearch && (
             <SearchBar
               tableRef={tableRef}
-              placeholder={searchPlaceholder ?? 'Search...'}
+              placeholder={searchPlaceholder ?? t('dynamicTable.search.placeholder', 'Search...')}
               debounceMs={searchDebounceMs}
               renderSuggestions={searchSuggestions}
+              initialValue={searchQuery}
             />
           )}
 
@@ -3808,14 +3885,19 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 )}
               </>
             ) : (
+              <>
+              {displayHost && (
+                <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
+              )}
               <ToolbarOverflow
                 onExport={hideExportButton ? undefined : handleExportAll}
                 exportDisabled={isExportingAll}
-                showDensity={!hideDensityControl}
+                showDensity={!hideDensityControl && !displayHost}
                 densityTableKey={tableId}
                 onFullscreen={enableFullscreen && !isFullscreen ? handleEnterFullscreen : undefined}
                 extras={toolbarOverflowExtras}
               />
+              </>
             )}
           </div>
 
@@ -4052,6 +4134,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 modernLayout={!disableBuiltinColumnMenu}
                 onSortAsc={handleModernSortAsc}
                 onSortDesc={handleModernSortDesc}
+                onSortClear={handleModernSortClear}
                 onFilterByField={handleModernFilterByField}
                 /* A1 — the header quick filter writes straight into the same
                    ephemeral `filters` state the Configure View drawer edits.
@@ -4398,6 +4481,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   );
 
   return (
+      // Reset for the subtree: a grid nested in this one (a drawer's sub-table)
+      // must not pick up the pane's display settings.
+      <TableDisplayContext.Provider value={null}>
       <TableDateFormatContext.Provider value={dateFormat}>
       <CellStoreContext.Provider value={store}>
         {isFullscreen ? (
@@ -4413,7 +4499,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         )}
       </CellStoreContext.Provider>
       </TableDateFormatContext.Provider>
+      </TableDisplayContext.Provider>
   );
 };
+
+/** Width of the trailing column when it only holds the row kebab. */
+const ACTIONS_KEBAB_COLUMN_WIDTH = 44;
 
 export default DynamicTable;

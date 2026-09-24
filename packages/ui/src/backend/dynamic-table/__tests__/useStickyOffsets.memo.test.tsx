@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react'
-import { useStickyOffsets } from '../hooks/index'
+import { useStickyOffsets, ROW_HEADER_WIDTH } from '../hooks/index'
 import { createCellStore } from '../store/index'
 import type { ColumnDef } from '../types/index'
 
@@ -70,6 +70,8 @@ describe('useStickyOffsets — referential stability', () => {
     rerender()
 
     expect(result.current).not.toBe(first)
-    expect(result.current.leftOffsets[0]).toBe(32)
+    // The painted row-header gutter (RowHeaderCell renders 50px).
+    expect(result.current.leftOffsets[0]).toBe(ROW_HEADER_WIDTH)
+    expect(ROW_HEADER_WIDTH).toBe(50)
   })
 })

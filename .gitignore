@@ -24,3 +24,10 @@ dist/
 *.log
 .idea/
 .vscode/
+
+# DynamicTable bench build outputs
+packages/ui/perf/dist/
+packages/ui/perf/dist-base/
+packages/ui/perf/.base/
+.ai/perf/profiles/
+.ai/perf/results/*.png

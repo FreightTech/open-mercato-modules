@@ -110,13 +110,13 @@ const firstRowHeight = () => {
 describe('density — mounted in the grid', () => {
   it('carries the density attribute on the grid container, so ONE switch restyles everything', () => {
     render(harness())
-    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('comfortable')
+    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('dense')
   })
 
-  it('defaults to comfortable and renders at TODAY\'S row height — opting out is a no-op', () => {
+  it('defaults to Tight and renders its 34px rows — the designer\'s default', () => {
     render(harness())
-    expect(firstRowHeight()).toBe(`${DENSITY_METRICS.comfortable.rowHeight}px`)
-    expect(firstRowHeight()).toBe('32px')
+    expect(firstRowHeight()).toBe(`${DENSITY_METRICS.dense.rowHeight}px`)
+    expect(firstRowHeight()).toBe('34px')
   })
 
 
@@ -138,7 +138,7 @@ function openDensityControls(): void {
   }
 }
 
-function densityOption(level: 'comfortable' | 'compact' | 'dense'): HTMLElement {
+function densityOption(level: 'dense' | 'compact' | 'comfortable'): HTMLElement {
   openDensityControls()
   return document.querySelector(`[data-density-option="${level}"]`) as HTMLElement
 }
@@ -148,22 +148,22 @@ function densityOption(level: 'comfortable' | 'compact' | 'dense'): HTMLElement 
     // The segmented control marks the current level with `aria-pressed`, which
     // is what a screen reader announces now that there is no collapsed trigger
     // carrying the level in its label.
-    const current = densityOption('comfortable')
+    const current = densityOption('dense')
     expect(current).not.toBeNull()
     expect(current.getAttribute('aria-pressed')).toBe('true')
-    expect(densityOption('dense').getAttribute('aria-pressed')).toBe('false')
+    expect(densityOption('comfortable').getAttribute('aria-pressed')).toBe('false')
   })
 
-  it('lets the user pick a tighter level, and the whole grid restyles + re-measures', () => {
+  it('lets the user pick another level, and the whole grid restyles + re-measures', () => {
     render(harness())
-    const dense = densityOption('dense')
-    expect(dense).not.toBeNull()
-    act(() => { fireEvent.click(dense) })
+    const roomy = densityOption('comfortable')
+    expect(roomy).not.toBeNull()
+    act(() => { fireEvent.click(roomy) })
 
-    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('dense')
+    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('comfortable')
     // Row height is the ONE number CSS cannot own — rows are absolutely
     // positioned by the virtualiser, so JS has to know it.
-    expect(firstRowHeight()).toBe(`${DENSITY_METRICS.dense.rowHeight}px`)
+    expect(firstRowHeight()).toBe(`${DENSITY_METRICS.comfortable.rowHeight}px`)
   })
 
   it('persists the choice under a USER-scoped key and never through a perspective', () => {
@@ -195,16 +195,17 @@ function densityOption(level: 'comfortable' | 'compact' | 'dense'): HTMLElement 
     expect(
       document.querySelector('button[aria-haspopup="listbox"][aria-label*="density"]'),
     ).toBeNull()
-    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('comfortable')
+    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('dense')
   })
 
-  it('leaves the LEGACY developer density prop alone — the two attributes are different axes', () => {
+  it('the LEGACY developer density prop no longer decides the row height — the user\'s level does', () => {
     render(harness({ density: 'md' }))
-    // `data-density` is what DynamicTable.v2.css keys `:not([data-density])` on;
-    // reusing it for the user preference would silently switch those rules off.
+    // `data-density` is still emitted (DynamicTable.v2.css keys a few rules on
+    // it) and stays a separate attribute from the user preference.
     expect(container().getAttribute('data-density')).toBe('md')
-    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('comfortable')
-    expect(firstRowHeight()).toBe('44px')
+    expect(container().getAttribute(DENSITY_ATTRIBUTE)).toBe('dense')
+    // FMS forced 44px through `density="md"`; the designer's default is 34.
+    expect(firstRowHeight()).toBe('34px')
   })
 })
 

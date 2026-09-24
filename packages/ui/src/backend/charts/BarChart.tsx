@@ -52,6 +52,12 @@ export type BarChartProps = {
   stacked?: boolean
   /** Axis-parallel reference lines (target / zero plotLine). */
   referenceLines?: BarChartReferenceLine[]
+  /**
+   * Fill the parent's height instead of the fixed 200px. For a chart inside a
+   * sized box (a dashboard or workspace pane): a fixed height overflowed a
+   * short pane and put a scrollbar over the chart.
+   */
+  fillHeight?: boolean
 }
 
 function defaultValueFormatter(value: number): string {
@@ -82,6 +88,7 @@ export function BarChart({
   getBarColor,
   stacked = false,
   referenceLines,
+  fillHeight = false,
 }: BarChartProps) {
   const getSeriesColor = (idx: number): string => {
     return resolveChartColor(colors?.[idx], idx)
@@ -94,7 +101,7 @@ export function BarChart({
     return (
       <div className={wrapperClass}>
         {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
-        <div className="flex h-40 sm:h-48 items-center justify-center">
+        <div className={fillHeight ? 'flex h-full min-h-[7rem] items-center justify-center' : 'flex h-40 sm:h-48 items-center justify-center'}>
           <p className="text-sm text-destructive">{error}</p>
         </div>
       </div>
@@ -105,7 +112,7 @@ export function BarChart({
     return (
       <div className={wrapperClass}>
         {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
-        <div className="flex h-40 sm:h-48 items-center justify-center">
+        <div className={fillHeight ? 'flex h-full min-h-[7rem] items-center justify-center' : 'flex h-40 sm:h-48 items-center justify-center'}>
           <Spinner className="h-6 w-6 text-muted-foreground" />
         </div>
       </div>
@@ -116,7 +123,7 @@ export function BarChart({
     return (
       <div className={wrapperClass}>
         {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
-        <div className="flex h-40 sm:h-48 items-center justify-center">
+        <div className={fillHeight ? 'flex h-full min-h-[7rem] items-center justify-center' : 'flex h-40 sm:h-48 items-center justify-center'}>
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         </div>
       </div>
@@ -124,7 +131,7 @@ export function BarChart({
   }
 
   const isHorizontal = layout === 'horizontal'
-  const chartHeight = isHorizontal ? Math.max(200, data.length * 28) : 200
+  const chartHeight = fillHeight ? '100%' : isHorizontal ? Math.max(200, data.length * 28) : 200
 
   const chartContent = (
     <ResponsiveContainer width="100%" height={chartHeight}>
@@ -198,9 +205,9 @@ export function BarChart({
   )
 
   return (
-    <div className={wrapperClass}>
+    <div className={fillHeight ? `flex h-full min-h-0 flex-col ${wrapperClass}` : wrapperClass}>
       {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
-      {chartContent}
+      {fillHeight ? <div className="min-h-0 flex-1">{chartContent}</div> : chartContent}
     </div>
   )
 }

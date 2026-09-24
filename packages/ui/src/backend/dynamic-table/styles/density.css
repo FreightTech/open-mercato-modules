@@ -42,43 +42,82 @@
    ═════════════════════════════════════════════════════════════════════════ */
 
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE DESIGNER'S SCALE — Roomy / Medium / Tight
+
+   Taken from the design prototype (gt-demo: TableSettingsMenu +
+   tokens/material.css): three row heights and the SAME type at every level —
+   density changes the air around the data, never the size of the data.
+   Tight is the default for every section ("default działów = Tight",
+   decision of 02.09).
+
+       level id      label    row    cell padding (y / x)
+       dense         Tight    34px    6 / 8
+       compact       Medium   44px   10 / 8
+       comfortable   Roomy    48px   12 / 8
+
+   The ids predate this scale and are persisted (localStorage, perspectives),
+   so they stay; only what they mean changed.
+
+   Rows are separated by a 1px rule on the row itself (DynamicTable.v2.css,
+   "ROWS AND HEADER"), inside the row height; cells carry no gap borders.
+   The editor fills the row's content box: row − 1px rule − 2 × inset.
+   ═════════════════════════════════════════════════════════════════════════ */
+
 /* ───────────────────────────────────────────────────────────────────────────
-   LEVEL 1 — comfortable   (THE DEFAULT)
-
-   TODAY'S SIZING, EXACTLY. Every value below was read out of the shipped
-   stylesheets and component before being written here:
-
-     row height 32px      DynamicTable.tsx:708 — `dataRowHeight` default (the
-                          32 branch; `sm`=36 / `md`=44 belong to the legacy
-                          `density` prop, a different axis)
-     cell padding 4/8     DynamicTable.v2.css — ".hot-table td.hot-cell"
-     inter-row gap 2+2    DynamicTable.v2.css — border-top/bottom
-                          "2px solid transparent" (4px total gap, rows read as
-                          separated pills), NO row separators
-     header padding 6/8   DynamicTable.v2.css — "th.hot-col-header"
-     header height auto   content-driven (16px line-box + 12px padding ≈ 28px);
-                          NOT pinned today, so it is NOT pinned here
-     header weight 500    DynamicTable.v2.css — "th.hot-col-header"
-     data type 12/16      body/regular/xs, on "td, th" directly
-     mono type 12/16      code/regular/sm, on ".cell-mono"
-     badge 2/10, 12/16    label/semibold/xs, on ".cell-badge"
-
-   NOTE the deliberate asymmetry below: this block DECLARES the baseline but
-   the consuming rules SKIP it (`:not([data-density-level="comfortable"])`).
-   Comfortable is therefore a no-op by CONSTRUCTION, not by careful
-   restatement — zero rules match, so there is nothing to get subtly wrong,
-   and no concurrent edit to DynamicTable.v2.css can drift the default out
-   from under us. The values are still declared because they are the baseline
-   of record, they are readable in DevTools, and `types/density.ts` mirrors
-   `--dt-row-height` for the virtualizer.
+   Tight — 34px   (THE DEFAULT)
+   The prototype's `--md-table-row-compact`.
    ───────────────────────────────────────────────────────────────────────── */
-.hot-container[data-density-level="comfortable"] {
-  --dt-row-height: 32px;
-  --dt-row-gap-top: 2px;
-  --dt-row-gap-bottom: 2px;
+.hot-container[data-density-level="dense"] {
+  --dt-row-height: 34px;
+  --dt-row-gap-top: 0px;
+  --dt-row-gap-bottom: 0px;
   --dt-row-rule-color: transparent;
 
-  --dt-cell-pad-y: 4px;
+  --dt-cell-pad-y: 6px;
+  --dt-cell-pad-x: 8px;
+
+  --dt-header-height: auto;
+  --dt-header-pad-y: 6px;
+  --dt-header-pad-x: 8px;
+  --dt-header-gap: 2px;
+
+  --dt-cell-font-size: var(--text-body-regular-xs, 0.75rem);
+  --dt-cell-line-height: var(--text-body-regular-xs--line-height, 1rem);
+  --dt-cell-letter-spacing: inherit;
+
+  --dt-mono-font-size: var(--text-code-regular-sm, 0.75rem);
+  --dt-mono-line-height: var(--text-code-regular-sm--line-height, 1rem);
+  --dt-mono-letter-spacing: inherit;
+
+  --dt-header-font-size: var(--text-body-regular-xs, 0.75rem);
+  --dt-header-line-height: var(--text-body-regular-xs--line-height, 1rem);
+  --dt-header-letter-spacing: inherit;
+  --dt-header-font-weight: 500;
+
+  --dt-badge-pad-y: 2px;
+  --dt-badge-pad-x: 10px;
+  --dt-badge-font-size: var(--text-label-semibold-xs, 0.75rem);
+  --dt-badge-line-height: var(--text-label-semibold-xs--line-height, 1rem);
+
+  --dt-editor-inset-y: 3px;
+  --dt-editor-inset-x: 6px;
+  --dt-editor-pad-x: 14px;
+  --dt-editor-line-height: 27px;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Medium — 44px
+   The prototype's `--md-table-row-medium` — and the height FMS list tables
+   used to force through the legacy `density="md"` prop.
+   ───────────────────────────────────────────────────────────────────────── */
+.hot-container[data-density-level="compact"] {
+  --dt-row-height: 44px;
+  --dt-row-gap-top: 0px;
+  --dt-row-gap-bottom: 0px;
+  --dt-row-rule-color: transparent;
+
+  --dt-cell-pad-y: 10px;
   --dt-cell-pad-x: 8px;
 
   --dt-header-height: auto;
@@ -107,42 +146,25 @@
   --dt-editor-inset-y: 4px;
   --dt-editor-inset-x: 6px;
   --dt-editor-pad-x: 14px;
-  --dt-editor-line-height: 24px;
+  --dt-editor-line-height: 35px;
 }
 
-
 /* ───────────────────────────────────────────────────────────────────────────
-   LEVEL 2 — compact
-
-   SAME 12px type as today. Only the geometry tightens. This is the level for
-   somebody who wants more rows but is still READING the table, not scanning
-   it — and it is the safe recommendation, because no glyph gets smaller so
-   nothing that was legible stops being legible.
-
-   Where the 6px comes from: 32 → 26 is the inter-row gap (4px → 2px) plus the
-   vertical padding (8px → 4px). The 16px line-box is untouched. The content
-   box stays 20px, i.e. EXACTLY as much room for the text as comfortable has —
-   compact spends none of its saving on the glyphs, all of it on the gaps.
-
-     26 = 1 (top border) + 2 (pad) + 20 (content) + 2 (pad) + 1 (bottom border)
-
-   Horizontal padding drops 8 → 6px on both sides: 4px more usable text per
-   column at the same column width. That is the axis workshop item A16 is
-   actually about ("roughly half the needed columns fit").
+   Roomy — 48px
+   The prototype's `--md-table-row-comfortable`.
    ───────────────────────────────────────────────────────────────────────── */
-.hot-container[data-density-level="compact"] {
-  --dt-row-height: 26px;
-  --dt-row-gap-top: 1px;
-  --dt-row-gap-bottom: 1px;
+.hot-container[data-density-level="comfortable"] {
+  --dt-row-height: 48px;
+  --dt-row-gap-top: 0px;
+  --dt-row-gap-bottom: 0px;
   --dt-row-rule-color: transparent;
 
-  --dt-cell-pad-y: 2px;
-  --dt-cell-pad-x: 6px;
+  --dt-cell-pad-y: 12px;
+  --dt-cell-pad-x: 8px;
 
-  /* 16px line-box + 2×4px padding = 24px exactly. */
-  --dt-header-height: 24px;
-  --dt-header-pad-y: 4px;
-  --dt-header-pad-x: 6px;
+  --dt-header-height: auto;
+  --dt-header-pad-y: 6px;
+  --dt-header-pad-x: 8px;
   --dt-header-gap: 2px;
 
   --dt-cell-font-size: var(--text-body-regular-xs, 0.75rem);
@@ -156,84 +178,17 @@
   --dt-header-font-size: var(--text-body-regular-xs, 0.75rem);
   --dt-header-line-height: var(--text-body-regular-xs--line-height, 1rem);
   --dt-header-letter-spacing: inherit;
-  --dt-header-font-weight: 600;
+  --dt-header-font-weight: 500;
 
-  /* 16px line-box + 2×1px padding + 2×1px border = 20px, inside a 20px box. */
-  --dt-badge-pad-y: 1px;
-  --dt-badge-pad-x: 8px;
+  --dt-badge-pad-y: 2px;
+  --dt-badge-pad-x: 10px;
   --dt-badge-font-size: var(--text-label-semibold-xs, 0.75rem);
   --dt-badge-line-height: var(--text-label-semibold-xs--line-height, 1rem);
 
-  --dt-editor-inset-y: 2px;
-  --dt-editor-inset-x: 4px;
-  --dt-editor-pad-x: 8px;
-  --dt-editor-line-height: 20px;
-}
-
-
-/* ───────────────────────────────────────────────────────────────────────────
-   LEVEL 3 — dense   (maximum information)
-
-   The power-user setting: a wide monitor, a whole working picture, scanning
-   rather than reading. 20px rows with 11px data and 10px headers — which is,
-   not by accident, Excel's own default row box. Users who live in this table
-   all day already read spreadsheets at exactly this density.
-
-     20 = 0 (top border) + 1 (pad) + 17 (content) + 1 (pad) + 1 (bottom rule)
-
-   The 17px content box carries a 14px line-box with 1.5px of slack above and
-   below, so descenders never clip and the text stays optically centred.
-
-   BORDER TREATMENT CHANGES HERE, deliberately. comfortable and compact
-   separate rows with WHITESPACE (transparent gap borders → rounded pills).
-   At 20px there is no whitespace left to spend, so dense switches to the
-   classic spreadsheet treatment: no gap, and a 1px hairline rule under each
-   row. This is not a cosmetic preference — at 20px, with 20+ columns, the
-   hairline is what lets the eye track a single record from the leftmost
-   column to the rightmost without slipping a row. Whitespace separation stops
-   working long before the type does.
-
-   Horizontal padding drops to 4px, the tightest that still keeps adjacent
-   columns' text visually distinct.
-   ───────────────────────────────────────────────────────────────────────── */
-.hot-container[data-density-level="dense"] {
-  --dt-row-height: 20px;
-  --dt-row-gap-top: 0px;
-  --dt-row-gap-bottom: 1px;
-  --dt-row-rule-color: var(--table-v2-divider);
-
-  --dt-cell-pad-y: 1px;
-  --dt-cell-pad-x: 4px;
-
-  /* 12px line-box + 2×3px padding = 18px; pinned to 20 to match the data row. */
-  --dt-header-height: 20px;
-  --dt-header-pad-y: 3px;
-  --dt-header-pad-x: 4px;
-  --dt-header-gap: 0px;
-
-  --dt-cell-font-size: var(--text-body-regular-2xs, 0.6875rem);
-  --dt-cell-line-height: var(--text-body-regular-2xs--line-height, 0.875rem);
-  --dt-cell-letter-spacing: var(--text-body-regular-2xs--letter-spacing, 0.01em);
-
-  --dt-mono-font-size: var(--text-code-regular-2xs, 0.6875rem);
-  --dt-mono-line-height: var(--text-code-regular-2xs--line-height, 0.875rem);
-  --dt-mono-letter-spacing: var(--text-code-regular-2xs--letter-spacing, 0.01em);
-
-  --dt-header-font-size: var(--text-label-semibold-2xs, 0.625rem);
-  --dt-header-line-height: var(--text-label-semibold-2xs--line-height, 0.75rem);
-  --dt-header-letter-spacing: var(--text-label-semibold-2xs--letter-spacing, 0.02em);
-  --dt-header-font-weight: var(--text-label-semibold-2xs--font-weight, 600);
-
-  /* 12px line-box + 2×1px border = 14px, inside a 17px box. */
-  --dt-badge-pad-y: 0px;
-  --dt-badge-pad-x: 6px;
-  --dt-badge-font-size: var(--text-label-semibold-2xs, 0.625rem);
-  --dt-badge-line-height: var(--text-label-semibold-2xs--line-height, 0.75rem);
-
-  --dt-editor-inset-y: 1px;
-  --dt-editor-inset-x: 2px;
-  --dt-editor-pad-x: 6px;
-  --dt-editor-line-height: 18px;
+  --dt-editor-inset-y: 4px;
+  --dt-editor-inset-x: 6px;
+  --dt-editor-pad-x: 14px;
+  --dt-editor-line-height: 39px;
 }
 
 
@@ -243,13 +198,12 @@
    ONE set, driven entirely by the variables above. Adding a fourth level means
    adding a variable block — never touching anything below this line.
 
-   The guard
-       .hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"])
-   does two jobs:
-     1. it EXCLUDES the baseline, so `comfortable` is a provable no-op;
-     2. it out-specifies the DynamicTable.v2.css rules it replaces (adds two
-        attribute selectors on top of the same class chain), so it wins on
-        specificity and does not depend on import order.
+   The selector
+       .hot-appearance-v2.hot-container[data-density-level]
+   applies to EVERY level — the designer's scale owns the geometry of all
+   three — and out-specifies the DynamicTable.v2.css rules it replaces (an
+   extra attribute selector on the same class chain), so it wins on
+   specificity and does not depend on import order.
 
    It matches any FUTURE level automatically.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -259,8 +213,8 @@
    with the shorthand; overriding just the widths (and the bottom colour) keeps
    its `solid` style and the `background-clip: padding-box` contract intact —
    which is what makes the fill stop at the gap instead of bleeding into it. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table td.hot-cell,
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table td.hot-row-header {
+.hot-appearance-v2.hot-container[data-density-level] .hot-table td.hot-cell,
+.hot-appearance-v2.hot-container[data-density-level] .hot-table td.hot-row-header {
   padding-top: var(--dt-cell-pad-y);
   padding-bottom: var(--dt-cell-pad-y);
   padding-left: var(--dt-cell-pad-x);
@@ -281,15 +235,15 @@
    The gutter is NOT scaled with density: the indicator is a fixed-size icon
    pinned at `right: 10px`, so the space it needs is the same at every level.
    Shrinking this with `--dt-cell-pad-x` is what caused the overlap. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table td.hot-cell[data-has-comment="true"],
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table td.hot-cell:has(> .cell-comment-indicator-ghost) {
+.hot-appearance-v2.hot-container[data-density-level] .hot-table td.hot-cell[data-has-comment="true"],
+.hot-appearance-v2.hot-container[data-density-level] .hot-table td.hot-cell:has(> .cell-comment-indicator-ghost) {
   padding-right: 28px;
 }
 
 /* The row-header (checkbox) column keeps its own centring but must not keep
    comfortable's 8px sides, or the checkbox column stays wide while every data
    column narrows. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table td.hot-row-header {
+.hot-appearance-v2.hot-container[data-density-level] .hot-table td.hot-row-header {
   padding-left: 0;
   padding-right: 0;
 }
@@ -298,8 +252,8 @@
 /* Applied to `td`/`th` DIRECTLY, mirroring the v2 base: custom-renderer cells
    put their content as a direct child of the <td>, so a rule on `.hot-table`
    alone would never reach them. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table td,
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table th {
+.hot-appearance-v2.hot-container[data-density-level] .hot-table td,
+.hot-appearance-v2.hot-container[data-density-level] .hot-table th {
   font-size: var(--dt-cell-font-size);
   line-height: var(--dt-cell-line-height);
   letter-spacing: var(--dt-cell-letter-spacing);
@@ -308,15 +262,15 @@
 /* Mono cells (`type:'mono'` — refs, container numbers, dates, amounts) share a
    row with sans cells, so their line-height MUST match or they alone would set
    the row height. The `2xs` mono token exists purely to hold that invariant. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-cell.cell-mono {
+.hot-appearance-v2.hot-container[data-density-level] .hot-cell.cell-mono {
   font-size: var(--dt-mono-font-size);
   line-height: var(--dt-mono-line-height);
   letter-spacing: var(--dt-mono-letter-spacing);
 }
 
 /* ── Column headers ──────────────────────────────────────────────────────── */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table th.hot-col-header,
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-table th.hot-row-header {
+.hot-appearance-v2.hot-container[data-density-level] .hot-table th.hot-col-header,
+.hot-appearance-v2.hot-container[data-density-level] .hot-table th.hot-row-header {
   height: var(--dt-header-height);
   padding-top: var(--dt-header-pad-y);
   padding-bottom: var(--dt-header-pad-y);
@@ -329,7 +283,7 @@
 }
 
 /* Gap between the sticky header bar and the first row. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-headers-sticky {
+.hot-appearance-v2.hot-container[data-density-level] .hot-headers-sticky {
   padding-bottom: var(--dt-header-gap);
 }
 
@@ -337,7 +291,7 @@
 /* Sets padding + type ONLY. Never `border-color` here (not even via the
    `border` shorthand): this selector outranks every `.cell-badge-<variant>`
    colour rule and would flatten all twelve variants to one border. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-cell .cell-badge {
+.hot-appearance-v2.hot-container[data-density-level] .hot-cell .cell-badge {
   padding-top: var(--dt-badge-pad-y);
   padding-bottom: var(--dt-badge-pad-y);
   padding-left: var(--dt-badge-pad-x);
@@ -353,7 +307,7 @@
 
    These out-specify the `:not([data-density])` compaction rules in
    DynamicTable.v2.css, which stay in force at `comfortable`. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) textarea.hot-cell-editor {
+.hot-appearance-v2.hot-container[data-density-level] textarea.hot-cell-editor {
   top: var(--dt-editor-inset-y);
   left: var(--dt-editor-inset-x);
   width: calc(100% - 2 * var(--dt-editor-inset-x));
@@ -362,7 +316,7 @@
   line-height: var(--dt-editor-line-height);
 }
 
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-cell.cell-select {
+.hot-appearance-v2.hot-container[data-density-level] .hot-cell.cell-select {
   padding-top: var(--dt-cell-pad-y);
   padding-bottom: var(--dt-cell-pad-y);
   padding-left: var(--dt-cell-pad-x);
@@ -371,7 +325,7 @@
 
 /* The select pill's own box: zero vertical padding, line-height carrying the
    height, and just enough right padding to clear the chevron sprite. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-cell.cell-select > .cell-content {
+.hot-appearance-v2.hot-container[data-density-level] .hot-cell.cell-select > .cell-content {
   padding-top: 0;
   padding-bottom: 0;
   padding-left: var(--dt-cell-pad-x);
@@ -390,20 +344,20 @@
    The numbers and the label are pinned to the same ramp the cells use: the
    totals are read as part of the column, not as a caption. `--dt-mono-*` for
    the values because they are numeric and sit under mono cells. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-footer-totals-row {
+.hot-appearance-v2.hot-container[data-density-level] .hot-footer-totals-row {
   font-size: var(--dt-cell-font-size);
   line-height: var(--dt-cell-line-height);
   letter-spacing: var(--dt-cell-letter-spacing);
 }
 
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-footer-totals-label,
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-footer-totals-scope {
+.hot-appearance-v2.hot-container[data-density-level] .hot-footer-totals-label,
+.hot-appearance-v2.hot-container[data-density-level] .hot-footer-totals-scope {
   font-size: var(--dt-cell-font-size);
   line-height: var(--dt-cell-line-height);
   letter-spacing: var(--dt-cell-letter-spacing);
 }
 
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-footer-totals-value {
+.hot-appearance-v2.hot-container[data-density-level] .hot-footer-totals-value {
   font-size: var(--dt-mono-font-size);
   line-height: var(--dt-mono-line-height);
   letter-spacing: var(--dt-mono-letter-spacing);
@@ -413,32 +367,20 @@
 
 /* The sigma badge is sized in px inline (14×14). Scale it with the type or it
    becomes the tallest thing in a 20px row. */
-.hot-appearance-v2.hot-container[data-density-level]:not([data-density-level="comfortable"]) .hot-footer-totals-sigma {
+.hot-appearance-v2.hot-container[data-density-level] .hot-footer-totals-sigma {
   width: 1em !important;
   height: 1em !important;
 }
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ACCESSIBILITY FLOOR
+   HEADER CHROME ON NARROW COLUMNS — RECLAIMING 40px
 
-   `dense` puts 11px/10px type on screen. That is a legitimate opt-in for a
-   power user on a large monitor — and an accessibility problem for anyone who
-   has told their OS they need larger text. When the user has asked for reduced
-   motion we leave density alone (it is not motion), but when they have asked
-   for MORE contrast, the hairline row rule is the first thing that
-   disappears — so darken it rather than letting dense degrade into an
-   undifferentiated block of text.
-   ═════════════════════════════════════════════════════════════════════════ */
-@media (prefers-contrast: more) {
-  .hot-container[data-density-level="dense"] {
-    --dt-row-rule-color: var(--m3-on-surface-variant, currentColor);
-  }
-}
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   HEADER CHROME AT `dense` — RECLAIMING 40px FROM EVERY COLUMN
+   History: this began as a `dense`-only rule (20px rows, every column
+   collapsed). With the designer's scale `dense` became Tight — the DEFAULT —
+   so the level-wide collapse was dropped; only the `[data-narrow]` rules
+   below remain, and they apply at every level. The reasoning that follows
+   is kept because it is still why narrow columns collapse.
 
    Measured, not guessed. In a 96px "Carrier" header the browser reports:
 
@@ -534,7 +476,6 @@
    Nothing that is visible today becomes hidden by this change: the kebab was
    ALREADY collapsed in exactly these cases. The change is strictly additive.
    ═════════════════════════════════════════════════════════════════════════ */
-.hot-appearance-v2.hot-container[data-density-level="dense"] .hot-col-header .hot-col-kebab,
 /* ── LEDGER 6.11 ────────────────────────────────────────────────────────────
    Applied at ANY density to a column that is simply too narrow to hold a label
    and its chrome at the same time. At default (comfortable) density "Type" and
@@ -563,8 +504,6 @@
     opacity var(--m3-duration-short3) var(--m3-ease-standard);
 }
 
-.hot-appearance-v2.hot-container[data-density-level="dense"] .hot-col-header:hover .hot-col-kebab,
-.hot-appearance-v2.hot-container[data-density-level="dense"] .hot-col-header:focus-within .hot-col-kebab,
 .hot-appearance-v2 .hot-col-header[data-narrow]:hover .hot-col-kebab,
 .hot-appearance-v2 .hot-col-header[data-narrow]:focus-within .hot-col-kebab {
   width: 20px;
@@ -653,7 +592,6 @@
 /* A user who has asked their OS for more contrast has told us that opacity
    games are not good enough for them: never hide the chrome for them at all. */
 @media (prefers-contrast: more) {
-  .hot-appearance-v2.hot-container[data-density-level="dense"] .hot-col-header .hot-col-kebab,
   .hot-appearance-v2 .hot-col-header[data-narrow] .hot-col-kebab {
     width: 20px;
     margin-left: 2px;
@@ -663,28 +601,3 @@
   }
 }
 
-/* ── Selection checkbox: scale with the row ──────────────────────────────────
-   The checkbox was pinned at 16px (DynamicTable.v2.css) for every level while
-   the row shrank 32 → 26 → 20px, so by `dense` it filled ~80% of the row and
-   read as an oversized control bolted to the left edge.
-
-   Kept at roughly half the row height, matching how it sits in comfortable.
-   Level-scoped rather than `:not(comfortable)`-guarded because the two levels
-   need DIFFERENT values, not one shared override — comfortable is untouched
-   either way, which is the property the guard test protects. */
-.hot-appearance-v2.hot-container[data-density-level="compact"] .hot-row-select {
-  width: 13px;
-  height: 13px;
-}
-.hot-appearance-v2.hot-container[data-density-level="compact"] .hot-row-select-all {
-  width: 11px;
-  height: 13px;
-}
-.hot-appearance-v2.hot-container[data-density-level="dense"] .hot-row-select {
-  width: 11px;
-  height: 11px;
-}
-.hot-appearance-v2.hot-container[data-density-level="dense"] .hot-row-select-all {
-  width: 10px;
-  height: 11px;
-}

@@ -63,13 +63,15 @@
  */
 
 /**
- * The three density levels, coarsest to tightest.
+ * The three density levels, coarsest to tightest — the designer's
+ * Roomy / Medium / Tight (gt-demo TableSettingsMenu). Same type at every
+ * level; only the row height and cell padding change.
  *
- * - `comfortable` — today's sizing, exactly. The default.
- * - `compact`     — same 12px type, tighter geometry. ~24% more rows.
- * - `dense`       — the maximum-information setting: 11px data / 10px headers,
- *                   hairline row rules. ~67% more rows. For a power user on a
- *                   wide monitor who is scanning, not reading.
+ * - `comfortable` — Roomy, 48px rows.
+ * - `compact`     — Medium, 44px rows.
+ * - `dense`       — Tight, 34px rows. THE DEFAULT.
+ *
+ * The ids predate the designer's labels and are persisted, so they stay.
  */
 export type DensityLevel = 'comfortable' | 'compact' | 'dense'
 
@@ -77,11 +79,10 @@ export type DensityLevel = 'comfortable' | 'compact' | 'dense'
 export const DENSITY_LEVELS: readonly DensityLevel[] = ['comfortable', 'compact', 'dense'] as const
 
 /**
- * The default. MUST stay `comfortable`: it is defined as pixel-identical to
- * pre-density rendering, which is what makes shipping this feature a visual
- * no-op for every user who never opens the setting.
+ * The default: Tight. "default działów = Tight" — the designer's decision of
+ * 02.09, recorded in the prototype's TableSettingsMenu.
  */
-export const DEFAULT_DENSITY: DensityLevel = 'comfortable'
+export const DEFAULT_DENSITY: DensityLevel = 'dense'
 
 /**
  * The container attribute that carries the level.
@@ -118,11 +119,11 @@ export type DensityMetrics = {
 }
 
 export const DENSITY_METRICS: Readonly<Record<DensityLevel, DensityMetrics>> = {
-  // Today's values, verified against DynamicTable.tsx:708 (`dataRowHeight`
-  // default 32) and DynamicTable.v2.css (header height is content-driven).
-  comfortable: { rowHeight: 32, headerHeight: null },
-  compact: { rowHeight: 26, headerHeight: 24 },
-  dense: { rowHeight: 20, headerHeight: 20 },
+  // The designer's scale (gt-demo tokens/material.css): Roomy 48 / Medium 44
+  // / Tight 34, Tight the default. Headers stay content-driven at every level.
+  comfortable: { rowHeight: 48, headerHeight: null },
+  compact: { rowHeight: 44, headerHeight: null },
+  dense: { rowHeight: 34, headerHeight: null },
 }
 
 /**
@@ -165,15 +166,8 @@ export function resolveDensityRowHeight(level: DensityLevel | null | undefined):
 
 /*
  * ─────────────────────────────────────────────────────────────────────────────
- * MIGRATION NOTE — folding in the legacy `density?: 'sm' | 'md'` prop
- *
- * The legacy prop is a per-table DEVELOPER choice (36px / 44px rows); this
- * scale is a per-user preference. They are independent axes today and a table
- * may carry both attributes without conflict, because `density.css` never
- * keys off `[data-density]`.
- *
- * The eventual cleanup — one axis, user-owned — is a separate change and needs
- * its own spec, because `'md'` (44px) is LOOSER than `comfortable` (32px), so
- * there is no honest 1:1 mapping. Do not "simplify" it in passing.
+ * THE LEGACY `density?: 'sm' | 'md'` PROP no longer sets the row height:
+ * the user's level always does (DynamicTable `dataRowHeight`). It still emits
+ * `data-density`, which a few v2 rules key on, and is otherwise inert.
  * ─────────────────────────────────────────────────────────────────────────────
  */

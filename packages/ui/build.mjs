@@ -10,10 +10,13 @@ const entryPoints = await glob('src/**/*.{ts,tsx}', {
   cwd: __dirname,
   // `__e2e__` holds Playwright-based test harnesses that ship next to the
   // components they drive (see dynamic-table/__e2e__/GridHarness.ts). They are
-  // imported directly by integration specs, never by the app, and depend on
-  // @playwright/test — so they must stay out of the published bundle. They ARE
-  // still type-checked (tsconfig `include` covers src/**), which is deliberate.
-  ignore: ['**/__tests__/**', '**/__e2e__/**', '**/*.test.ts', '**/*.test.tsx'],
+  // imported by integration specs in CONSUMING repos, never by the app, so they
+  // are compiled file-by-file into dist (nothing imports them from app code, so
+  // no app bundle ever contains them; `@playwright/test` stays an external
+  // import). They must be compiled: the consumer imports them from
+  // node_modules, where Node refuses to strip TypeScript types, so shipping only
+  // the .ts sources left every consuming spec unable to load its harness.
+  ignore: ['**/__tests__/**', '**/*.test.ts', '**/*.test.tsx'],
   absolute: true,
 })
 

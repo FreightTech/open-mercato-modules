@@ -331,7 +331,7 @@ export const DensityControl: React.FC<DensityControlProps> = ({
             aria-label={t('dynamicTable.density.label', 'Row density')}
             aria-activedescendant={`${listboxId}-${activeIndex}`}
             onKeyDown={onListboxKeyDown}
-            className="fixed z-[60] overflow-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] py-1 text-[var(--m3-on-surface)] shadow-m3-2 outline-none"
+            className="fixed z-[60] overflow-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] py-1 text-[var(--m3-on-surface)] shadow-m3-2 outline-none"
             style={{ top: position.top, left: position.left, width: PANEL_WIDTH }}
           >
             {options.map((option, index) => {
@@ -417,24 +417,24 @@ type Translate = ReturnType<typeof useT>
 function LEVEL_LABEL(t: Translate, level: DensityLevel): string {
   switch (level) {
     case 'compact':
-      return t('dynamicTable.density.compact', 'Compact')
+      return t('dynamicTable.density.compact', 'Medium')
     case 'dense':
-      return t('dynamicTable.density.dense', 'Dense')
+      return t('dynamicTable.density.dense', 'Tight')
     case 'comfortable':
     default:
-      return t('dynamicTable.density.comfortable', 'Comfortable')
+      return t('dynamicTable.density.comfortable', 'Roomy')
   }
 }
 
 function LEVEL_DESCRIPTION(t: Translate, level: DensityLevel): string {
   switch (level) {
     case 'compact':
-      return t('dynamicTable.density.compactHint', 'Same text size, tighter rows')
+      return t('dynamicTable.density.compactHint', '44px rows')
     case 'dense':
-      return t('dynamicTable.density.denseHint', 'Smallest text, most rows on screen')
+      return t('dynamicTable.density.denseHint', '34px rows — the default')
     case 'comfortable':
     default:
-      return t('dynamicTable.density.comfortableHint', 'Default spacing and text size')
+      return t('dynamicTable.density.comfortableHint', '48px rows')
   }
 }
 

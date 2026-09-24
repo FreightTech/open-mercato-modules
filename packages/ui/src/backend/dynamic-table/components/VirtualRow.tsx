@@ -1,7 +1,8 @@
 import React, { memo, useRef } from 'react';
+import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { MoreHorizontal } from 'lucide-react';
 import { VirtualItem } from '@tanstack/react-virtual';
-import { useCellStore, useSelection } from '../hooks/index';
+import { useCellStore, useRowRangeState } from '../hooks/index';
 import { ColumnDef } from '../types/index';
 import { AnnotationMap } from '../hooks/useAnnotations';
 import Cell from './Cell';
@@ -114,8 +115,12 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
     compiledFormats,
     columnWindow,
   }) => {
+    const t = useT();
+    const rowActionsLabel = t('dynamicTable.rowActions', 'Row actions');
+    const selectRowLabel = t('dynamicTable.selection.row', 'Select row');
     const store = useCellStore();
-    const selection = useSelection();
+    // Only this row's slice of the selection — see useRowRangeState.
+    const rowRange = useRowRangeState(rowIndex);
     // Guards the Save button's mouse path against firing twice — see the button.
     const suppressSaveClickRef = useRef(false);
     const isNewRow = store.isNewRow(rowIndex);
@@ -123,10 +128,10 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
 
     // `Cell` is memoised, but it takes the column definition WITH the store's
     // current width folded in — building that object inline handed every cell a
-    // fresh prop on every row render, so `Cell`'s memo never held either. This
-    // row re-renders on any selection change (it subscribes for the row-range
-    // outline), so without this a single arrow-key press re-rendered every
-    // mounted cell. Widths change only via the store revision.
+    // fresh prop on every row render, so `Cell`'s memo never held either. Rows
+    // still re-render when their row-range slice changes, a column window moves
+    // or a new row scrolls in; without this each of those re-rendered every
+    // cell of the row. Widths change only via the store revision.
     const cellColConfigs = React.useMemo(
       () => columns.map((col, colIndex) => ({ ...col, width: store.getColumnWidth(colIndex) })),
       [columns, store, _storeRevision],
@@ -141,23 +146,14 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
     const isRowSelected = selectionId != null && !!selectedRowIds?.has(String(selectionId));
 
     // Row-level selection state (for row headers)
-    const isInRowRange =
-      selection.type === 'rowRange' &&
-      selection.anchor &&
-      selection.focus &&
-      rowIndex >= Math.min(selection.anchor.row, selection.focus.row) &&
-      rowIndex <= Math.max(selection.anchor.row, selection.focus.row);
-
-    const rowRangeEdges = {
-      top:
-        isInRowRange && selection.anchor && selection.focus
-          ? rowIndex === Math.min(selection.anchor.row, selection.focus.row)
-          : false,
-      bottom:
-        isInRowRange && selection.anchor && selection.focus
-          ? rowIndex === Math.max(selection.anchor.row, selection.focus.row)
-          : false,
-    };
+    const isInRowRange = rowRange !== 'none';
+    const rowRangeEdges = React.useMemo(
+      () => ({
+        top: rowRange === 'top' || rowRange === 'top-bottom',
+        bottom: rowRange === 'bottom' || rowRange === 'top-bottom',
+      }),
+      [rowRange],
+    );
 
     // One cell renderer, two callers. `colIndex` is ALWAYS the absolute index
     // into `columns`, whether it arrived from a plain map or from a window
@@ -236,6 +232,7 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
         {rowHeaders && (
           <RowHeaderCell
             row={rowIndex}
+            selectLabel={selectRowLabel}
             isNewRow={isNewRow}
             isInRowRange={!!isInRowRange}
             rowRangeEdges={rowRangeEdges}
@@ -326,8 +323,8 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
               <button
                 type="button"
                 className="hot-row-actions-btn"
-                title="Row actions"
-                aria-label="Row actions"
+                title={rowActionsLabel}
+                aria-label={rowActionsLabel}
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => onRowActionsMenu?.(e, rowIndex)}
               >

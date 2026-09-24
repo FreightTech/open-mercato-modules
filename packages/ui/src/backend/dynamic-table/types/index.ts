@@ -530,8 +530,8 @@ export interface PaginationProps {
 
 /**
  * Style preset for read-only cells.
- * - 'muted': Gray background (default) - indicates cells are not editable
- * - 'normal': Same as editable cells - white/transparent background
+ * - 'muted': Gray background - indicates cells are not editable
+ * - 'normal': Same as editable cells - transparent background (default)
  * - 'subtle': Very subtle background tint - minimal visual difference
  */
 export type ReadOnlyStyle = 'muted' | 'normal' | 'subtle';
@@ -730,7 +730,8 @@ export interface TableUIConfig {
    */
   fillConfirmThreshold?: number;
   /**
-   * Visual style for read-only cells. Default: 'muted'
+   * Visual style for read-only cells. Default: 'normal' (the design's table
+   * does not tint read-only columns)
    * - 'muted': Gray background - indicates cells are not editable
    * - 'normal': Same as editable cells - no visual difference
    * - 'subtle': Very subtle background - minimal visual indication

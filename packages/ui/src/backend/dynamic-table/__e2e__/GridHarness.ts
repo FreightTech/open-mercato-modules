@@ -163,6 +163,24 @@ export class GridHarness {
   }
 
   /**
+   * Rows the grid HOLDS (its `aria-rowcount`), as opposed to rows it has
+   * rendered. `rowCount()` counts the virtualiser's window, which depends on
+   * the pane's height: a search that narrows 61 documents to 40 renders about
+   * the same number of rows either way, and a pane that grows (its own search
+   * row hidden) renders MORE. Use this to prove a dataset narrowed.
+   * Falls back to the rendered count on a grid with a custom body.
+   *
+   * On a GROUPED view the count includes group header and summary rows (it is
+   * the virtualiser's visual row count), so it is not a data-row count there —
+   * compare like with like, or count data rows another way.
+   */
+  async loadedRowCount(): Promise<number> {
+    const value = await this.root.locator('[aria-rowcount]').first().getAttribute('aria-rowcount').catch(() => null)
+    const parsed = value === null ? Number.NaN : Number.parseInt(value, 10)
+    return Number.isFinite(parsed) ? parsed : this.rowCount()
+  }
+
+  /**
    * Resolve a column by its visible header. Accepts a regex so a spec can match
    * both locales at once (`/Nr faktury|Invoice no/i`) — the demo session's
    * language is not fixed, and hard-coding one locale makes tests flaky by design.

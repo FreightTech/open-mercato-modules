@@ -142,18 +142,36 @@ export function mapCriteriaForTable(
  * it would be an upstream change, which this spec forbids outright — so the
  * declaration lives on our side of the line instead.
  *
- * DELIBERATELY EMPTY. A widget appears here only once someone has READ its
- * component and confirmed it accepts an equivalent value through `settings`;
- * an invented entry would produce a pane that claims to be filtered and is not,
- * which is strictly worse than one that admits it is not filtered.
+ * An entry is a PROMISE: the widget reads `settings[WORKSPACE_FILTERS_SETTINGS_KEY]`
+ * and narrows its own data by those rows. A widget appears here only once its
+ * component and its endpoint actually do that — an invented entry would produce
+ * a pane that claims to be filtered and is not, which is strictly worse than
+ * one that admits it is not filtered. The designer's rule (recording 05:48):
+ * workspace filters reach the widgets that show CONNECTED data; the rest say so.
  *
  * To add one:
- *   1. Open the widget and find the `settings` key it filters on.
- *   2. Add `'<module>:<widget>': { customer: 'contractorId' }` below.
- *   3. The pane stops reporting that criterion as unmapped, and the host passes
- *      the mapped value through the slot's `settings`.
+ *   1. Make the widget pass `settings.workspaceFilters` to its endpoint, and the
+ *      endpoint apply them (field names are the widget's own, as mapped here).
+ *   2. Add `'<module>.dashboard.<widget>': { customer: '<field>' }` below.
  */
-export const WIDGET_SHARED_FILTERS: Record<string, SharedFilterMapping> = {}
+export const WIDGET_SHARED_FILTERS: Record<string, SharedFilterMapping> = {
+  // Offers — the customer is the offer's client, the date its creation.
+  'offers.dashboard.unsentOffers': { customer: 'clientName', dateRange: 'createdAt' },
+  'offers.dashboard.pendingResponseOffers': { customer: 'clientName', dateRange: 'createdAt' },
+  // Invoicing — the customer is the invoice's counterparty. The cash-flow
+  // charts are fixed time windows, so they take the customer only.
+  'invoicing.dashboard.inflows': { customer: 'counterpartyName' },
+  'invoicing.dashboard.outflows': { customer: 'counterpartyName' },
+  'invoicing.dashboard.toBook': { customer: 'counterpartyName', dateRange: 'invoiceDate' },
+}
+
+/**
+ * The settings key a widget reads its workspace filters from — `FilterRow[]` in
+ * the widget's own field names (see `WIDGET_SHARED_FILTERS`). Absent or empty
+ * means "not filtered by the workspace". A plain string so a widget can honour
+ * the contract without importing this package.
+ */
+export const WORKSPACE_FILTERS_SETTINGS_KEY = 'workspaceFilters'
 
 /**
  * Same contract as `mapCriteriaForTable`, for a widget pane.

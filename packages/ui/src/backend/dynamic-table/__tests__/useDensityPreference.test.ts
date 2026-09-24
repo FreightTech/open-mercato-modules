@@ -57,28 +57,28 @@ afterEach(() => {
 describe('useDensityPreference — reading', () => {
   it('defaults to comfortable when nothing is stored', () => {
     const { result } = renderHook(() => useDensityPreference())
-    expect(result.current.density).toBe('comfortable')
-    expect(DEFAULT_DENSITY).toBe('comfortable')
+    expect(result.current.density).toBe('dense')
+    expect(DEFAULT_DENSITY).toBe('dense')
   })
 
   it('restores a stored level for the signed-in user', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
-    window.localStorage.setItem(keyFor('user-a'), 'dense')
+    window.localStorage.setItem(keyFor('user-a'), 'comfortable')
     const { result } = renderHook(() => useDensityPreference())
-    expect(result.current.density).toBe('dense')
+    expect(result.current.density).toBe('comfortable')
   })
 
   it('degrades a CORRUPT stored value to today’s rendering rather than throwing', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
     window.localStorage.setItem(keyFor('user-a'), 'ultra-mega-dense')
     const { result } = renderHook(() => useDensityPreference())
-    expect(result.current.density).toBe('comfortable')
+    expect(result.current.density).toBe('dense')
   })
 
   it('hydrates server-side at the DEFAULT, so SSR cannot mismatch', () => {
     // The server has no access to the user's localStorage; any other answer
     // would be a hydration error rather than a nicety.
-    expect(getServerDensityPreference()).toBe('comfortable')
+    expect(getServerDensityPreference()).toBe('dense')
   })
 })
 
@@ -90,14 +90,14 @@ describe('useDensityPreference — persistence scope (A3: must never leak)', () 
   it('persists under a USER-scoped key', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
     const { result } = renderHook(() => useDensityPreference())
-    act(() => result.current.setDensity('dense'))
-    expect(window.localStorage.getItem(keyFor('user-a'))).toBe('dense')
+    act(() => result.current.setDensity('comfortable'))
+    expect(window.localStorage.getItem(keyFor('user-a'))).toBe('comfortable')
   })
 
   it('does NOT leak one user’s choice to the next account on the same machine', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
     const first = renderHook(() => useDensityPreference())
-    act(() => first.result.current.setDensity('dense'))
+    act(() => first.result.current.setDensity('comfortable'))
     first.unmount()
 
     // Second account signs in on this browser.
@@ -105,9 +105,9 @@ describe('useDensityPreference — persistence scope (A3: must never leak)', () 
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-b')
     const second = renderHook(() => useDensityPreference())
 
-    expect(second.result.current.density).toBe('comfortable')
+    expect(second.result.current.density).toBe('dense')
     // …and user A's setting is still intact for when they come back.
-    expect(window.localStorage.getItem(keyFor('user-a'))).toBe('dense')
+    expect(window.localStorage.getItem(keyFor('user-a'))).toBe('comfortable')
   })
 
   it('writes ONE key with no table identity in it — the setting is global across grids', () => {
@@ -127,7 +127,7 @@ describe('useDensityPreference — persistence scope (A3: must never leak)', () 
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
     const { result } = renderHook(() => useDensityPreference())
     act(() => result.current.setDensity('gigantic' as never))
-    expect(result.current.density).toBe('comfortable')
+    expect(result.current.density).toBe('dense')
     expect(window.localStorage.getItem(keyFor('user-a'))).toBeNull()
   })
 
@@ -139,9 +139,9 @@ describe('useDensityPreference — persistence scope (A3: must never leak)', () 
       })
     try {
       const { result } = renderHook(() => useDensityPreference())
-      act(() => result.current.setDensity('dense'))
+      act(() => result.current.setDensity('comfortable'))
       // The click is honoured in memory even though it cannot survive a reload.
-      expect(result.current.density).toBe('dense')
+      expect(result.current.density).toBe('comfortable')
     } finally {
       setItem.mockRestore()
     }
@@ -176,26 +176,26 @@ describe('ensureDensityScope', () => {
 
   it('does NOT inherit a previous account’s preference when the cached uid was stale', async () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
-    window.localStorage.setItem(keyFor('user-a'), 'dense')
-    expect(getDensityPreference()).toBe('dense')
+    window.localStorage.setItem(keyFor('user-a'), 'comfortable')
+    expect(getDensityPreference()).toBe('comfortable')
 
     // The session actually belongs to somebody else.
     mockApiCall.mockResolvedValue({ ok: true, result: { userId: 'user-b' } })
     await ensureDensityScope()
 
-    expect(getDensityPreference()).toBe('comfortable')
+    expect(getDensityPreference()).toBe('dense')
     expect(window.localStorage.getItem(keyFor('user-b'))).toBeNull()
-    expect(window.localStorage.getItem(keyFor('user-a'))).toBe('dense')
+    expect(window.localStorage.getItem(keyFor('user-a'))).toBe('comfortable')
   })
 
   it('re-renders a mounted grid when the scope reconciles', async () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
-    window.localStorage.setItem(keyFor('user-a'), 'dense')
+    window.localStorage.setItem(keyFor('user-a'), 'comfortable')
     window.localStorage.setItem(keyFor('user-b'), 'compact')
     mockApiCall.mockResolvedValue({ ok: true, result: { userId: 'user-b' } })
 
     const { result } = renderHook(() => useDensityPreference())
-    expect(result.current.density).toBe('dense')
+    expect(result.current.density).toBe('comfortable')
 
     await act(async () => {
       await ensureDensityScope()
@@ -206,7 +206,7 @@ describe('ensureDensityScope', () => {
 
   it('keeps the painted level when the auth endpoint fails', async () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
-    window.localStorage.setItem(keyFor('user-a'), 'dense')
+    window.localStorage.setItem(keyFor('user-a'), 'comfortable')
     mockApiCall.mockRejectedValue(new Error('offline'))
 
     const { result } = renderHook(() => useDensityPreference())
@@ -214,7 +214,7 @@ describe('ensureDensityScope', () => {
       await ensureDensityScope()
     })
 
-    expect(result.current.density).toBe('dense')
+    expect(result.current.density).toBe('comfortable')
   })
 
   it('resolves identity at most once per page however many grids mount', async () => {
@@ -238,18 +238,18 @@ describe('useDensityPreference — shared store', () => {
     const a = renderHook(() => useDensityPreference())
     const b = renderHook(() => useDensityPreference())
 
-    act(() => setDensityPreference('dense'))
+    act(() => setDensityPreference('comfortable'))
 
     // A list page and its drawer sub-table must not end up at different
     // densities because only one of them owns the toolbar control.
-    expect(a.result.current.density).toBe('dense')
-    expect(b.result.current.density).toBe('dense')
+    expect(a.result.current.density).toBe('comfortable')
+    expect(b.result.current.density).toBe('comfortable')
   })
 
   it('follows a change made in another browser tab', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
     const { result } = renderHook(() => useDensityPreference())
-    expect(result.current.density).toBe('comfortable')
+    expect(result.current.density).toBe('dense')
 
     act(() => {
       window.localStorage.setItem(keyFor('user-a'), 'compact')
@@ -274,21 +274,21 @@ describe('useDensityPreference — shared store', () => {
 describe('useDensityPreference — override', () => {
   it('wins for that table and is never written to storage', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
-    const { result } = renderHook(() => useDensityPreference('dense'))
+    const { result } = renderHook(() => useDensityPreference('comfortable'))
 
-    expect(result.current.density).toBe('dense')
+    expect(result.current.density).toBe('comfortable')
     expect(result.current.isOverridden).toBe(true)
 
     act(() => result.current.setDensity('compact'))
     // A structural, developer-chosen level must not silently become the user's
     // setting on every other grid they open.
     expect(window.localStorage.getItem(keyFor('user-a'))).toBeNull()
-    expect(result.current.density).toBe('dense')
+    expect(result.current.density).toBe('comfortable')
   })
 
   it('falls through to the user preference for an invalid override', () => {
     const { result } = renderHook(() => useDensityPreference('huge' as never))
-    expect(result.current.density).toBe('comfortable')
+    expect(result.current.density).toBe('dense')
     expect(result.current.isOverridden).toBe(false)
   })
 })
@@ -322,11 +322,11 @@ describe('DensityControl', () => {
 
   it('states the CURRENT density in the trigger’s accessible name', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
-    window.localStorage.setItem(keyFor('user-a'), 'dense')
+    window.localStorage.setItem(keyFor('user-a'), 'comfortable')
     renderControl()
     // The toolbar variant is icon-only, so without this a screen-reader user
     // could open the menu and still not know what is selected.
-    expect(screen.getByRole('button', { name: 'Row density: Dense' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Row density: Roomy' })).toBeInTheDocument()
   })
 
   it('renders the panel in a PORTAL on document.body, not inside the toolbar', () => {
@@ -351,14 +351,14 @@ describe('DensityControl', () => {
     openControl()
     const options = screen.getAllByRole('option')
     expect(options).toHaveLength(3)
-    expect(options.map((o) => o.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false'])
+    expect(options.map((o) => o.getAttribute('aria-selected'))).toEqual(['false', 'false', 'true'])
   })
 
   it('persists the chosen level and closes', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
     renderControl()
     openControl()
-    fireEvent.click(screen.getByText('Compact'))
+    fireEvent.click(screen.getByText('Medium'))
 
     expect(window.localStorage.getItem(keyFor('user-a'))).toBe('compact')
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
@@ -367,22 +367,23 @@ describe('DensityControl', () => {
   it('reports the choice through onChange without persisting when controlled', () => {
     const onChange = jest.fn()
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
-    renderControl({ value: 'comfortable', onChange })
+    renderControl({ value: 'dense', onChange })
     openControl()
-    fireEvent.click(screen.getByText('Dense'))
+    fireEvent.click(screen.getByText('Roomy'))
 
-    expect(onChange).toHaveBeenCalledWith('dense')
+    expect(onChange).toHaveBeenCalledWith('comfortable')
     expect(window.localStorage.getItem(keyFor('user-a'))).toBeNull()
   })
 
-  it('is operable from the keyboard: ArrowDown then Enter', () => {
+  it('is operable from the keyboard: ArrowUp then Enter', () => {
     window.localStorage.setItem(DENSITY_SCOPE_CACHE_KEY, 'user-a')
     renderControl()
     const trigger = screen.getByRole('button', { name: /row density/i })
     fireEvent.keyDown(trigger, { key: 'ArrowDown' })
 
     const listbox = screen.getByRole('listbox')
-    fireEvent.keyDown(listbox, { key: 'ArrowDown' })
+    // The default (Tight) is the last option, so one step UP is Medium.
+    fireEvent.keyDown(listbox, { key: 'ArrowUp' })
     fireEvent.keyDown(listbox, { key: 'Enter' })
 
     expect(window.localStorage.getItem(keyFor('user-a'))).toBe('compact')
@@ -430,6 +431,6 @@ describe('DensityControl', () => {
 
   it('shows the current level in words in the labelled variant', () => {
     renderControl({ variant: 'labelled' })
-    expect(screen.getByRole('button', { name: /row density/i })).toHaveTextContent('Comfortable')
+    expect(screen.getByRole('button', { name: /row density/i })).toHaveTextContent('Tight')
   })
 })

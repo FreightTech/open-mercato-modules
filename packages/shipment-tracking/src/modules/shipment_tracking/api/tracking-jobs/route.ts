@@ -53,6 +53,23 @@ const buildFilters = (query: TrackingJobListQuery): Record<string, unknown> => {
     filters.referenceValue = query.referenceValue
   }
 
+  // Free-text search — the grid's own search box and a split-view workspace's
+  // shared search both send it as `q`/`search`. The route used to discard it,
+  // so a Tracking Jobs pane kept showing every row under a live needle with
+  // nothing on screen saying so (TC-APP-612). Matches what a user types: a
+  // container / booking / B/L reference, the carrier, or the provider's id.
+  const raw = (query as { q?: unknown; search?: unknown }).q ?? (query as { search?: unknown }).search
+  const needle = typeof raw === 'string' ? raw.trim() : ''
+  if (needle) {
+    const pattern = `%${needle.replace(/[\\%_]/g, (char) => `\\${char}`)}%`
+    filters.$or = [
+      { reference_value: { $ilike: pattern } },
+      { carrier_code: { $ilike: pattern } },
+      { reference_type: { $ilike: pattern } },
+      { provider_shipment_id: { $ilike: pattern } },
+    ]
+  }
+
   return filters
 }
 

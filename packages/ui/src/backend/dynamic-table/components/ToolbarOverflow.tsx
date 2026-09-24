@@ -124,7 +124,10 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
       // trigger would close here and immediately reopen via onClick.
       const insidePanel = boxRef.current?.contains(target)
       const onTrigger = triggerRef.current?.contains(target)
-      if (!insidePanel && !onTrigger) {
+      // A host row can open its own portalled flyout ("Podmień na…"). A click
+      // in it is a click in THIS menu's content, not outside it.
+      const inChildMenu = (target as Element).closest?.('[data-split-menu-panel]')
+      if (!insidePanel && !onTrigger && !inChildMenu) {
         setOpen(false)
         setExportOpen(false)
       }
@@ -175,7 +178,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
           // sidebar: a pane on the left anchors its menu over the nav, and
           // nav links intercepted the clicks, so menu rows that happened to
           // overlap a link were dead while their neighbours worked.
-          className="fixed z-[1000] overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] py-1 text-[var(--m3-on-surface)] shadow-m3-2"
+          className="fixed z-[1000] overflow-y-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] py-1 text-[var(--m3-on-surface)] shadow-m3-2"
           style={{ top: placement.top, left: placement.left, width: MENU_WIDTH, maxHeight: placement.maxHeight }}
           data-toolbar-overflow-menu=""
         >
@@ -244,7 +247,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
                       aria-pressed={density === level}
                     >
                       {density === level ? <Check size={11} aria-hidden="true" /> : null}
-                      {DENSITY_LABELS[level]}
+                      {t(`dynamicTable.density.${level}`, DENSITY_LABELS[level])}
                     </button>
                   ))}
                 </div>

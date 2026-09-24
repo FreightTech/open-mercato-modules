@@ -289,11 +289,14 @@ describe('pollTrackingJob — ShipsGo provider branch', () => {
   })
 
   it('keeps polling a recent ARRIVED air job (not yet stale)', async () => {
+    // Relative, like the stale case above: a fixed date (it was 2026-08-20)
+    // silently crossed the staleness window and turned this test red.
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
     const recent: ShipsGoAirShipment = {
       id: 55555, reference: 'job-shipsgo', awb_number: '020-12345678', airline: { iata: 'LH', name: 'Lufthansa' },
       status: 'LANDED',
       movements: [
-        { event: 'ARR', status: 'ACT', location: { iata: 'JFK' }, flight: 'LH1234', timestamp: '2026-08-20T10:00:00Z' },
+        { event: 'ARR', status: 'ACT', location: { iata: 'JFK' }, flight: 'LH1234', timestamp: twoDaysAgo },
       ],
     }
     const fetchOrRegister = vi.fn().mockResolvedValue(mapAirShipmentToEvents(recent))

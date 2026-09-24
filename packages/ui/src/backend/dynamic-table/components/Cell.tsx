@@ -66,8 +66,17 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
   // This ensures correct values are displayed when columns are reordered
   const cellValue = rowData?.[colConfig.data];
 
+  // Set by Escape, cleared when the next edit starts. `handleCancel` moves focus
+  // back to the grid while the editor is STILL MOUNTED, so every editor's
+  // `onBlur → onSave` fired right after Escape and committed the text the user
+  // had just abandoned (found driving the FMS transport table). A cancelled
+  // edit ignores that trailing save — one guard here covers every editor.
+  const cancelledRef = useRef(false);
+  const wasEditingRef = useRef(false);
+
   const handleSave = useCallback(
     (value?: any, clearEditing: boolean = true) => {
+      if (cancelledRef.current) return;
       const newValue = value !== undefined ? value : cellValue;
       onCellSave(row, col, newValue, clearEditing);
     },
@@ -75,6 +84,7 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
   );
 
   const handleCancel = useCallback(() => {
+    cancelledRef.current = true;
     store.clearEditing();
     store.focusTable();
   }, [store]);
@@ -86,6 +96,10 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
     },
     []
   );
+
+  // A new edit starts un-cancelled.
+  if (state.isEditing && cancelledRef.current && !wasEditingRef.current) cancelledRef.current = false;
+  wasEditingRef.current = state.isEditing;
 
   // Focus input when editing starts
   useEffect(() => {
@@ -131,17 +145,26 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
   }
 
   const renderer = getCellRenderer(colConfig);
-  const renderedValue = renderer(cellValue, rowData, colConfig, row, col);
+  // `rowData` is briefly undefined when the dataset shrinks (a search narrows
+  // the rows): a cell subscribed to a now-stale index re-renders before its row
+  // unmounts. A column's own renderer is written for real rows — Documents'
+  // name renderer reads `rowData.sectionCount` — and calling it with undefined
+  // took the whole page down. The cell shell still renders (its data-row /
+  // data-col keep pointer hit-testing intact for that one frame); only its
+  // content is skipped.
+  const hasRow = rowData != null;
+  const renderedValue = hasRow ? renderer(cellValue, rowData, colConfig, row, col) : null;
   const hasCustomRenderer = typeof colConfig.renderer === 'function';
   // Precedence is deliberate: a code-level `cellClassName` declared by the
   // module WINS over a user's highlighting rule. The module knows something the
   // user does not (an overdue invoice, a failed sync), and a view-scoped colour
   // must not be able to hide it.
   const conditionalClassName =
-    colConfig.cellClassName?.(cellValue, rowData, row, col) ||
-    (compiledFormats
-      ? conditionalFormatClassName(compiledFormats, colConfig.data, cellValue, rowData)
-      : undefined) ||
+    (hasRow &&
+      (colConfig.cellClassName?.(cellValue, rowData, row, col) ||
+        (compiledFormats
+          ? conditionalFormatClassName(compiledFormats, colConfig.data, cellValue, rowData)
+          : undefined))) ||
     '';
   const alignClass = colConfig.align ? `cell-align-${colConfig.align}` : '';
   const monoClass = colConfig.mono ? 'cell-mono' : '';

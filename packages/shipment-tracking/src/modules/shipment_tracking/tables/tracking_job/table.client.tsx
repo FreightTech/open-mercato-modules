@@ -317,7 +317,6 @@ export default function TrackingJobTable({
     <div className={wrapperClass} data-table-id="shipment_tracking.tracking_job">
       <DynamicTable
         {...table.props}
-        striped
         density="md"
         rowActions={rowActions}
         onRowAction={handleRowAction}

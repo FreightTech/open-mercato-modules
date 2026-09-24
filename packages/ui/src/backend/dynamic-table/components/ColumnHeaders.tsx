@@ -50,6 +50,8 @@ export interface ColumnHeadersProps {
   onSortAsc?: (colIndex: number) => void;
   /** Modern layout: callback for sort descending */
   onSortDesc?: (colIndex: number) => void;
+  /** Remove the sort — offered in the column menu when this column is sorted. */
+  onSortClear?: (colIndex: number) => void;
   /** Modern layout: callback for "Advanced filter…" (opens the Configure View panel) */
   onFilterByField?: (colIndex: number) => void;
   /**
@@ -160,6 +162,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
     modernLayout = false,
     onSortAsc,
     onSortDesc,
+    onSortClear,
     onFilterByField,
     filters,
     onFiltersChange,
@@ -687,7 +690,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                 type="button"
                 className="hot-col-kebab"
                 tabIndex={-1}
-                title="Column options"
+                title={t('dynamicTable.columnMenu.title', 'Column options')}
                 /* The funnel next to it names the column's filter state for a
                    screen reader; this one carried only a `title`, which is not
                    a reliable accessible name on a button with no text. */
@@ -753,7 +756,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                       checked={!!allSelected}
                       ref={(el) => { if (el) el.indeterminate = !allSelected && !!someSelected; }}
                       onChange={() => onToggleSelectAll?.()}
-                      aria-label="Select all rows"
+                      aria-label={t('dynamicTable.selection.all', 'Select all rows')}
                     />
                   )}
                 </th>
@@ -778,6 +781,9 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                 <th
                   className="hot-col-header"
                   data-actions-cell="true"
+                  // No visible label: the design's trailing column is the row
+                  // kebab alone. Screen readers still get its name.
+                  aria-label={t('dynamicTable.actions.header', 'Actions')}
                   style={{
                     width: actionsColumnWidth,
                     flexBasis: actionsColumnWidth,
@@ -788,7 +794,6 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                     zIndex: 3,
                   }}
                 >
-                  Actions
                 </th>
               )}
             </tr>
@@ -804,6 +809,11 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
             isFrozen={frozenColumns?.has(columns[headerMenu.colIndex].data) ?? false}
             onSortAsc={() => onSortAsc?.(headerMenu.colIndex)}
             onSortDesc={() => onSortDesc?.(headerMenu.colIndex)}
+            onSortClear={
+              onSortClear && sortState.columnIndex === headerMenu.colIndex && sortState.direction
+                ? () => onSortClear(headerMenu.colIndex)
+                : undefined
+            }
             /* "Filter by this field" now lands on the quick filter — the
                workshop complaint was precisely that it opened the Configure
                View drawer instead. The drawer stays reachable one item below. */

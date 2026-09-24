@@ -23,6 +23,7 @@ import type {
 import { WidgetPane } from '../split-view/WidgetPane'
 import { ContentRegistryProvider } from '../registry/ContentRegistryContext'
 import type { WidgetCatalogEntry } from '../registry/widgetCatalog'
+import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
 
 jest.mock('../../dashboard/widgetRegistry', () => ({
   loadDashboardWidgetModule: jest.fn(),
@@ -100,6 +101,7 @@ function renderPane(
     loaderKeyExists: (key: string) => (options.existingLoaderKeys ?? []).includes(key),
   }
   return render(
+    <I18nProvider locale="en" dict={{}}>
     <ContentRegistryProvider value={value}>
       <WidgetPane
         content={{
@@ -112,7 +114,8 @@ function renderPane(
         onSettingsChange={options.onSettingsChange}
         overflowExtras={options.overflowExtras}
       />
-    </ContentRegistryProvider>,
+    </ContentRegistryProvider>
+    </I18nProvider>,
   )
 }
 

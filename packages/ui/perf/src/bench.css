@@ -1,0 +1,33 @@
+/* Same cascade as .storybook/preview.css (the order is load-bearing). Paths go
+   through the `@bench-src` alias so an A/B run (run.mjs --base) compares the
+   CSS of the ref under test, not just its code. No Google Fonts: a benchmark
+   must never wait on the network; system fonts are identical for every run. */
+@import "tailwindcss";
+@import "@bench-src/theme/tokens.v2.css";
+@import "@bench-src/theme/m3.css";
+@import "@bench-src/theme/typography.css";
+@import "@bench-src/backend/dynamic-table/styles/DynamicTable.css";
+@import "@bench-src/backend/dynamic-table/styles/DynamicTable.v2.css";
+@import "@bench-src/backend/dynamic-table/styles/density.css";
+@import "@bench-src/backend/dynamic-table/styles/dateCell.css";
+@import "@bench-src/backend/dynamic-table/styles/ContextMenu.css";
+@import "@bench-src/backend/dynamic-table/styles/SearchBar.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-geist-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius: 0.625rem;
+  color-scheme: light;
+}
+
+html, body { margin: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--background-v2);
+  color: var(--foreground-v2);
+}
+#root { padding: 8px; }

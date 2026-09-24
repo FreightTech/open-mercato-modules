@@ -85,6 +85,36 @@ export function useSelection(): SelectionState {
 }
 
 // ============================================
+// ROW RANGE HOOK (per-row slice of the selection)
+// ============================================
+export type RowRangeState = 'none' | 'in' | 'top' | 'bottom' | 'top-bottom';
+
+/**
+ * Whether `row` is inside a row-range selection, and on which edge — as a
+ * PRIMITIVE, so `useSyncExternalStore` bails out for every row whose answer
+ * did not change. Subscribing rows to the whole selection (`useSelection`)
+ * re-rendered every mounted row on every arrow key.
+ */
+export function useRowRangeState(row: number): RowRangeState {
+  const store = useCellStore();
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => store.subscribeToSelection(onStoreChange),
+    [store]
+  );
+  const getSnapshot = useCallback((): RowRangeState => {
+    const selection = store.getSelection();
+    if (selection.type !== 'rowRange' || !selection.anchor || !selection.focus) return 'none';
+    const lo = Math.min(selection.anchor.row, selection.focus.row);
+    const hi = Math.max(selection.anchor.row, selection.focus.row);
+    if (row < lo || row > hi) return 'none';
+    if (row === lo && row === hi) return 'top-bottom';
+    return row === lo ? 'top' : row === hi ? 'bottom' : 'in';
+  }, [store, row]);
+  const getServerSnapshot = useCallback((): RowRangeState => 'none', []);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+// ============================================
 // DRAG HANDLING HOOK
 // ============================================
 export function useDragHandling(
@@ -665,7 +695,15 @@ export function useCopyHandler(
  * 32, not 50. Mismatching this leaves an 18px gap to the left of the first
  * pinned column.
  */
-export const ROW_HEADER_WIDTH = 32;
+/**
+ * Rendered width of the row-header (checkbox) gutter — `RowHeaderCell` and the
+ * header's corner cell are both 50px. Every piece of geometry that has to agree
+ * with the painted gutter reads this: sticky/frozen column offsets, the column
+ * virtualizer's leading width, and the row width. It used to be 32 while the
+ * cells painted 50, so frozen columns slid 18px under the checkboxes and a
+ * keyboard reveal stopped 18px short of the right edge.
+ */
+export const ROW_HEADER_WIDTH = 50;
 
 export function useStickyOffsets(
   columns: { sticky?: 'left' | 'right'; width?: number }[],
