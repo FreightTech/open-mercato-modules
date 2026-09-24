@@ -563,7 +563,7 @@ export function WorkspaceFilterBar({
       // A size container: when the bar is narrow its secondary labels collapse
       // to icons (see the `@max-[…]/wsbar:` classes here and in
       // WorkspaceActions) instead of pushing controls off the right edge.
-      className={`@container/wsbar flex h-10 min-w-0 shrink-0 items-center gap-2 ${className ?? ''}`.trim()}
+      className={`@container/wsbar mb-2 flex h-9 min-w-0 shrink-0 items-center gap-2 ${className ?? ''}`.trim()}
       role="search"
       aria-label={t('splitView.sharedFilter.title', 'Workspace filter')}
       data-workspace-filter-bar=""
@@ -574,7 +574,7 @@ export function WorkspaceFilterBar({
            input, right beside the primitive's clear button. */
         type="text"
         inputSize="sm"
-        className="h-8 min-w-[9rem] flex-1"
+        className="h-9 min-w-[9rem] flex-1"
         /* The pill overrides go through `style`, not through classes.
            `primitives-v2/utils#cn` is a plain string join with no
            tailwind-merge, so `rounded-m3-full` and the primitive's own
@@ -619,7 +619,7 @@ export function WorkspaceFilterBar({
               e.preventDefault()
               open(e.currentTarget)
             }}
-            className={`flex h-8 max-w-56 shrink-0 cursor-pointer items-center gap-1 rounded-m3-full border px-3 transition-colors ${
+            className={`flex h-9 max-w-56 shrink-0 cursor-pointer items-center gap-1 rounded-m3-full border px-3 transition-colors ${
               isActive
                 ? 'border-transparent bg-[var(--m3-secondary-container)] text-[var(--m3-on-secondary-container)] hover:bg-[var(--m3-row-selected-hover)]'
                 : 'border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] text-[var(--m3-on-surface)] hover:bg-[var(--m3-container-hover)]'
@@ -655,7 +655,7 @@ export function WorkspaceFilterBar({
           onChange={addCriterion}
           options={available.map((key) => ({ value: key, label: criterionLabel(t, key) }))}
           placeholder={t('splitView.sharedFilter.add', 'Filter')}
-          className="hot-quick-filter-control h-8 shrink-0 gap-1.5 rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] pl-3 pr-2.5 text-label-medium-md transition-colors hover:bg-[var(--m3-container-hover)]"
+          className="hot-quick-filter-control h-9 shrink-0 gap-1.5 rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] pl-3 pr-2.5 text-label-medium-md transition-colors hover:bg-[var(--m3-container-hover)]"
           ariaLabel={t('splitView.sharedFilter.add', 'Filter')}
           dataAttributes={{ 'data-workspace-add-criterion': '' }}
         />
@@ -666,7 +666,7 @@ export function WorkspaceFilterBar({
       {shared && unmappedSummary.map(([key, panes]) => (
         <span
           key={key}
-          className="flex h-8 shrink-0 items-center gap-1 rounded-m3-full bg-[var(--m3-error-container)] px-3 text-[var(--m3-on-error-container)]"
+          className="flex h-9 shrink-0 items-center gap-1 rounded-m3-full bg-[var(--m3-error-container)] px-3 text-[var(--m3-on-error-container)]"
           title={t('splitView.sharedFilter.unmappedPanes', 'Not filtered: {panes}', {
             panes: panes.join(', '),
           })}
@@ -689,7 +689,7 @@ export function WorkspaceFilterBar({
           mode takes the same `secondary-container` every other selection in
           the app uses, and the other mode is one click away. */}
       <div
-        className="flex h-8 shrink-0 items-center overflow-hidden rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)]"
+        className="flex h-9 shrink-0 items-center overflow-hidden rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)]"
         role="radiogroup"
         aria-label={t('splitView.sharedFilter.scope', 'Filter scope')}
       >

@@ -178,7 +178,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
           // sidebar: a pane on the left anchors its menu over the nav, and
           // nav links intercepted the clicks, so menu rows that happened to
           // overlap a link were dead while their neighbours worked.
-          className="fixed z-[1000] overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] py-1 text-[var(--m3-on-surface)] shadow-m3-2"
+          className="fixed z-[1000] overflow-y-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] py-1 text-[var(--m3-on-surface)] shadow-m3-2"
           style={{ top: placement.top, left: placement.left, width: MENU_WIDTH, maxHeight: placement.maxHeight }}
           data-toolbar-overflow-menu=""
         >

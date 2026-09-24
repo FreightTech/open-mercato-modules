@@ -72,7 +72,7 @@ export function CustomizeTab({ onOpen, active }: { onOpen: () => void; active?: 
       type="button"
       onClick={onOpen}
       style={offset === null ? undefined : { top: -offset, height, bottom: 'auto' }}
-      className={`absolute bottom-full right-0 z-10 flex h-6 items-center gap-1 rounded-b-m3-md border border-t-0 px-2.5 text-label-semibold-xs shadow-m3-1 transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard [&_svg]:h-3.5 [&_svg]:w-3.5 ${
+      className={`absolute bottom-full right-[calc(0.5rem+var(--ws-scrollbar,0px))] z-10 flex h-7 items-center gap-1 rounded-b-m3-md border border-t-0 px-2.5 text-label-semibold-xs transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard [&_svg]:h-3.5 [&_svg]:w-3.5 ${
         active
           ? 'border-transparent bg-[var(--m3-secondary-container)] text-[var(--m3-on-secondary-container)]'
           : 'border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-container-hover)] hover:text-[var(--m3-on-surface)]'
@@ -97,7 +97,7 @@ export function AddWidgetMenu({ onAdd }: { onAdd: (content: PaneContentRef) => v
   const t = useT()
   return (
     <AnchoredMenu
-      placement={{ width: 300, preferredHeight: 460, align: 'end' }}
+      placement={{ width: 260, preferredHeight: 460, align: 'end' }}
       panelProps={{ 'data-workspace-add-widget-menu': '' }}
       renderTrigger={({ ref, open, toggle }) => (
         <button
@@ -159,7 +159,7 @@ export function LayoutMenu({
   const label = active ? active.name : t('splitView.bar.layout', 'Layout')
   return (
     <AnchoredMenu
-      placement={{ width: 280, preferredHeight: 560, align: 'end' }}
+      placement={{ width: 240, preferredHeight: 560, align: 'end' }}
       panelProps={{ 'data-workspace-layout-menu': '' }}
       renderTrigger={({ ref, open, toggle }) => (
         <button

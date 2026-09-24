@@ -291,11 +291,16 @@ function useFilledHeight(enabled: boolean) {
 
     const measure = () => {
       const rect = element.getBoundingClientRect()
+      // The scroll pane's own bottom padding is inside its client box; filling
+      // down to that edge overflowed the page by exactly that padding and put
+      // a second scrollbar beside the workspace's.
       const bottom =
         scrollPane && scrollPane !== document.body
           ? Math.min(
               window.innerHeight,
-              Math.round(scrollPane.getBoundingClientRect().top) + scrollPane.clientHeight,
+              Math.round(scrollPane.getBoundingClientRect().top) +
+                scrollPane.clientHeight -
+                (parseFloat(getComputedStyle(scrollPane).paddingBottom) || 0),
             )
           : window.innerHeight
       setHeight(Math.max(Math.floor(bottom - rect.top), 320))
@@ -367,7 +372,9 @@ function revealPane(paneId: string) {
 }
 
 /** Vertical gap between the main grid and the sections, and between sections. */
-const SECTION_GAP_PX = 8
+const SECTION_GAP_PX = 16
+/** Room kept clear at the workspace's right edge for an overlay scrollbar. */
+const OVERLAY_SCROLLBAR_CLEARANCE_PX = 8
 /** A section's header strip. */
 const BOX_HEADER_PX = 32
 
@@ -435,6 +442,29 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
   const fill = useFilledHeight(!fullscreen)
   const [areaElement, setAreaElement] = React.useState<HTMLDivElement | null>(null)
   const areaHeight = useClientHeight(areaElement)
+  // When sections make the workspace scroll, its scrollbar takes width from
+  // the grid but not from the bar above it, so the cards stopped short of the
+  // bar's right edge. The bar is padded by the same amount.
+  // An OVERLAY scrollbar (macOS default) takes no width and draws over the
+  // cards' right edge instead; then the workspace keeps a strip clear for it
+  // and the bar matches that strip.
+  const [scrollbar, setScrollbar] = React.useState({ classic: 0, overlay: 0 })
+  React.useLayoutEffect(() => {
+    if (!areaElement) return
+    const measure = () => {
+      const classic = Math.max(0, areaElement.offsetWidth - areaElement.clientWidth)
+      const scrolls = areaElement.scrollHeight > areaElement.clientHeight + 1
+      const overlay = classic === 0 && scrolls ? OVERLAY_SCROLLBAR_CLEARANCE_PX : 0
+      setScrollbar((current) =>
+        current.classic === classic && current.overlay === overlay ? current : { classic, overlay },
+      )
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(areaElement)
+    for (const child of Array.from(areaElement.children)) observer.observe(child)
+    return () => observer.disconnect()
+  }, [areaElement, layout, fullscreen])
   const { layouts, save } = useSplitViewLayouts(tableId)
 
   // Escape leaves full screen — unless a menu or the drawer is what Escape is for.
@@ -733,15 +763,15 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
                       : { ...current, root: evenAll(current.root) },
                   )
                 }
-                // The gutter between cards: 8px of layout, the prototype's
-                // grid gap. At rest it is EMPTY — the cards' own edges do the
+                // The gutter between cards: 16px, the prototype's grid gap
+                // (measured). At rest it is EMPTY — the cards' own edges do the
                 // separating — and `::before` is the drag handle, an accent
                 // pill that colours in on hover. It must stay a DIRECT sibling
                 // of the size wrappers: `startDrag` measures `parentElement`.
                 className={`relative z-10 shrink-0 bg-transparent before:absolute before:rounded-m3-full before:bg-transparent before:transition-colors before:duration-[var(--m3-duration-short2)] before:ease-m3-standard before:content-[''] hover:before:bg-[var(--m3-accent)] ${
                   isRow
-                    ? 'w-2 cursor-col-resize before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2'
-                    : 'h-2 cursor-row-resize before:inset-x-2 before:top-1/2 before:h-0.5 before:-translate-y-1/2'
+                    ? 'w-4 cursor-col-resize before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2'
+                    : 'h-4 cursor-row-resize before:inset-x-2 before:top-1/2 before:h-0.5 before:-translate-y-1/2'
                 }`}
                 data-split-divider={`${dividerKey}:${index}`}
               />
@@ -762,16 +792,23 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
     <div
       ref={fullscreen ? undefined : fill.ref}
       className={`relative flex min-h-0 flex-col bg-[var(--m3-surface)] ${fullscreen ? 'h-full' : 'h-full'}`}
-      style={!fullscreen && fill.height ? { height: fill.height } : undefined}
       data-split-view={isSplit ? 'true' : 'false'}
       data-shared-filters={isSplit && sharedEnabled ? 'on' : 'off'}
       data-split-fullscreen={fullscreen ? 'true' : undefined}
+      style={
+        {
+          ...(!fullscreen && fill.height ? { height: fill.height } : {}),
+          // Read by the bar's and the grid's right padding — see `scrollbar`.
+          '--ws-scrollbar': `${scrollbar.classic + scrollbar.overlay}px`,
+          '--ws-overlay': `${scrollbar.overlay}px`,
+        } as React.CSSProperties
+      }
     >
       {!fullscreen && <CustomizeTab onOpen={() => setCustomizeOpen(true)} active={customizeOpen} />}
 
       {isSplit && (
         <WorkspaceFilterBar
-          className="px-2"
+          className="pl-2 pr-[calc(0.5rem+var(--ws-scrollbar,0px))]"
           criteria={criteria}
           onChange={setCriteria}
           unmappedByPane={perPane.unmapped}
@@ -801,7 +838,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
         ref={setAreaElement}
         // `px-2` and NEVER `p-2` for the grid: horizontal breathing room is
         // free, vertical padding would cost grid height on every list page.
-        className={`min-h-0 flex-1${isSplit ? ' px-2 pb-2' : ''}${hasBoxes ? ' flex flex-col overflow-y-auto' : ' flex'}`}
+        className={`min-h-0 flex-1${isSplit ? ' pb-2 pl-2 pr-[calc(0.5rem+var(--ws-overlay,0px))]' : ''}${hasBoxes ? ' flex flex-col overflow-y-auto' : ' flex'}`}
         style={isSplit && !hasBoxes ? { overflow: 'auto' } : undefined}
         data-split-root=""
       >

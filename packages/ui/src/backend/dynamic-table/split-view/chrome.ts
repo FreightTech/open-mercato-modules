@@ -39,36 +39,35 @@ export const M3_MENU_CAPTION =
 export const M3_MENU_DIVIDER = 'my-1 h-px bg-[var(--m3-outline-variant)]'
 
 /**
- * A portalled menu panel — an M3 elevated surface: a `md` (12px) corner, the
- * softer `outline-variant` hairline, a container step for the fill, and the
- * two-shadow elevation rather than Tailwind's `shadow-*`.
+ * A portalled menu panel, measured off the prototype's ActionMenu: a 16px
+ * corner, the faintest hairline, a white fill and the M3 level-2 elevation
+ * (the prototype's shadow is the same two layers).
  */
 export const M3_MENU_PANEL =
-  'pointer-events-auto fixed z-[1000] overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-bright)] p-1 shadow-m3-2'
+  'pointer-events-auto fixed z-[1000] overflow-y-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] p-1 shadow-m3-2'
 
 /**
  * A control in the workspace bar — an M3 outlined assist chip at the bar's
  * 32px. Every pill in the bar shares it so they line up to the pixel.
  */
 export const BAR_PILL =
-  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] px-3 text-label-medium-md text-[var(--m3-on-surface)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-container-hover)] active:bg-[var(--m3-state-layer-pressed)] disabled:cursor-not-allowed disabled:opacity-[var(--m3-disabled-content-opacity)] disabled:hover:bg-[var(--m3-surface-container-lowest)] [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-[var(--m3-on-surface-variant)]'
+  'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] px-3 text-label-medium-md text-[var(--m3-on-surface)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-container-hover)] active:bg-[var(--m3-state-layer-pressed)] disabled:cursor-not-allowed disabled:opacity-[var(--m3-disabled-content-opacity)] disabled:hover:bg-[var(--m3-surface-container-lowest)] [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-[var(--m3-on-surface-variant)]'
 
 /** A bar pill that is currently "on" — a saved layout applied, full screen active. */
 export const BAR_PILL_ON =
-  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-m3-full border border-transparent bg-[var(--m3-secondary-container)] px-3 text-label-medium-md text-[var(--m3-on-secondary-container)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-row-selected-hover)] [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0'
+  'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-m3-full border border-transparent bg-[var(--m3-secondary-container)] px-3 text-label-medium-md text-[var(--m3-on-secondary-container)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-row-selected-hover)] [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0'
 
 /** A 28px round icon button inside cards and menus. */
 export const ICON_BUTTON =
   'flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-m3-full text-[var(--m3-on-surface-variant)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)] active:bg-[var(--m3-state-layer-pressed)] disabled:cursor-not-allowed disabled:opacity-[var(--m3-disabled-content-opacity)] [&_svg]:h-4 [&_svg]:w-4'
 
 /**
- * A pane when the page is a workspace: the Figma widget card (549:542) — white
- * container, a 16px corner (the grid's own `.hot-card` radius, so a table pane
- * and a widget pane agree on shape) and the soft two-layer elevation from the
- * widget gallery rather than a hairline.
+ * A pane when the page is a workspace — the prototype's section card (gt-demo
+ * `Card`, measured): white, a 16px corner, a 1px hairline and NO shadow. Table
+ * and widget panes share it, so every card in the grid has the same edge.
  */
 export const PANE_CARD =
-  'rounded-m3-lg bg-[var(--m3-surface-container-lowest)] shadow-m3-1'
+  'rounded-m3-lg border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)]'
 
 /** A text field in the drawer and in menus. Focus is the teal ring, not blue. */
 export const TEXT_FIELD =

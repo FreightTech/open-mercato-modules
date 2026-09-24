@@ -290,9 +290,13 @@ function WidgetPaneBody({
       className="flex h-full min-h-0 min-w-0 flex-1 flex-col"
       data-pane-widget-body={content.widgetId}
     >
+      {/* The title sits 16px below the card edge — where a table pane's title
+          sits (8px margin, centred in its 36px header) — so titles line up
+          across a row of mixed panes. The 28px icon buttons centre on the
+          20px title line. */}
       {!hideToolbar && (
         <div
-          className="flex shrink-0 items-start gap-2 px-4 pb-2 pt-3 text-[var(--m3-on-surface)]"
+          className="flex shrink-0 items-start gap-2 px-4 pb-2 pt-4 text-[var(--m3-on-surface)] [&>button]:-mt-1"
           data-pane-widget-header=""
         >
           <div className="flex min-w-0 flex-1 flex-col">

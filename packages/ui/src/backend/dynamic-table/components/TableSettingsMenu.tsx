@@ -27,7 +27,7 @@ import { setDensityPreference, useDensityPreference } from '../hooks/useDensityP
 import { computeAnchoredPosition } from '../utils/anchoredPosition'
 import type { TableDisplayToggle } from './TableDisplayContext'
 
-const MENU_WIDTH = 248
+const MENU_WIDTH = 236
 
 const DENSITY_FALLBACK: Record<DensityLevel, string> = {
   comfortable: 'Roomy',
@@ -117,7 +117,7 @@ export function TableSettingsMenu({
           ref={panelRef}
           role="dialog"
           aria-label={label}
-          className="fixed z-[1000] flex flex-col gap-2.5 overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-bright)] p-3 text-[var(--m3-on-surface)] shadow-m3-2"
+          className="fixed z-[1000] flex flex-col gap-2.5 overflow-y-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] p-3 text-[var(--m3-on-surface)] shadow-m3-2"
           // Flipped above the ⚙, `top` is where the panel's BOTTOM edge goes.
           style={{
             ...(placement.flipAbove ? { bottom: window.innerHeight - placement.top } : { top: placement.top }),

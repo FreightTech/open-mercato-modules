@@ -2400,14 +2400,35 @@
   /* Horizontal margin dropped to 0: the card owns the pane's inset now, so the
      pill strip spans the full content width and its left edge lines up with the
      table's first column. Vertical margin is unchanged. */
-  margin: 2px 0;
-  padding: 2px 8px;            /* was 4px 8px, minus the 2px margin */
-  gap: 8px;                    /* was 12px */
+  /* The prototype's pane header (gt-demo `tHeadTop`, measured): a WHITE row
+     inside the card, no tinted pill, 8px below the card's top edge — the pill
+     sat 2px under the 16px corner and read as cramped against it. The card
+     owns the 16px sides, so the title lines up with a widget pane's title. */
+  margin: 8px 0 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  gap: 8px;
+  /* One height for every pane's header, CTA or not: without it a pane with a
+     "Utwórz …" button stood 7px taller than its neighbour and their titles,
+     tabs and grids no longer lined up across the row. 36px = the CTA + 2+2. */
+  min-height: 36px;
+  box-sizing: border-box;
+  align-items: center;
+}
+
+/* The hairline between a page toolbar and its tabs separates two bands on a
+   full page; inside a pane the header is white and the prototype has no rule
+   there — it read as a stray line across the card. */
+[data-split-view='true'] .hot-appearance-v2.hot-container .hot-tabs-row::before {
+  display: none;
 }
 
 [data-split-view='true'] .hot-appearance-v2.hot-container .hot-tabs-row {
   margin-bottom: 0;            /* was 8px */
-  padding-right: 8px;          /* was 16px */
+  /* The first tab's pill starts on the card's 16px edge, under the title. */
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* The card's own inset — a pane already has a border and a divider around it,
@@ -2444,9 +2465,15 @@
 
 /* Toolbar title: keep it (nothing else names the table in a pane) but stop it
    reserving a full-size heading's leading. */
+/* A pane's title is a card title, the same as a widget pane's (Figma widget
+   card; WidgetPane `text-body-medium-sm`): 14/20 medium. The page-heading
+   size it kept before made a table pane shout next to a widget pane. */
 [data-split-view='true'] .hot-appearance-v2 .hot-toolbar-title {
   margin: 0;
-  line-height: 1.2;
+  font-size: var(--text-body-medium-sm, 0.875rem);
+  line-height: var(--text-body-medium-sm--line-height, 1.25rem);
+  font-weight: var(--text-body-medium-sm--font-weight, 500);
+  letter-spacing: normal;
 }
 
 /* The page-level bleed margins do not apply inside a host. */

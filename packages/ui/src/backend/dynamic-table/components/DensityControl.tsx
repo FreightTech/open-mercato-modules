@@ -331,7 +331,7 @@ export const DensityControl: React.FC<DensityControlProps> = ({
             aria-label={t('dynamicTable.density.label', 'Row density')}
             aria-activedescendant={`${listboxId}-${activeIndex}`}
             onKeyDown={onListboxKeyDown}
-            className="fixed z-[60] overflow-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] py-1 text-[var(--m3-on-surface)] shadow-m3-2 outline-none"
+            className="fixed z-[60] overflow-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] py-1 text-[var(--m3-on-surface)] shadow-m3-2 outline-none"
             style={{ top: position.top, left: position.left, width: PANEL_WIDTH }}
           >
             {options.map((option, index) => {
