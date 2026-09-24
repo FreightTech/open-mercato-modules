@@ -1092,7 +1092,7 @@ __metadata:
     "@types/react-dom": "npm:^19.2.3"
     typescript: "npm:^5.9.3"
   peerDependencies:
-    "@freighttech/ui": ^0.13.0
+    "@freighttech/ui": ^0.13.0 || ^0.14.0
     "@mikro-orm/core": ^7.0.17
     "@mikro-orm/decorators": ^7.0.17
     "@mikro-orm/migrations": ^7.0.17
@@ -1130,7 +1130,7 @@ __metadata:
     typescript: "npm:^5.9.3"
     undici: "npm:^7.25.0"
   peerDependencies:
-    "@freighttech/ui": ^0.13.0
+    "@freighttech/ui": ^0.13.0 || ^0.14.0
     "@mikro-orm/core": ^7.0.17
     "@mikro-orm/decorators": ^7.0.17
     "@mikro-orm/migrations": ^7.0.17

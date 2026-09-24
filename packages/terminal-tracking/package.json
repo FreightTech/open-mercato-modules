@@ -1,6 +1,6 @@
 {
   "name": "@freighttech/terminal-tracking",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "type": "module",
   "license": "MIT",
   "publishConfig": {
@@ -40,7 +40,7 @@
     "undici": "^7.25.0"
   },
   "peerDependencies": {
-    "@freighttech/ui": "^0.13.0",
+    "@freighttech/ui": "^0.13.0 || ^0.14.0",
     "@mikro-orm/core": "^7.0.17",
     "@mikro-orm/decorators": "^7.0.17",
     "@mikro-orm/migrations": "^7.0.17",
