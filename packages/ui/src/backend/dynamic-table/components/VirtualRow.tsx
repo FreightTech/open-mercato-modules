@@ -1,4 +1,5 @@
 import React, { memo, useRef } from 'react';
+import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { MoreHorizontal } from 'lucide-react';
 import { VirtualItem } from '@tanstack/react-virtual';
 import { useCellStore, useRowRangeState } from '../hooks/index';
@@ -114,6 +115,9 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
     compiledFormats,
     columnWindow,
   }) => {
+    const t = useT();
+    const rowActionsLabel = t('dynamicTable.rowActions', 'Row actions');
+    const selectRowLabel = t('dynamicTable.selection.row', 'Select row');
     const store = useCellStore();
     // Only this row's slice of the selection — see useRowRangeState.
     const rowRange = useRowRangeState(rowIndex);
@@ -228,6 +232,7 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
         {rowHeaders && (
           <RowHeaderCell
             row={rowIndex}
+            selectLabel={selectRowLabel}
             isNewRow={isNewRow}
             isInRowRange={!!isInRowRange}
             rowRangeEdges={rowRangeEdges}
@@ -318,8 +323,8 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
               <button
                 type="button"
                 className="hot-row-actions-btn"
-                title="Row actions"
-                aria-label="Row actions"
+                title={rowActionsLabel}
+                aria-label={rowActionsLabel}
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => onRowActionsMenu?.(e, rowIndex)}
               >

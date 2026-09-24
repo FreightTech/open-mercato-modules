@@ -278,6 +278,12 @@ export function createMouseHandlers(
     // The editor's blur handler calls onSave -> handleCellSave -> clearEditing,
     // ensuring the value is saved before the editing state is cleared.
 
+    // A header press is the header's own business: it has just selected the
+    // column (`handleColumnHeaderMouseDown`) and bubbles here next. Treating
+    // it as "empty space" cleared that selection at once, so a header click
+    // selected nothing.
+    if ((e.target as HTMLElement).closest('th')) return;
+
     const cell = (e.target as HTMLElement).closest('td');
     if (!cell) {
       // Clicked on empty space inside table (below rows) - clear selection

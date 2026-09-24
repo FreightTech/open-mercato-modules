@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useEscapeLayer } from '../hooks/useEscapeLayer';
 
 if (typeof window !== 'undefined') {
@@ -54,23 +54,29 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const [adjustedPosition, setAdjustedPosition] = useState(position);
 
-  useEffect(() => {
+  // A layout effect, so the corrected position is what gets painted — no
+  // frame of the menu hanging off the edge first.
+  useLayoutEffect(() => {
     if (!isOpen || !menuRef.current) return;
 
-    // Adjust position to keep menu within viewport
+    // Keep the menu on screen. The row kebab sits at the grid's right edge, and
+    // a menu opened to its right ran under the page scrollbar and off screen:
+    // measure against the viewport WITHOUT the scrollbar (`clientWidth`) and,
+    // when there is no room, open the menu on the other side of the pointer.
     const rect = menuRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+    const margin = 8;
 
     let x = position.x;
     let y = position.y;
 
-    if (x + rect.width > viewportWidth) {
-      x = viewportWidth - rect.width - 10;
+    if (x + rect.width > viewportWidth - margin) {
+      x = Math.max(margin, position.x - rect.width);
     }
 
-    if (y + rect.height > viewportHeight) {
-      y = viewportHeight - rect.height - 10;
+    if (y + rect.height > viewportHeight - margin) {
+      y = Math.max(margin, position.y - rect.height);
     }
 
     setAdjustedPosition({ x, y });

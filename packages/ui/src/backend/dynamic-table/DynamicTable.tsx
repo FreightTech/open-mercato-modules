@@ -1628,6 +1628,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     [handleSortDirectionChange],
   );
 
+  const handleModernSortClear = useCallback(
+    (colIndex: number) => handleSortDirectionChange(colIndex, null),
+    [handleSortDirectionChange],
+  );
+
   const handleModernFilterByField = useCallback((colIndex: number) => {
     const col = cols[colIndex];
     if (!col) return;
@@ -2112,6 +2117,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     const sync = () => {
       const editing = store.getEditingCell();
       const sel = store.getSelection();
+      // A whole-column selection (a header click) spans every row; its focus
+      // is the LAST row by construction, and following it scrolled the grid to
+      // the bottom on every header click. There is no row to keep in view.
+      if (!editing && sel.type === 'colRange') return;
       const target = editing?.row ?? sel.focus?.row ?? sel.anchor?.row;
       if (target == null || target < 0 || target >= store.getRowCount()) return;
       if (target === lastRow) return;
@@ -3790,7 +3799,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           {!hideSearch && (
             <SearchBar
               tableRef={tableRef}
-              placeholder={searchPlaceholder ?? 'Search...'}
+              placeholder={searchPlaceholder ?? t('dynamicTable.search.placeholder', 'Search...')}
               debounceMs={searchDebounceMs}
               renderSuggestions={searchSuggestions}
               initialValue={searchQuery}
@@ -4127,6 +4136,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 modernLayout={!disableBuiltinColumnMenu}
                 onSortAsc={handleModernSortAsc}
                 onSortDesc={handleModernSortDesc}
+                onSortClear={handleModernSortClear}
                 onFilterByField={handleModernFilterByField}
                 /* A1 — the header quick filter writes straight into the same
                    ephemeral `filters` state the Configure View drawer edits.

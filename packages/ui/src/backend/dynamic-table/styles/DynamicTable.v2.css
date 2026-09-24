@@ -2681,7 +2681,10 @@
   position: absolute;
   top: 6px;
   right: 8px;
-  z-index: 6;
+  /* Above the sticky column header (z-index 10, DynamicTable.css): with the
+     toolbar AND the tabs hidden, the header is the top row and it covered the
+     buttons, leaving an empty white pill. */
+  z-index: 12;
   display: flex;
   align-items: center;
   gap: 2px;

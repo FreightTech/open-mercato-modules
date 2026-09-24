@@ -11,10 +11,12 @@ export interface RowHeaderCellProps {
   selectable?: boolean;
   selected?: boolean;
   onToggleSelect?: () => void;
+  /** Accessible name of the selection checkbox — translated by the row, once. */
+  selectLabel?: string;
 }
 
 const RowHeaderCell: React.FC<RowHeaderCellProps> = memo(
-  ({ row, isNewRow, isInRowRange, rowRangeEdges, onCancel, onDoubleClick, selectable, selected, onToggleSelect }) => {
+  ({ row, isNewRow, isInRowRange, rowRangeEdges, onCancel, onDoubleClick, selectable, selected, onToggleSelect, selectLabel = 'Select row' }) => {
     return (
       <td
         className="hot-row-header"
@@ -58,7 +60,7 @@ const RowHeaderCell: React.FC<RowHeaderCellProps> = memo(
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
             onDoubleClick={(e) => e.stopPropagation()}
-            aria-label="Select row"
+            aria-label={selectLabel}
           />
         ) : (
           row + 1
