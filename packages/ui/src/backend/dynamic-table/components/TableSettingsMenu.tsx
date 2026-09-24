@@ -30,9 +30,9 @@ import type { TableDisplayToggle } from './TableDisplayContext'
 const MENU_WIDTH = 248
 
 const DENSITY_FALLBACK: Record<DensityLevel, string> = {
-  comfortable: 'Roomy',
-  compact: 'Medium',
-  dense: 'Tight',
+  comfortable: 'Comfortable',
+  compact: 'Compact',
+  dense: 'Dense',
 }
 
 export function TableSettingsMenu({
@@ -150,10 +150,11 @@ export function TableSettingsMenu({
                         : 'text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-state-layer-hover)]',
                     ].join(' ')}
                     aria-pressed={density === level}
+                    title={t(`dynamicTable.density.${level}Hint`, '')}
                     data-density-option={level}
                   >
                     {density === level ? <Check size={11} aria-hidden="true" /> : null}
-                    {t(`dynamicTable.density.option.${level}`, DENSITY_FALLBACK[level])}
+                    {t(`dynamicTable.density.${level}`, DENSITY_FALLBACK[level])}
                   </button>
                 ))}
               </div>

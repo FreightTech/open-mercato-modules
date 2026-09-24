@@ -359,37 +359,44 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
   const t = useT()
   const registry = useTableRegistry()
 
-  // Restored SYNCHRONOUSLY in the initializer, not in an effect: an effect
-  // would paint one default pane first and then swap in the real arrangement,
-  // which reads as a flash and remounts every grid it restores.
+  // The server has no stored layout, so the first render — on the server AND
+  // during hydration — is always the page's own table. Restoring in the
+  // initializer instead made the hydrated tree disagree with the server's
+  // (a different arrangement, random pane ids) and React does not patch that.
+  //
+  // The stored arrangement is read in a LAYOUT effect: it commits before the
+  // browser paints, so there is still no flash of the default pane, and the
+  // grid is not rendered until then, so no pane mounts only to be replaced.
   //
   // Tables are pruned against the registry (available synchronously); widgets
   // are NOT — the widget catalogue is fetched, so pruning against it at first
   // paint would drop every widget pane on every reload (TC-APP-604). A widget
   // the user can no longer open degrades in its own pane instead.
-  const [layout, setLayout] = React.useState<SplitLayout>(() => {
+  const [layout, setLayout] = React.useState<SplitLayout>(() => ({
+    // A DETERMINISTIC id: this initializer runs on the server too.
+    root: { kind: 'pane', id: defaultPaneId(tableId), content: tableContent(tableId) },
+    version: SPLIT_LAYOUT_VERSION,
+  }))
+  const [restored, setRestored] = React.useState(false)
+  React.useLayoutEffect(() => {
     const known = new Set(registry.tables.map((table) => table.metadata.id))
     const stored = readStoredLayout(tableId, (content) =>
       content.kind === 'table' ? known.has(content.tableId) : true,
     )
-    return (
-      stored ?? {
-        // A DETERMINISTIC id for the default pane. This initializer also runs
-        // on the server, where there is no stored layout; a random id there
-        // and another on the client made the hydrated `data-pane-id` disagree
-        // with React's own, which React does not patch — so the DOM carried
-        // an id nothing else knew.
-        root: { kind: 'pane', id: defaultPaneId(tableId), content: tableContent(tableId) },
-        version: SPLIT_LAYOUT_VERSION,
-      }
-    )
-  })
+    if (stored) setLayout(stored)
+    setRestored(true)
+    // Once per table: the registry is only needed for the first read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableId])
 
   // Every mutation funnels through `setLayout`, so one effect covers all of
   // them — there is no path that changes the layout without being saved.
   // Coalesced on an animation frame because a divider drag calls `setLayout`
   // per `mousemove`; the cleanup flushes synchronously so nothing is lost.
+  // Nothing is written before the stored layout is read, or the default
+  // would overwrite it.
   React.useEffect(() => {
+    if (!restored) return
     let frame: number | null = requestAnimationFrame(() => {
       frame = null
       writeStoredLayout(tableId, layout)
@@ -399,7 +406,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
       cancelAnimationFrame(frame)
       writeStoredLayout(tableId, layout)
     }
-  }, [tableId, layout])
+  }, [tableId, layout, restored])
 
   /** What the picker will do with the content you choose. */
   const [pending, setPending] = React.useState<
@@ -788,7 +795,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
           style={hasBoxes ? { flex: '0 0 auto', height: Math.max(areaHeight - 8, PANE_MIN_HEIGHT_PX) } : undefined}
           data-split-main=""
         >
-          {renderNode(layout.root, [], undefined, mainSlotCount)}
+          {restored && renderNode(layout.root, [], undefined, mainSlotCount)}
         </div>
 
         {boxes.map((box, index) => {

@@ -60,9 +60,9 @@ const MENU_WIDTH = 216
 const MENU_MAX_HEIGHT = 720
 
 const DENSITY_LABELS: Record<DensityLevel, string> = {
-  comfortable: 'Roomy',
-  compact: 'Medium',
-  dense: 'Tight',
+  comfortable: 'Comfortable',
+  compact: 'Compact',
+  dense: 'Dense',
 }
 
 export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
@@ -247,7 +247,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
                       aria-pressed={density === level}
                     >
                       {density === level ? <Check size={11} aria-hidden="true" /> : null}
-                      {DENSITY_LABELS[level]}
+                      {t(`dynamicTable.density.${level}`, DENSITY_LABELS[level])}
                     </button>
                   ))}
                 </div>
