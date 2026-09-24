@@ -59,8 +59,9 @@
    The ids predate this scale and are persisted (localStorage, perspectives),
    so they stay; only what they mean changed.
 
-   Row height includes the 2+2px inter-row gap. The editor fills the row's
-   content box: row − 4px gap − 2 × inset.
+   Rows are separated by a 1px rule on the row itself (DynamicTable.v2.css,
+   "ROWS AND HEADER"), inside the row height; cells carry no gap borders.
+   The editor fills the row's content box: row − 1px rule − 2 × inset.
    ═════════════════════════════════════════════════════════════════════════ */
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -69,8 +70,8 @@
    ───────────────────────────────────────────────────────────────────────── */
 .hot-container[data-density-level="dense"] {
   --dt-row-height: 34px;
-  --dt-row-gap-top: 2px;
-  --dt-row-gap-bottom: 2px;
+  --dt-row-gap-top: 0px;
+  --dt-row-gap-bottom: 0px;
   --dt-row-rule-color: transparent;
 
   --dt-cell-pad-y: 6px;
@@ -102,7 +103,7 @@
   --dt-editor-inset-y: 3px;
   --dt-editor-inset-x: 6px;
   --dt-editor-pad-x: 14px;
-  --dt-editor-line-height: 24px;
+  --dt-editor-line-height: 27px;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -112,8 +113,8 @@
    ───────────────────────────────────────────────────────────────────────── */
 .hot-container[data-density-level="compact"] {
   --dt-row-height: 44px;
-  --dt-row-gap-top: 2px;
-  --dt-row-gap-bottom: 2px;
+  --dt-row-gap-top: 0px;
+  --dt-row-gap-bottom: 0px;
   --dt-row-rule-color: transparent;
 
   --dt-cell-pad-y: 10px;
@@ -145,7 +146,7 @@
   --dt-editor-inset-y: 4px;
   --dt-editor-inset-x: 6px;
   --dt-editor-pad-x: 14px;
-  --dt-editor-line-height: 32px;
+  --dt-editor-line-height: 35px;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -154,8 +155,8 @@
    ───────────────────────────────────────────────────────────────────────── */
 .hot-container[data-density-level="comfortable"] {
   --dt-row-height: 48px;
-  --dt-row-gap-top: 2px;
-  --dt-row-gap-bottom: 2px;
+  --dt-row-gap-top: 0px;
+  --dt-row-gap-bottom: 0px;
   --dt-row-rule-color: transparent;
 
   --dt-cell-pad-y: 12px;
@@ -187,7 +188,7 @@
   --dt-editor-inset-y: 4px;
   --dt-editor-inset-x: 6px;
   --dt-editor-pad-x: 14px;
-  --dt-editor-line-height: 36px;
+  --dt-editor-line-height: 39px;
 }
 
 

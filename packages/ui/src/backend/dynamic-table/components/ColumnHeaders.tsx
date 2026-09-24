@@ -778,6 +778,9 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                 <th
                   className="hot-col-header"
                   data-actions-cell="true"
+                  // No visible label: the design's trailing column is the row
+                  // kebab alone. Screen readers still get its name.
+                  aria-label={t('dynamicTable.actions.header', 'Actions')}
                   style={{
                     width: actionsColumnWidth,
                     flexBasis: actionsColumnWidth,
@@ -788,7 +791,6 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                     zIndex: 3,
                   }}
                 >
-                  Actions
                 </th>
               )}
             </tr>

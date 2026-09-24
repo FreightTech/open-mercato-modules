@@ -206,7 +206,6 @@ export default function WebhooksPage() {
         <div className="-mx-4 lg:-mx-6">
           <DynamicTable
             {...table.props}
-            striped
             density="md"
             rowActions={rowActions}
             onRowAction={handleRowAction}

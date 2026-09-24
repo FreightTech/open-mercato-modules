@@ -167,9 +167,12 @@ describe('density metrics ↔ density.css', () => {
     expect(overflowing).toEqual([])
   })
 
-  it('every level keeps the rounded-pill rows — no hairline rules', () => {
+  it('cells carry no gap borders at any level — rows are separated by one rule on the row', () => {
+    // The design's table (gt-demo DataTable, 15.09): a 1px divider between
+    // rows, drawn once per row in DynamicTable.v2.css, not a gap per cell.
     for (const level of DENSITY_LEVELS) {
-      expect(readVar(level, '--dt-row-gap-top')).toBe('2px')
+      expect(readVar(level, '--dt-row-gap-top')).toBe('0px')
+      expect(readVar(level, '--dt-row-gap-bottom')).toBe('0px')
       expect(readVar(level, '--dt-row-rule-color')).toBe('transparent')
     }
   })

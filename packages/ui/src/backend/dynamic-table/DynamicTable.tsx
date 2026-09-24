@@ -558,7 +558,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   siblingTableRefs,
   onRowClick,
   highlightedRowId,
-  actionsColumnWidth: actionsColumnWidthProp = 80,
+  actionsColumnWidth: actionsColumnWidthProp,
   enableComments = false,
   commentsEntityType,
   commentsCellTarget,
@@ -630,7 +630,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     onFullscreenChange,
     enableFillHandle = false,
     fillConfirmThreshold = 100,
-    readOnlyStyle = 'muted',
+    // The design's table does not tint read-only columns (gt-demo, 15.09): a
+    // grey column read as a stripe the user could not explain.
+    readOnlyStyle = 'normal',
     rowHoverStyle = 'default',
     disableBuiltinColumnMenu = false,
     borderless = false,
@@ -702,7 +704,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   });
 
   // -------------------- CONSTANTS --------------------
-  const actionsColumnWidth = actionsColumnWidthProp;
 
   // -------------------- BASE COLUMNS --------------------
   // -------------------- LINKED (LOOKUP) COLUMNS --------------------
@@ -1096,7 +1097,23 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // none of these drop the empty column entirely. Recomputed on every render;
   // adding/removing a new row bumps `storeRevision` (see setStoreRevision),
   // which re-renders and re-reads `store.hasNewRows()` so the column toggles.
-  const showActionsColumn = !hideActionsColumn && (!!rowActions || !!actionsRenderer || store.hasNewRows());
+  // `rowActions` alone is not enough: a table may define it and return nothing
+  // for most rows (transports offer an action on tracked sea legs only), which
+  // left a wide, empty column on every page. The column appears when at least
+  // one loaded row has an action. One cheap call per row, only when the data or
+  // the callback changes.
+  const anyRowHasActions = useMemo(() => {
+    if (!rowActions) return false;
+    for (let index = 0; index < data.length; index++) {
+      if (rowActions(data[index], index).length > 0) return true;
+    }
+    return false;
+  }, [data, rowActions]);
+  const showActionsColumn = !hideActionsColumn && (anyRowHasActions || !!actionsRenderer || store.hasNewRows());
+  // A kebab-only column is the design's narrow trailing column; a custom
+  // renderer, or a new row's "Save" button, keeps the wider default.
+  const actionsColumnWidth =
+    actionsColumnWidthProp ?? (actionsRenderer || store.hasNewRows() ? 80 : ACTIONS_KEBAB_COLUMN_WIDTH);
 
   // Sticky-column scroll shadows (v2 affordance — CSS scopes them):
   //  • Actions column gets a LEFT-edge shadow while there's content still to
@@ -4477,5 +4494,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       </TableDisplayContext.Provider>
   );
 };
+
+/** Width of the trailing column when it only holds the row kebab. */
+const ACTIONS_KEBAB_COLUMN_WIDTH = 44;
 
 export default DynamicTable;

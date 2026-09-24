@@ -124,9 +124,10 @@
     color: var(--m3-on-surface-variant);
 }
 
-/* 'normal' style - same as editable cells, no visual difference */
+/* 'normal' style (the default) - same as editable cells, no visual difference.
+   Transparent rather than white, so the row's hover layer shows through. */
 [data-readonly-style="normal"] .hot-cell.read-only {
-    background: var(--m3-surface-container-lowest);
+    background: transparent;
     color: var(--m3-on-surface);
 }
 
