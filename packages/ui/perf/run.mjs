@@ -232,6 +232,26 @@ async function runOnce(browser, wl, opts = {}) {
   const right = await keyRun('ArrowRight')
   out.keyNav = { n: down.n + right.n, p95: Math.max(down.p95 || 0, right.p95 || 0), down, right }
 
+  // Correctness, not speed: after every arrow press the caret must be fully
+  // inside the visible band (below the sticky header, inside the scroller).
+  // Walks 40 down then 40 up from the top — past the bottom edge and back.
+  await page.evaluate(() => window.__bench.scrollTo(0, 0))
+  await page.locator('td[data-row="0"][data-col="2"]').click()
+  const caretVisible = () => page.evaluate(() => {
+    const c = document.querySelector('td[data-cell-selected="true"]') || [...document.querySelectorAll('td[data-in-range="true"]')].find((td) => td.dataset.rangeTop === 'true')
+    if (!c) return false
+    const s = document.querySelector('.hot-virtual-container').getBoundingClientRect()
+    const h = document.querySelector('.hot-headers-sticky')?.getBoundingClientRect().bottom ?? s.top
+    const r = c.getBoundingClientRect()
+    return r.top >= Math.max(s.top, h) - 1 && r.bottom <= s.bottom + 1 && r.left >= s.left - 1 && r.right <= s.right + 1
+  })
+  let hidden = 0
+  const steps = Math.min(40, wl.rows - 1)
+  for (const key of ['ArrowDown', 'ArrowUp']) {
+    for (let i = 0; i < steps; i++) { await page.keyboard.press(key); if (!(await caretVisible())) hidden++ }
+  }
+  out.caret = { presses: steps * 2, hidden }
+
   // Edit: open an editor on a text column, type, commit with Enter. Ten cells.
   await page.evaluate(() => window.__bench.scrollTo(0, 0))
   const textCol = wl.cols > 7 ? 7 : 0

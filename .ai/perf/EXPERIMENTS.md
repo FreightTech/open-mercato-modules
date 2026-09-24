@@ -25,3 +25,8 @@ Highlights: app-transport horizontal pan 36.7 → 16.1 ms/frame (−56%, dropped
 
 ## Merged with split-view (dynamictables-split-view)
 `merged-split-view` — 6355150 vs a4ccc44 (100x30, 100x80, app-transport; 5 interleaved runs): **0 better, 0 worse, no page errors** — the split-view work (Cell null guard, SearchBar initialValue, zebra/display host) is performance-neutral on the grid.
+
+## Correctness fixes found by the real-app browser check (FMS, 2026-09-24)
+Both also exist on main; both found by driving /backend/folders-transport, not by any benchmark.
+- **Escape saved the edit** (1ceadcc). `Cell.handleCancel` moved focus while the editor was still mounted, so the editor's `onBlur → onSave` committed the abandoned text. Guarded in `Cell`; regression test forces the keydown→blur order; verified in FMS (Escape ×3 + reload → value untouched).
+- **ArrowDown walked the caret off-screen for ~10 rows.** The scroll-into-view effect bailed when the target row was MOUNTED, and overscan keeps ~10 off-screen rows mounted. Now it measures the row against the visible band (below the sticky header, above the bottom edge / sticky footer). New bench metric `caret.hidden` (80 presses down+up): 37 → 0 on both workloads; FMS transport table 0/36. `caret-visible` A/B shows ArrowDown script/press 3.7 → 8.2 ms — decomposed (`split.mjs`, 5 interleaved runs): presses WITHIN the view are unchanged (4.69 vs 4.86 ms), presses past the edge go 3.96 → 8.43 ms because the grid now actually scrolls one row per press (base was cheap only because it did not scroll — the bug). Accepted: that is the cost of a one-row scroll, same as slow-scroll per frame.

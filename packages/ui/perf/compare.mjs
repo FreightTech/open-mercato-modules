@@ -34,7 +34,7 @@ const HEADLINE = [
   'scrollY_fast.p95', 'scrollY_fast.taskMsPerFrame', 'scrollY_fast.scriptMsPerFrame', 'scrollY_fast.styleMsPerFrame', 'scrollY_fast.layoutMsPerFrame', 'scrollY_fast.dropped', 'scrollY_fast.blankFrames', 'scrollY_fast.reactCommits',
   'scrollX.p95', 'scrollX.taskMsPerFrame', 'scrollX.dropped', 'scrollX.blankFrames',
   'keyNav.down.scriptMsPerPress', 'keyNav.down.taskMsPerPress', 'keyNav.down.slowPresses', 'keyNav.right.scriptMsPerPress', 'keyNav.right.taskMsPerPress', 'keyNav.right.slowPresses', 'edit.keydown.p95',
-  'memory.jsHeapMB', 'afterMount.domNodes',
+  'caret.hidden', 'memory.jsHeapMB', 'afterMount.domNodes',
 ]
 // Informational: more or fewer is not "better" by itself.
 const NEUTRAL = /\.n$|mountedRows|mountedCells|commits\.count|commits\.actualMs|layoutsPerFrame/

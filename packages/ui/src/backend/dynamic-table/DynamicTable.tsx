@@ -2104,11 +2104,30 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       if (target == null || target < 0 || target >= store.getRowCount()) return;
       if (target === lastRow) return;
       lastRow = target;
-      // Already painted → nothing to do. A drag-select's focus can only ever be
-      // a mounted cell, so this is also what keeps a drag from auto-scrolling.
-      const mounted = rowVirtualizer.getVirtualItems();
-      if (mounted.length === 0) return;
-      if (target >= mounted[0].index && target <= mounted[mounted.length - 1].index) return;
+      // MOUNTED is not VISIBLE: with overscan the next ~10 rows below the edge
+      // are always mounted, so a mounted-only bail let ArrowDown walk the caret
+      // off-screen for ten rows before anything scrolled (measured: caret
+      // hidden after 38 of 80 arrow presses on a 100-row grid). A mounted row
+      // is measured against the band rows are actually visible in — below the
+      // sticky header, above the bottom edge and a sticky footer — and the
+      // scroller moves just enough. Looked up by `data-row` (the DATA index),
+      // so grouped views measure the right row too. A drag-select's focus is
+      // always under the pointer, hence visible, so a drag never auto-scrolls.
+      const scroller = tableRef.current;
+      const rowEl = scroller?.querySelector<HTMLElement>(`tr[data-row="${target}"]`);
+      if (scroller && rowEl) {
+        const view = scroller.getBoundingClientRect();
+        const header = scroller.querySelector<HTMLElement>('.hot-headers-sticky');
+        const footer = scroller.querySelector<HTMLElement>('.hot-footer-totals');
+        const bandTop = Math.max(view.top, header ? header.getBoundingClientRect().bottom : view.top);
+        const bandBottom =
+          view.top + scroller.clientHeight -
+          (footer && getComputedStyle(footer).position === 'sticky' ? footer.offsetHeight : 0);
+        const row = rowEl.getBoundingClientRect();
+        if (row.top < bandTop) scroller.scrollTop -= bandTop - row.top;
+        else if (row.bottom > bandBottom) scroller.scrollTop += row.bottom - bandBottom;
+        return;
+      }
       rowVirtualizer.scrollToIndex(target, { align: 'auto' });
     };
     const offSelection = store.subscribeToSelection(sync);
