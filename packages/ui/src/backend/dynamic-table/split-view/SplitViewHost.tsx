@@ -29,6 +29,7 @@
  */
 
 import * as React from 'react'
+import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/useOrganizationScope'
 import ReactDOM from 'react-dom'
 import { SlidersHorizontal } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
@@ -391,35 +392,58 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
   // browser paints, so there is still no flash of the default pane, and the
   // grid is not rendered until then, so no pane mounts only to be replaced.
   //
-  // Tables are pruned against the registry (available synchronously); widgets
-  // are NOT — the widget catalogue is fetched, so pruning against it at first
-  // paint would drop every widget pane on every reload (TC-APP-604). A widget
-  // the user can no longer open degrades in its own pane instead.
+  // Tables are pruned against the registry once it has loaded (see below);
+  // widgets are NOT — the widget catalogue is fetched, so pruning against it
+  // at first paint would drop every widget pane on every reload (TC-APP-604).
+  // A widget the user can no longer open degrades in its own pane instead.
   const [layout, setLayout] = React.useState<SplitLayout>(() => ({
     // A DETERMINISTIC id: this initializer runs on the server too.
     root: { kind: 'pane', id: defaultPaneId(tableId), content: tableContent(tableId) },
     version: SPLIT_LAYOUT_VERSION,
   }))
   const [restored, setRestored] = React.useState(false)
+  // The layout as last restored (or the initial default). Until the user
+  // changes something the layout IS this object, and an untouched layout is
+  // never written back: that write is what clobbered saved layouts.
+  const baselineRef = React.useRef<SplitLayout>(layout)
+  const defaultLayoutRef = React.useRef<SplitLayout>(layout)
+  const layoutRef = React.useRef(layout)
+  layoutRef.current = layout
+  // The organisation scope and the table registry both arrive after first
+  // paint. The stored layout may be keyed under the organisation (written
+  // before the user id resolved), and a read without it finds nothing — so the
+  // restore runs again as each arrives, for as long as the user has not
+  // touched the layout.
+  const scopeVersion = useOrganizationScopeVersion()
   React.useLayoutEffect(() => {
-    const known = new Set(registry.tables.map((table) => table.metadata.id))
+    if (layoutRef.current !== baselineRef.current) return
+    // Prune tables only against a registry that has LOADED; against an empty
+    // one every pane reads as unknown. A pane whose table really is gone
+    // degrades in place instead, like a widget pane.
+    const known = registry.ready ? new Set(registry.tables.map((table) => table.metadata.id)) : null
     const stored = readStoredLayout(tableId, (content) =>
-      content.kind === 'table' ? known.has(content.tableId) : true,
+      content.kind === 'table' && known ? known.has(content.tableId) : true,
     )
-    if (stored) setLayout(stored)
+    if (stored) {
+      baselineRef.current = stored
+      setLayout(stored)
+    } else if (baselineRef.current !== defaultLayoutRef.current) {
+      // An earlier read (registry not loaded yet) kept panes this one prunes
+      // away entirely: back to the page's own table (TC-APP-609).
+      baselineRef.current = defaultLayoutRef.current
+      setLayout(defaultLayoutRef.current)
+    }
     setRestored(true)
-    // Once per table: the registry is only needed for the first read.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableId])
+  }, [tableId, registry.ready, scopeVersion])
 
-  // Every mutation funnels through `setLayout`, so one effect covers all of
-  // them — there is no path that changes the layout without being saved.
-  // Coalesced on an animation frame because a divider drag calls `setLayout`
-  // per `mousemove`; the cleanup flushes synchronously so nothing is lost.
-  // Nothing is written before the stored layout is read, or the default
-  // would overwrite it.
+  // Every user mutation funnels through `setLayout`, so one effect covers all
+  // of them. Coalesced on an animation frame because a divider drag calls
+  // `setLayout` per `mousemove`; the cleanup flushes synchronously so nothing
+  // is lost. Nothing is written before the first read, and an untouched layout
+  // is not written at all (see `baselineRef`).
   React.useEffect(() => {
-    if (!restored) return
+    if (!restored || layout === baselineRef.current) return
     let frame: number | null = requestAnimationFrame(() => {
       frame = null
       writeStoredLayout(tableId, layout)
