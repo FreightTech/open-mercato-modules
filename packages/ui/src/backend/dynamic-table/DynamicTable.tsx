@@ -1191,13 +1191,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   const totalWidth = useMemo(() => {
     return (
       cols.reduce((sum, _, idx) => sum + store.getColumnWidth(idx), 0) +
-      (rowHeaders ? 50 : 0) +
+      (rowHeaders ? ROW_HEADER_WIDTH : 0) +
       (showActionsColumn ? actionsColumnWidth : 0)
     );
   }, [cols, store, rowHeaders, actionsColumnWidth, showActionsColumn, storeRevision]);
 
   /** Row furniture that sits outside the column widths. */
-  const furnitureWidth = (rowHeaders ? 50 : 0) + (showActionsColumn ? actionsColumnWidth : 0);
+  const furnitureWidth = (rowHeaders ? ROW_HEADER_WIDTH : 0) + (showActionsColumn ? actionsColumnWidth : 0);
 
   // Stable width getter for the pinned totals row, so its `memo` survives a
   // render that changed nothing it cares about. Widths only move when the store
@@ -2041,11 +2041,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     pinnedRightIndices: pinnedColumnIndices.right,
     forcedIndices: forcedColumnIndices,
     overscan: columnOverscan,
-    // ROW_HEADER_WIDTH (32), NOT the 50 that `totalWidth` uses for the same
-    // gutter — the two disagree today (a pre-existing bug). The 18px difference
-    // moves only the scroll-range arithmetic, well inside one overscan column,
-    // and never touches a spacer width. Do NOT "fix" it by swapping `totalWidth`
-    // for the virtualizer's: that visibly narrows every table by 18px.
+    // The same gutter width `totalWidth` and the painted row header use. When
+    // this disagreed (32 vs 50) scrollToColumn revealed a column 18px short of
+    // the right edge.
     leadingWidth: rowHeaders ? ROW_HEADER_WIDTH : 0,
     trailingWidth: showActionsColumn ? actionsColumnWidth : 0,
     widthRevision: storeRevision,

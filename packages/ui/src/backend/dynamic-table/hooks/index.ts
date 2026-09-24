@@ -695,7 +695,15 @@ export function useCopyHandler(
  * 32, not 50. Mismatching this leaves an 18px gap to the left of the first
  * pinned column.
  */
-export const ROW_HEADER_WIDTH = 32;
+/**
+ * Rendered width of the row-header (checkbox) gutter — `RowHeaderCell` and the
+ * header's corner cell are both 50px. Every piece of geometry that has to agree
+ * with the painted gutter reads this: sticky/frozen column offsets, the column
+ * virtualizer's leading width, and the row width. It used to be 32 while the
+ * cells painted 50, so frozen columns slid 18px under the checkboxes and a
+ * keyboard reveal stopped 18px short of the right edge.
+ */
+export const ROW_HEADER_WIDTH = 50;
 
 export function useStickyOffsets(
   columns: { sticky?: 'left' | 'right'; width?: number }[],
