@@ -176,7 +176,7 @@ export function ContentCatalogList({
             data-split-picker-kind={group.key === 'tables' ? 'table' : 'widget'}
             data-split-picker-group={group.key}
           >
-            <div className={`px-1.5 pb-0.5 pt-1.5 ${M3_MENU_CAPTION}`}>{group.label}</div>
+            <div className={`px-3 pb-1 pt-2 ${M3_MENU_CAPTION}`}>{group.label}</div>
             {group.items.map(({ item, title }) => (
               <button
                 key={`${item.kind}:${item.id}`}

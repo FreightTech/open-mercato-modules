@@ -350,6 +350,22 @@ function defaultPaneId(tableId: string): string {
   return `p0${(hash >>> 0).toString(36)}`
 }
 
+/**
+ * Scroll the workspace — and ONLY the workspace — until a pane is in view.
+ * Not `scrollIntoView`: that scrolls every scrollable ancestor too, and moved
+ * the whole page up under the navbar, taking the "Dostosuj" tab with it.
+ */
+function revealPane(paneId: string) {
+  const pane = document.querySelector<HTMLElement>(`[data-pane-id="${paneId}"], [data-pane-empty="${paneId}"]`)
+  const root = pane?.closest<HTMLElement>('[data-split-root]')
+  if (!pane || !root) return
+  const paneRect = pane.getBoundingClientRect()
+  const rootRect = root.getBoundingClientRect()
+  if (paneRect.top >= rootRect.top && paneRect.bottom <= rootRect.bottom) return
+  const top = root.scrollTop + (paneRect.top - rootRect.top) - SECTION_GAP_PX - BOX_HEADER_PX
+  root.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+}
+
 /** Vertical gap between the main grid and the sections, and between sections. */
 const SECTION_GAP_PX = 8
 /** A section's header strip. */
@@ -536,12 +552,13 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
       landed = result.slotId
       return result.layout
     })
-    requestAnimationFrame(() => {
-      if (!landed) return
-      document
-        .querySelector(`[data-pane-id="${landed}"], [data-pane-empty="${landed}"]`)
-        ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-    })
+    // Bring the new pane into view — a full grid puts it in a section below
+    // the fold. After a beat, not on the next frame: the menu that asked for
+    // it closes and hands focus back to its trigger, and that focus move
+    // cancels a smooth scroll started in the same frame.
+    window.setTimeout(() => {
+      if (landed) revealPane(landed)
+    }, 120)
   }, [])
 
   const signature = React.useMemo(() => layoutSignature(layout), [layout])
@@ -767,8 +784,6 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
                 layouts={layouts}
                 activeId={activeLayoutId}
                 isDefault={isDefault}
-                currentTemplate={templateOf(layout.root)}
-                onPickTemplate={(id) => setLayout((current) => applyGridTemplate(current, id, primaryPaneId))}
                 onApply={(saved) => setLayout(() => saved.layout)}
                 onDefault={() => setLayout((current) => resetLayout(current, tableId))}
                 onSaveCurrent={() =>

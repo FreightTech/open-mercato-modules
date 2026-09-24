@@ -7,16 +7,14 @@
  * before this existed. Anything that looks like "a split-view menu row" takes
  * its classes from here.
  *
- * Sizes are the grid's, not M3's touch geometry: rows are 28px (M3 says 48dp)
- * and controls 32px, because this is a dense operations tool and the table
- * toolbar these sit beside uses exactly those heights (measured: 32px icon
- * buttons, 28px search pill, 28px view tabs). Shape, colour roles, state layers
- * and motion are M3's.
+ * Menu rows follow the design prototype (gt-demo ActionMenu): 32px rows,
+ * 14px text, 12px side padding. Controls are 32px. Shape, colour roles, state
+ * layers and motion are M3's.
  */
 
 /** One row of a menu. */
 export const M3_MENU_ROW =
-  'flex h-7 w-full items-center gap-2 rounded-m3-xs px-1.5 text-left text-body-regular-xs text-[var(--m3-on-surface)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] active:bg-[var(--m3-state-layer-pressed)] disabled:cursor-not-allowed disabled:opacity-[var(--m3-disabled-content-opacity)] disabled:hover:bg-transparent'
+  'flex h-8 w-full items-center gap-2 rounded-m3-xs px-3 text-left text-body-regular-sm text-[var(--m3-on-surface)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-hover)] active:bg-[var(--m3-state-layer-pressed)] disabled:cursor-not-allowed disabled:opacity-[var(--m3-disabled-content-opacity)] disabled:hover:bg-transparent'
 
 /**
  * The SELECTED form of a menu row. M3 marks selection by swapping the
@@ -28,7 +26,7 @@ export const M3_MENU_ROW_ON =
 
 /** A destructive row — "Usuń panel". Error ink, error state layer. */
 export const M3_MENU_ROW_DANGER =
-  'flex h-7 w-full items-center gap-2 rounded-m3-xs px-1.5 text-left text-body-regular-xs text-[var(--m3-error)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-error-hover)]'
+  'flex h-8 w-full items-center gap-2 rounded-m3-xs px-3 text-left text-body-regular-sm text-[var(--m3-error)] transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard hover:bg-[var(--m3-state-layer-error-hover)]'
 
 /**
  * A section caption inside a menu ("Całe działy", "Wykresy"). 10px chrome uses
@@ -46,7 +44,7 @@ export const M3_MENU_DIVIDER = 'my-1 h-px bg-[var(--m3-outline-variant)]'
  * two-shadow elevation rather than Tailwind's `shadow-*`.
  */
 export const M3_MENU_PANEL =
-  'pointer-events-auto fixed z-[1000] overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-1 shadow-m3-2'
+  'pointer-events-auto fixed z-[1000] overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-bright)] p-1 shadow-m3-2'
 
 /**
  * A control in the workspace bar — an M3 outlined assist chip at the bar's

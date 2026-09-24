@@ -464,7 +464,9 @@ export function CustomizeDrawer({
                 onClick={() => onOpenChange(false)}
               />
             </div>
-            <p className="hot-config-panel-subtitle">
+            {/* The design's header is the title alone; the sentence stays for
+                screen readers, who get no picture of the three steps. */}
+            <p className="sr-only">
               {t('splitView.customize.subtitle', 'Pick a grid, fill it with tables and widgets, and save it as a layout.')}
             </p>
           </div>

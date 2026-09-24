@@ -117,7 +117,7 @@ export function TableSettingsMenu({
           ref={panelRef}
           role="dialog"
           aria-label={label}
-          className="fixed z-[1000] flex flex-col gap-2.5 overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container)] p-3 text-[var(--m3-on-surface)] shadow-m3-2"
+          className="fixed z-[1000] flex flex-col gap-2.5 overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-bright)] p-3 text-[var(--m3-on-surface)] shadow-m3-2"
           // Flipped above the ⚙, `top` is where the panel's BOTTOM edge goes.
           style={{
             ...(placement.flipAbove ? { bottom: window.innerHeight - placement.top } : { top: placement.top }),

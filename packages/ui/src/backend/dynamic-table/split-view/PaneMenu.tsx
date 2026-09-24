@@ -21,16 +21,17 @@
  */
 
 import * as React from 'react'
-import { ArrowLeftRight, Check, ChevronRight, ExternalLink, PanelBottom, PanelLeft, PanelRight, PanelTop, Trash2 } from 'lucide-react'
+import { Check, ChevronRight, ExternalLink, PanelBottom, PanelLeft, PanelRight, PanelTop, X } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useToolbarOverflowClose } from '../components/ToolbarOverflow'
 import { AnchoredPanel } from './AnchoredMenu'
 import { ContentCatalogList } from './ContentPicker'
-import { M3_MENU_CAPTION, M3_MENU_DIVIDER, M3_MENU_ROW, M3_MENU_ROW_DANGER, M3_MENU_ROW_ON } from './chrome'
+import { M3_MENU_CAPTION, M3_MENU_DIVIDER, M3_MENU_ROW, M3_MENU_ROW_ON } from './chrome'
 import type { PaneChrome, PaneContentRef, SplitDirection } from './types'
 
-const GUTTER = 'flex w-4 shrink-0 justify-center [&_svg]:h-3.5 [&_svg]:w-3.5'
-const GUTTER_ICON = 'text-[var(--m3-on-surface-variant)]'
+// The design's menu (gt-demo ActionMenu): the label leads, the icon trails.
+const TRAIL = 'flex w-4 shrink-0 justify-center [&_svg]:h-3.5 [&_svg]:w-3.5'
+const TRAIL_ICON = 'text-[var(--m3-on-surface-variant)]'
 
 export type PaneMenuRowsProps = {
   /** The section this pane summarises — "Otwórz dział". */
@@ -70,9 +71,8 @@ function ReplaceWithRow({ current, onSwap }: { current: PaneContentRef; onSwap: 
         aria-expanded={!!anchor}
         data-pane-swap=""
       >
-        <span className={GUTTER}><ArrowLeftRight className={GUTTER_ICON} /></span>
         <span className="flex-1">{t('splitView.pane.replaceWith', 'Replace with…')}</span>
-        <ChevronRight className="h-3.5 w-3.5 text-[var(--m3-on-surface-variant)]" />
+        <span className={TRAIL}><ChevronRight className={TRAIL_ICON} /></span>
       </button>
       {anchor && (
         <AnchoredPanel
@@ -127,14 +127,14 @@ export function PaneMenuRows({
     <div className="px-1" data-pane-menu-rows="">
       {href && (
         <a href={href} className={M3_MENU_ROW} onClick={closeMenu} data-pane-open-full="">
-          <span className={GUTTER}><ExternalLink className={GUTTER_ICON} /></span>
-          {t('splitView.pane.openSection', 'Open section')}
+          <span className="flex-1">{t('splitView.pane.openSection', 'Open section')}</span>
+          <span className={TRAIL}><ExternalLink className={TRAIL_ICON} /></span>
         </a>
       )}
       {canSwap && <ReplaceWithRow current={current} onSwap={onSwap} />}
 
       {(href || canSwap) && <div className={M3_MENU_DIVIDER} />}
-      <div className={`px-1.5 pb-1 pt-0.5 ${M3_MENU_CAPTION}`}>{t('splitView.pane.addBeside', 'Add beside')}</div>
+      <div className={`px-3 pb-1 pt-1 ${M3_MENU_CAPTION}`}>{t('splitView.pane.addBeside', 'Add beside')}</div>
       <div className="px-0.5 pb-1">
         {/* An M3 connected button group: one pill, hairline-divided. */}
         <div className="flex overflow-hidden rounded-m3-full border border-[var(--m3-outline)]">
@@ -166,7 +166,7 @@ export function PaneMenuRows({
       {widget && widgetToggles.length > 0 && (
         <>
           <div className={M3_MENU_DIVIDER} />
-          <div className={`px-1.5 pb-0.5 pt-0.5 ${M3_MENU_CAPTION}`}>{t('splitView.pane.widgetSettings', 'Widget')}</div>
+          <div className={`px-3 pb-1 pt-1 ${M3_MENU_CAPTION}`}>{t('splitView.pane.widgetSettings', 'Widget')}</div>
           {widgetToggles.map((item) => {
             const on = widget.chrome?.[item.key] !== false
             return (
@@ -180,12 +180,12 @@ export function PaneMenuRows({
                   event.stopPropagation()
                   widget.onToggleChrome({ [item.key]: !on } as Partial<PaneChrome>)
                 }}
-                className={on ? M3_MENU_ROW_ON : M3_MENU_ROW}
+                className={M3_MENU_ROW}
                 data-pane-chrome={item.key}
                 data-pane-chrome-on={on ? 'true' : 'false'}
               >
-                <span className={GUTTER}>{on && <Check />}</span>
-                <span className={on ? '' : 'text-[var(--m3-on-surface-variant)]'}>{item.label}</span>
+                <span className={`flex-1 ${on ? '' : 'text-[var(--m3-on-surface-variant)]'}`}>{item.label}</span>
+                <span className={TRAIL}>{on && <Check className="text-[var(--m3-primary)]" />}</span>
               </button>
             )
           })}
@@ -201,11 +201,11 @@ export function PaneMenuRows({
               onRemove()
               closeMenu()
             }}
-            className={M3_MENU_ROW_DANGER}
+            className={M3_MENU_ROW}
             data-pane-close=""
           >
-            <span className={GUTTER}><Trash2 /></span>
-            {t('splitView.pane.remove', 'Remove panel')}
+            <span className="flex-1">{t('splitView.pane.remove', 'Remove panel')}</span>
+            <span className={TRAIL}><X className="text-[var(--m3-error)]" /></span>
           </button>
         </>
       )}

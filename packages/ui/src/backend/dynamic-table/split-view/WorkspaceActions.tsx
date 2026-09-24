@@ -12,7 +12,7 @@
  */
 
 import * as React from 'react'
-import { Check, ChevronDown, LayoutGrid, Maximize2, Minimize2, Plus, Settings2, X } from 'lucide-react'
+import { Check, ChevronDown, LayoutGrid, Maximize, Minimize, Plus, Settings, X } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { AnchoredMenu } from './AnchoredMenu'
 import { ContentCatalogList } from './ContentPicker'
@@ -141,8 +141,6 @@ export function LayoutMenu({
   layouts,
   activeId,
   isDefault,
-  currentTemplate,
-  onPickTemplate,
   onApply,
   onDefault,
   onSaveCurrent,
@@ -151,8 +149,6 @@ export function LayoutMenu({
   layouts: SavedSplitLayout[]
   activeId: string | null
   isDefault: boolean
-  currentTemplate: GridTemplateId | null
-  onPickTemplate: (id: GridTemplateId) => void
   onApply: (saved: SavedSplitLayout) => void
   onDefault: () => void
   onSaveCurrent: () => void
@@ -184,18 +180,9 @@ export function LayoutMenu({
     >
       {(close) => (
         <div className="flex flex-col">
-          <div className={`px-1.5 pb-1.5 pt-1 ${M3_MENU_CAPTION}`}>{t('splitView.bar.grid', 'Grid')}</div>
-          <div className="px-1 pb-1">
-            <TemplateTiles
-              currentId={currentTemplate}
-              onPick={(id) => {
-                onPickTemplate(id)
-                close()
-              }}
-            />
-          </div>
-          <div className={M3_MENU_DIVIDER} />
-          <div className={`px-1.5 pb-0.5 pt-1 ${M3_MENU_CAPTION}`}>{t('splitView.bar.savedLayouts', 'Saved layouts')}</div>
+          {/* The design's menu: saved layouts, then "save current" and the
+              way into the drawer. The grid is chosen in the drawer. */}
+          <div className={`px-3 pb-1 pt-2 ${M3_MENU_CAPTION}`}>{t('splitView.bar.savedLayouts', 'Saved layouts')}</div>
           <button
             type="button"
             onClick={() => {
@@ -248,7 +235,7 @@ export function LayoutMenu({
             className={M3_MENU_ROW}
             data-workspace-customize=""
           >
-            <span className="flex w-4 justify-center"><Settings2 className="h-3.5 w-3.5 text-[var(--m3-on-surface-variant)]" /></span>
+            <span className="flex w-4 justify-center"><Settings className="h-3.5 w-3.5 text-[var(--m3-on-surface-variant)]" /></span>
             {t('splitView.bar.customize', 'Customize…')}
           </button>
         </div>
@@ -271,8 +258,8 @@ export function FullscreenToggle({ active, onToggle }: { active: boolean; onTogg
       title={active ? t('splitView.bar.exitFullscreen', 'Exit full screen') : t('splitView.bar.fullscreen', 'Full screen')}
       data-workspace-fullscreen={active ? 'on' : 'off'}
     >
-      {active ? <Minimize2 /> : <Maximize2 />}
-      <span className="@max-[1400px]/wsbar:hidden">
+      {active ? <Minimize /> : <Maximize />}
+      <span className="@max-[1180px]/wsbar:hidden">
         {active ? t('splitView.bar.exitFullscreen', 'Exit full screen') : t('splitView.bar.fullscreen', 'Full screen')}
       </span>
     </button>
