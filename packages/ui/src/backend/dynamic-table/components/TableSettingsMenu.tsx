@@ -30,9 +30,9 @@ import type { TableDisplayToggle } from './TableDisplayContext'
 const MENU_WIDTH = 248
 
 const DENSITY_FALLBACK: Record<DensityLevel, string> = {
-  comfortable: 'Comfortable',
-  compact: 'Compact',
-  dense: 'Dense',
+  comfortable: 'Roomy',
+  compact: 'Medium',
+  dense: 'Tight',
 }
 
 export function TableSettingsMenu({

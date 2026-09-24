@@ -1207,18 +1207,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // When grouped, virtualizer count is visual rows length; otherwise original row count
   const virtualizerCount = isGrouped ? groupingResult.visualRows!.length : rowCount;
 
-  // Row height by density: sm=36, md=44; default 32 (Figma 220:2935 — tighter
-  // baseline for all v2 tables). Includes the 4px inter-row gap (2px transparent
-  // border top + bottom) so the visible row pill is ~28px, matching Figma.
-  // The user's density preference wins when they have actually expressed one.
-  // At `comfortable` (the default) this is the ORIGINAL expression, unchanged —
-  // that is what makes shipping density a pixel-level no-op for everyone who
-  // never opens the picker. Row height is the single number CSS cannot own:
-  // rows are absolutely positioned by the virtualizer, so JS has to know it.
-  const dataRowHeight =
-    densityLevel !== 'comfortable'
-      ? resolveDensityRowHeight(densityLevel)
-      : density === 'md' ? 44 : density === 'sm' ? 36 : 32;
+  // Row height is the user's density level — the designer's Roomy 48 /
+  // Medium 44 / Tight 34, Tight by default. The legacy `density` prop no
+  // longer decides it: FMS tables forced 44px through `density="md"`, which is
+  // what kept every list page at Medium however the design said otherwise.
+  // Row height is the single number CSS cannot own: rows are absolutely
+  // positioned by the virtualizer, so JS has to know it.
+  const dataRowHeight = resolveDensityRowHeight(densityLevel);
 
   // Row selection (v2 checkbox column for bulk / grouped actions).
   // Selection identity must be unique per visual row — fall back to

@@ -60,9 +60,9 @@ const MENU_WIDTH = 216
 const MENU_MAX_HEIGHT = 720
 
 const DENSITY_LABELS: Record<DensityLevel, string> = {
-  comfortable: 'Comfortable',
-  compact: 'Compact',
-  dense: 'Dense',
+  comfortable: 'Roomy',
+  compact: 'Medium',
+  dense: 'Tight',
 }
 
 export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({

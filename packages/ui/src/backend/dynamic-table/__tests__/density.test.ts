@@ -31,8 +31,8 @@ function readVar(level: DensityLevel, prop: string): string | null {
 }
 
 describe('density scale — the setting', () => {
-  it('defaults to comfortable, so shipping the feature is a visual no-op', () => {
-    expect(DEFAULT_DENSITY).toBe('comfortable')
+  it('defaults to Tight — the designer\'s decision of 02.09', () => {
+    expect(DEFAULT_DENSITY).toBe('dense')
   })
 
   it('exposes exactly three levels, coarsest first', () => {
@@ -58,9 +58,9 @@ describe('resolveDensityAttribute', () => {
 
   it('falls back to the default for a corrupt stored preference', () => {
     // A bad value in localStorage must not break the grid.
-    expect(resolveDensityAttribute(undefined)).toBe('comfortable')
-    expect(resolveDensityAttribute(null)).toBe('comfortable')
-    expect(resolveDensityAttribute('cosy' as unknown as DensityLevel)).toBe('comfortable')
+    expect(resolveDensityAttribute(undefined)).toBe(DEFAULT_DENSITY)
+    expect(resolveDensityAttribute(null)).toBe(DEFAULT_DENSITY)
+    expect(resolveDensityAttribute('cosy' as unknown as DensityLevel)).toBe(DEFAULT_DENSITY)
   })
 
   it('is pure — same input, same interned output, no allocation', () => {
@@ -80,12 +80,15 @@ describe('isDensityLevel', () => {
 })
 
 describe('density metrics ↔ density.css', () => {
-  it('comfortable is TODAY\'S sizing, pinned', () => {
-    // 32px is DynamicTable.tsx `dataRowHeight` default. If this changes, the
-    // "opting out is a no-op" guarantee is gone.
-    expect(DENSITY_METRICS.comfortable.rowHeight).toBe(32)
-    expect(DENSITY_METRICS.comfortable.headerHeight).toBeNull()
-    expect(readVar('comfortable', '--dt-header-height')).toBe('auto')
+  it('is the designer\'s scale: Roomy 48 / Medium 44 / Tight 34', () => {
+    // gt-demo tokens/material.css: --md-table-row-comfortable / -medium / -compact.
+    expect(DENSITY_METRICS.comfortable.rowHeight).toBe(48)
+    expect(DENSITY_METRICS.compact.rowHeight).toBe(44)
+    expect(DENSITY_METRICS.dense.rowHeight).toBe(34)
+    for (const level of DENSITY_LEVELS) {
+      expect(DENSITY_METRICS[level].headerHeight).toBeNull()
+      expect(readVar(level, '--dt-header-height')).toBe('auto')
+    }
   })
 
   it('row heights strictly decrease across the scale', () => {
@@ -152,7 +155,7 @@ describe('density metrics ↔ density.css', () => {
     const lineHeightPx: Record<DensityLevel, number> = {
       comfortable: 16,
       compact: 16,
-      dense: 14,
+      dense: 16,
     }
     const overflowing = DENSITY_LEVELS.filter((level) => {
       const chrome =
@@ -164,33 +167,28 @@ describe('density metrics ↔ density.css', () => {
     expect(overflowing).toEqual([])
   })
 
-  it('dense trades whitespace separation for a hairline rule', () => {
-    // At 20px there is no whitespace left to separate rows with; the hairline
-    // is what lets the eye track one record across 20+ columns.
-    expect(readVar('dense', '--dt-row-gap-top')).toBe('0px')
-    expect(readVar('dense', '--dt-row-rule-color')).not.toBe('transparent')
-    // The looser levels keep the rounded-pill look.
-    expect(readVar('comfortable', '--dt-row-rule-color')).toBe('transparent')
-    expect(readVar('compact', '--dt-row-rule-color')).toBe('transparent')
+  it('every level keeps the rounded-pill rows — no hairline rules', () => {
+    for (const level of DENSITY_LEVELS) {
+      expect(readVar(level, '--dt-row-gap-top')).toBe('2px')
+      expect(readVar(level, '--dt-row-rule-color')).toBe('transparent')
+    }
   })
 
-  it('compact keeps today\'s 12px type — only geometry tightens', () => {
-    // The safe recommendation: nothing that was legible stops being legible.
-    expect(readVar('compact', '--dt-cell-font-size')).toBe(readVar('comfortable', '--dt-cell-font-size'))
-    expect(readVar('compact', '--dt-cell-line-height')).toBe(readVar('comfortable', '--dt-cell-line-height'))
-  })
+  it.each(['--dt-cell-font-size', '--dt-cell-line-height', '--dt-mono-font-size', '--dt-header-font-size', '--dt-badge-font-size'])(
+    'the same type at every level (%s) — density changes the air, not the data',
+    (name) => {
+      const values = new Set(DENSITY_LEVELS.map((level) => readVar(level, name)))
+      expect(values.size).toBe(1)
+    },
+  )
 })
 
-describe('comfortable is a no-op by construction', () => {
-  it('no consuming rule targets the comfortable level', () => {
-    // Every consuming rule is guarded by :not([data-density-level="comfortable"]).
-    // Count selectors that mention the attribute but are NOT a variable block
-    // and NOT guarded — there must be none.
-    const consuming = css
-      .split('\n')
-      .filter((line) => line.includes('[data-density-level]'))
-      .filter((line) => !line.includes(':not([data-density-level="comfortable"])'))
-    expect(consuming).toEqual([])
+describe('every level goes through the variables', () => {
+  it('no consuming rule skips a level', () => {
+    // The designer's scale owns the geometry of all three levels, so nothing
+    // may exclude one — an excluded level would silently fall back to the
+    // v2 stylesheet's 32px-row box model inside a 48px row.
+    expect(css).not.toContain(':not([data-density-level')
   })
 })
 
@@ -198,7 +196,7 @@ describe('resolveDensityRowHeight', () => {
   it('returns the level height, or the default height for junk', () => {
     expect(resolveDensityRowHeight('dense')).toBe(DENSITY_METRICS.dense.rowHeight)
     expect(resolveDensityRowHeight('nope' as unknown as DensityLevel)).toBe(
-      DENSITY_METRICS.comfortable.rowHeight,
+      DENSITY_METRICS[DEFAULT_DENSITY].rowHeight,
     )
   })
 })

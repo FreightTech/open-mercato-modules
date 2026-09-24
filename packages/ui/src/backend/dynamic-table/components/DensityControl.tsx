@@ -417,24 +417,24 @@ type Translate = ReturnType<typeof useT>
 function LEVEL_LABEL(t: Translate, level: DensityLevel): string {
   switch (level) {
     case 'compact':
-      return t('dynamicTable.density.compact', 'Compact')
+      return t('dynamicTable.density.compact', 'Medium')
     case 'dense':
-      return t('dynamicTable.density.dense', 'Dense')
+      return t('dynamicTable.density.dense', 'Tight')
     case 'comfortable':
     default:
-      return t('dynamicTable.density.comfortable', 'Comfortable')
+      return t('dynamicTable.density.comfortable', 'Roomy')
   }
 }
 
 function LEVEL_DESCRIPTION(t: Translate, level: DensityLevel): string {
   switch (level) {
     case 'compact':
-      return t('dynamicTable.density.compactHint', 'Same text size, tighter rows')
+      return t('dynamicTable.density.compactHint', '44px rows')
     case 'dense':
-      return t('dynamicTable.density.denseHint', 'Smallest text, most rows on screen')
+      return t('dynamicTable.density.denseHint', '34px rows — the default')
     case 'comfortable':
     default:
-      return t('dynamicTable.density.comfortableHint', 'Default spacing and text size')
+      return t('dynamicTable.density.comfortableHint', '48px rows')
   }
 }
 
