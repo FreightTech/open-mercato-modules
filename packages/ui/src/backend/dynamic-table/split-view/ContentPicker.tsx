@@ -25,7 +25,7 @@
 import * as React from 'react'
 import { Search } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
-import { useAccessibleContent, type PaneContentItem } from '../registry/ContentRegistryContext'
+import { useAccessibleContent, useContentRegistry, type PaneContentItem } from '../registry/ContentRegistryContext'
 import { WIDGET_KINDS, widgetPresentation, type WidgetKind } from '../registry/widgetPresentation'
 import { AnchoredPanel } from './AnchoredMenu'
 import { M3_MENU_CAPTION, M3_MENU_ROW } from './chrome'
@@ -129,6 +129,10 @@ export function ContentCatalogList({
   const t = useT()
   const [query, setQuery] = React.useState('')
   const groups = useContentGroups(query, exclude)
+  // Tables are known at once; the widget catalogue is fetched. Until it lands
+  // the list says so — a picker with no widgets reads as "there are none".
+  const { mounted: hasCatalogue, ready: catalogueReady } = useContentRegistry()
+  const widgetsLoading = hasCatalogue && !catalogueReady
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   // One frame late on purpose: the panel this sits in renders hidden for its
@@ -159,7 +163,7 @@ export function ContentCatalogList({
         </div>
       )}
       <div className="min-h-0 overflow-y-auto">
-        {groups.length === 0 && (
+        {groups.length === 0 && !widgetsLoading && (
           <div
             className="px-2 py-4 text-center text-body-regular-xs text-[var(--m3-on-surface-variant)]"
             data-split-picker-empty=""
@@ -191,6 +195,16 @@ export function ContentCatalogList({
             ))}
           </div>
         ))}
+        {widgetsLoading && (
+          <div
+            className={`mt-1 flex h-8 items-center gap-2 border-t border-[var(--m3-outline-variant)] px-3 pt-1 text-body-regular-sm text-[var(--m3-on-surface-variant)]`}
+            role="status"
+            data-split-picker-loading=""
+          >
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--m3-outline)] border-t-[var(--m3-primary)] motion-reduce:animate-none" aria-hidden="true" />
+            {t('splitView.picker.loadingWidgets', 'Loading widgets…')}
+          </div>
+        )}
       </div>
     </div>
   )
