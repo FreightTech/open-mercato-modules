@@ -66,8 +66,17 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
   // This ensures correct values are displayed when columns are reordered
   const cellValue = rowData?.[colConfig.data];
 
+  // Set by Escape, cleared when the next edit starts. `handleCancel` moves focus
+  // back to the grid while the editor is STILL MOUNTED, so every editor's
+  // `onBlur → onSave` fired right after Escape and committed the text the user
+  // had just abandoned (found driving the FMS transport table). A cancelled
+  // edit ignores that trailing save — one guard here covers every editor.
+  const cancelledRef = useRef(false);
+  const wasEditingRef = useRef(false);
+
   const handleSave = useCallback(
     (value?: any, clearEditing: boolean = true) => {
+      if (cancelledRef.current) return;
       const newValue = value !== undefined ? value : cellValue;
       onCellSave(row, col, newValue, clearEditing);
     },
@@ -75,6 +84,7 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
   );
 
   const handleCancel = useCallback(() => {
+    cancelledRef.current = true;
     store.clearEditing();
     store.focusTable();
   }, [store]);
@@ -86,6 +96,10 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
     },
     []
   );
+
+  // A new edit starts un-cancelled.
+  if (state.isEditing && cancelledRef.current && !wasEditingRef.current) cancelledRef.current = false;
+  wasEditingRef.current = state.isEditing;
 
   // Focus input when editing starts
   useEffect(() => {
