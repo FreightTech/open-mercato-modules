@@ -13,6 +13,7 @@ import { makeColumns, makeRows } from './data'
  *   cols     column count                       (default 30)
  *   height   grid height in px                  (default 800)
  *   frozen   leading columns pinned left          (default 0)
+ *   fill     1 = uiConfig.enableFillHandle (offers, RFQ and carrier tables)
  *   colVirt  1 = uiConfig.enableColumnVirtualization (default 0; the FMS
  *            transport, folder and invoice tables turn it on)
  *
@@ -27,10 +28,25 @@ const COLS = Number(params.get('cols') ?? 30)
 const HEIGHT = Number(params.get('height') ?? 800)
 const FROZEN = Number(params.get('frozen') ?? 0)
 const COL_VIRT = params.get('colVirt') === '1'
+const FILL = params.get('fill') === '1'
+// labels=1: the "port" dropdowns take {value, label} options whose label differs
+// from the stored value (lowercase value, uppercase label) — the RFQ status shape.
+const LABELS = params.get('labels') === '1'
 
-const columns = makeColumns(COLS).map((c, i) => (i < FROZEN ? { ...c, sticky: 'left' as const } : c))
-const uiConfig = COL_VIRT ? { enableColumnVirtualization: true } : undefined
-const data = makeRows(ROWS, COLS)
+const columns = makeColumns(COLS)
+  .map((c, i) => (i < FROZEN ? { ...c, sticky: 'left' as const } : c))
+  .map((c: any) => (LABELS && c.type === 'dropdown' && c.title?.startsWith('Port')
+    ? { ...c, source: (c.source as string[]).map((v) => ({ value: v.toLowerCase(), label: v.toUpperCase() })) }
+    : c))
+const uiConfig = COL_VIRT || FILL
+  ? { ...(COL_VIRT ? { enableColumnVirtualization: true } : {}), ...(FILL ? { enableFillHandle: true } : {}) }
+  : undefined
+const data = makeRows(ROWS, COLS).map((row) => {
+  if (!LABELS) return row
+  const out: Record<string, unknown> = { ...row }
+  for (const c of columns as any[]) if (c.title?.startsWith('Port')) out[c.data] = String(row[c.data]).toLowerCase()
+  return out
+})
 
 // ---- React commit accounting (profiling build only) -------------------------
 // `nested-update` = a commit forced synchronously from inside another commit
