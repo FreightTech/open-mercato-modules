@@ -227,10 +227,32 @@ export class SplitViewHarness {
     await this.page.keyboard.press('Escape')
   }
 
-  /** Open the "Dostosowanie widoku" drawer from the Dostosuj tab. */
+  /**
+   * Open the workspace ⚙ menu (split views only — the bar exists only then).
+   * Every layout control lives in it: Dostosuj, Dodaj widget, saved layouts,
+   * Pełny ekran.
+   */
+  async openSettings(): Promise<Locator> {
+    await this.dismissOverlays()
+    await this.page.locator('[data-workspace-settings]').first().click()
+    const menu = this.page.locator('[data-workspace-settings-menu]').first()
+    await expect(menu).toBeVisible({ timeout: 10_000 })
+    return menu
+  }
+
+  /**
+   * Open the "Dostosowanie widoku" drawer: from the workspace ⚙ when the page
+   * is split, else from the page table's own ⋯ menu (unsplit has no bar).
+   */
   async openCustomize(): Promise<Locator> {
     await this.dismissOverlays()
-    await this.page.locator('[data-split-customize-tab]').first().click()
+    if (await this.isSplit()) {
+      const menu = await this.openSettings()
+      await menu.locator('[data-workspace-customize]').first().click()
+    } else {
+      await this.openMenu(0)
+      await this.page.locator('[data-pane-menu-rows] [data-workspace-customize]').first().click()
+    }
     const drawer = this.page.locator('[data-split-customize]').first()
     await expect(drawer).toBeVisible({ timeout: 10_000 })
     return drawer
@@ -437,10 +459,10 @@ export class SplitViewHarness {
     await this.closeCustomize()
   }
 
-  /** "Dodaj widget" in the workspace bar: first free slot, else a new section. */
+  /** "Dodaj widget" in the workspace ⚙: first free slot, else a new section. */
   async addFromBar(name: string): Promise<void> {
-    await this.dismissOverlays()
-    await this.page.locator('[data-workspace-add-widget]').first().click()
+    const menu = await this.openSettings()
+    await menu.locator('[data-workspace-add-widget]').first().click()
     await this.pickContent(name)
   }
 }

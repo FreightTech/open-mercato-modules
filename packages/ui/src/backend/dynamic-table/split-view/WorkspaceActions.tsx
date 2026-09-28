@@ -1,9 +1,9 @@
 'use client'
 
 /**
- * The workspace-level controls: the "Dostosuj" tab that hangs under the top
- * bar, and the right end of the workspace bar — "Dodaj widget", "Wygląd" and
- * "Pełny ekran" — plus a section's own header.
+ * The workspace-level controls: ONE ⚙ at the right end of the workspace bar
+ * ({@link WorkspaceSettingsMenu}: Dostosuj, Dodaj widget, saved layouts, Pełny
+ * ekran), the "exit full screen" pill, and a section's own header.
  *
  * All of it acts on the LAYOUT, never on one pane, which is why it lives above
  * the panes rather than in any pane's menu. An earlier build put templates,
@@ -12,7 +12,7 @@
  */
 
 import * as React from 'react'
-import { Check, ChevronDown, LayoutGrid, Maximize, Minimize, Plus, Settings, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, LayoutGrid, Maximize, Minimize, Plus, Save, Settings, X } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { AnchoredMenu } from './AnchoredMenu'
 import { ContentCatalogList } from './ContentPicker'
@@ -31,6 +31,7 @@ import type { GridTemplateId, PaneContentRef } from './types'
  * the host, `bottom: 100%`, so it adds no height to the page and costs no row.
  * A 24px tab in 24px of padding that was empty anyway.
  */
+/** @deprecated No longer rendered by `SplitViewHost` — use {@link WorkspaceSettingsMenu}. Kept for deep imports; removal in the next minor. */
 export function CustomizeTab({ onOpen, active }: { onOpen: () => void; active?: boolean }) {
   const t = useT()
   const ref = React.useRef<HTMLButtonElement>(null)
@@ -108,6 +109,7 @@ export function CustomizeTab({ onOpen, active }: { onOpen: () => void; active?: 
  * The bar's entry point for new content: fills the first free slot, or opens
  * a new section when the grid is full (see `addContent`).
  */
+/** @deprecated Folded into {@link WorkspaceSettingsMenu}. Kept for deep imports; removal in the next minor. */
 export function AddWidgetMenu({ onAdd }: { onAdd: (content: PaneContentRef) => void }) {
   const t = useT()
   return (
@@ -152,6 +154,7 @@ export function AddWidgetMenu({ onAdd }: { onAdd: (content: PaneContentRef) => v
  * the layout editor had "fallen into the drawer" once widgets were placed
  * (recording 06:11): from the main view you could only switch or add.
  */
+/** @deprecated Folded into {@link WorkspaceSettingsMenu}. Kept for deep imports; removal in the next minor. */
 export function LayoutMenu({
   layouts,
   activeId,
@@ -255,6 +258,144 @@ export function LayoutMenu({
           </button>
         </div>
       )}
+    </AnchoredMenu>
+  )
+}
+
+// ─── ⚙ Ustawienia widoku ─────────────────────────────────────────────────────
+
+/**
+ * Every layout control behind ONE ⚙ at the right end of the workspace bar:
+ * "Dostosuj widok…", "Dodaj widget" (the catalog opens in the same panel),
+ * the saved layouts with "Zapisz bieżący", and "Pełny ekran".
+ *
+ * Users work in the tables; the layout controls are needed rarely, so they do
+ * not get a permanent row of pills or a tab hanging from the top bar (owner
+ * review, 2026-09-28: "hidden under the cog icon, I don't need always present
+ * the customization buttons"). Layout options stay out of the table's own ⚙,
+ * which is for that table only.
+ */
+export function WorkspaceSettingsMenu({
+  layouts,
+  activeId,
+  isDefault,
+  fullscreen,
+  onApply,
+  onDefault,
+  onSaveCurrent,
+  onCustomize,
+  onAdd,
+  onToggleFullscreen,
+}: {
+  layouts: SavedSplitLayout[]
+  activeId: string | null
+  isDefault: boolean
+  fullscreen: boolean
+  onApply: (saved: SavedSplitLayout) => void
+  onDefault: () => void
+  onSaveCurrent: () => void
+  onCustomize: () => void
+  onAdd: (content: PaneContentRef) => void
+  onToggleFullscreen: () => void
+}) {
+  const t = useT()
+  const [catalog, setCatalog] = React.useState(false)
+  const label = t('splitView.bar.settings', 'View settings')
+  const row = (key: string, fallback: string, icon: React.ReactNode, onClick: () => void, attr: string) => (
+    <button type="button" onClick={onClick} className={M3_MENU_ROW} {...{ [attr]: '' }}>
+      <span className="flex w-4 justify-center text-[var(--m3-on-surface-variant)] [&_svg]:h-3.5 [&_svg]:w-3.5">{icon}</span>
+      <span className="flex-1 truncate">{t(key, fallback)}</span>
+    </button>
+  )
+  return (
+    <AnchoredMenu
+      placement={{ width: catalog ? 260 : 240, preferredHeight: 560, align: 'end' }}
+      panelProps={{ 'data-workspace-settings-menu': '' }}
+      renderTrigger={({ ref, open, toggle }) => (
+        <button
+          ref={ref}
+          type="button"
+          onClick={() => {
+            setCatalog(false)
+            toggle()
+          }}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label={label}
+          title={label}
+          className={`${open ? BAR_PILL_ON : BAR_PILL} w-9 justify-center px-0`}
+          data-workspace-settings=""
+        >
+          <Settings />
+        </button>
+      )}
+    >
+      {(close) =>
+        catalog ? (
+          <div className="flex flex-col" data-workspace-add-widget-menu="">
+            <button type="button" onClick={() => setCatalog(false)} className={M3_MENU_ROW} data-workspace-settings-back="">
+              <span className="flex w-4 justify-center text-[var(--m3-on-surface-variant)]"><ChevronLeft className="h-3.5 w-3.5" /></span>
+              <span className="flex-1 truncate">{t('splitView.bar.addWidget', 'Add widget')}</span>
+            </button>
+            <div className={M3_MENU_DIVIDER} />
+            <ContentCatalogList
+              onPick={(content) => {
+                onAdd(content)
+                setCatalog(false)
+                close()
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {row('splitView.bar.customize', 'Customize…', <LayoutGrid />, () => { onCustomize(); close() }, 'data-workspace-customize')}
+            {row('splitView.bar.addWidget', 'Add widget', <Plus />, () => setCatalog(true), 'data-workspace-add-widget')}
+            <div className={M3_MENU_DIVIDER} />
+            <div className={`px-3 pb-1 pt-1 ${M3_MENU_CAPTION}`}>{t('splitView.bar.savedLayouts', 'Saved layouts')}</div>
+            <button
+              type="button"
+              onClick={() => {
+                onDefault()
+                close()
+              }}
+              className={isDefault ? M3_MENU_ROW_ON : M3_MENU_ROW}
+              data-workspace-layout-default=""
+            >
+              <span className="w-4" />
+              <span className="flex-1 truncate">{t('splitView.layouts.default', 'Default view')}</span>
+              {isDefault && <Check className="h-3.5 w-3.5" />}
+            </button>
+            {layouts.map((saved) => {
+              const on = saved.id === activeId
+              return (
+                <button
+                  key={saved.id}
+                  type="button"
+                  onClick={() => {
+                    onApply(saved)
+                    close()
+                  }}
+                  className={on ? M3_MENU_ROW_ON : M3_MENU_ROW}
+                  data-workspace-layout-item={saved.name}
+                >
+                  <span className="w-4" />
+                  <span className="flex-1 truncate">{saved.name}</span>
+                  {on && <Check className="h-3.5 w-3.5" />}
+                </button>
+              )
+            })}
+            {row('splitView.bar.saveCurrent', 'Save current', <Save />, () => { onSaveCurrent(); close() }, 'data-workspace-layout-save')}
+            <div className={M3_MENU_DIVIDER} />
+            {row(
+              fullscreen ? 'splitView.bar.exitFullscreen' : 'splitView.bar.fullscreen',
+              fullscreen ? 'Exit full screen' : 'Full screen',
+              fullscreen ? <Minimize /> : <Maximize />,
+              () => { onToggleFullscreen(); close() },
+              'data-workspace-fullscreen-item',
+            )}
+          </div>
+        )
+      }
     </AnchoredMenu>
   )
 }
