@@ -150,7 +150,12 @@ export type SplitLayout = {
    * them, which is exactly what an opaque field guarantees.
    */
   sharedCriteria?: unknown
+  /** @deprecated Shared/Per pane toggle is gone (0.14.3); read only as the default for the two switches below. */
   sharedFiltersEnabled?: boolean
+  /** ⚙ "Global search": the workspace bar's search box is shown and drives every pane. */
+  workspaceSearch?: boolean
+  /** ⚙ "Search in tables": every table pane shows its own search box. */
+  paneSearch?: boolean
 }
 
 /** One extra section of the workspace — a small tree of its own. */
@@ -344,6 +349,8 @@ export function normalizeLayout(input: unknown, fallbackTableId: string): SplitL
     if (boxes.length > 0) next.boxes = boxes
     if (doc.sharedCriteria !== undefined) next.sharedCriteria = doc.sharedCriteria
     if (typeof doc.sharedFiltersEnabled === 'boolean') next.sharedFiltersEnabled = doc.sharedFiltersEnabled
+    if (typeof doc.workspaceSearch === 'boolean') next.workspaceSearch = doc.workspaceSearch
+    if (typeof doc.paneSearch === 'boolean') next.paneSearch = doc.paneSearch
     return next
   }
 

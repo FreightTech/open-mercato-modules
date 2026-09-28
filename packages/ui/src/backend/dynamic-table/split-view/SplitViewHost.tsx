@@ -45,7 +45,7 @@ import { WidgetPane } from './WidgetPane'
 import { BoxHeader, FullscreenToggle, WorkspaceSettingsMenu } from './WorkspaceActions'
 import { WorkspaceFilterBar, type UnmappedPaneReport } from './WorkspaceFilterBar'
 import { PANE_CARD } from './chrome'
-import { mapCriteriaForTable, mapCriteriaForWidget, type SharedCriteria } from './sharedCriteria'
+import { mapCriteriaForTable, mapCriteriaForWidget, resolveSharedSearch, type SharedCriteria } from './sharedCriteria'
 import type { FilterRow } from '../types/index'
 import { useSplitViewLayouts } from './useSplitViewLayouts'
 import { readStoredLayout, writeStoredLayout } from './layoutPersistence'
@@ -147,6 +147,7 @@ function TablePaneBody({
   onToggleChrome,
   sharedFilters,
   sharedSearch,
+  hideOwnSearch,
 }: {
   tableId: string
   paneId: string
@@ -157,6 +158,8 @@ function TablePaneBody({
   onToggleChrome: (patch: Partial<PaneChrome>) => void
   sharedFilters?: FilterRow[]
   sharedSearch?: string
+  /** ⚙ "Search in tables" is off: the pane's own search box is hidden. */
+  hideOwnSearch?: boolean
 }) {
   const t = useT()
   const { definition, status } = useTableById(tableId)
@@ -212,7 +215,7 @@ function TablePaneBody({
         hideToolbar={chrome?.toolbar === false}
         // The workspace bar REPLACES each pane's search row while it is on, so
         // the density cost of the bar is paid back by the rows it reclaims.
-        hideSearch={chrome?.search === false || sharedSearch !== undefined}
+        hideSearch={chrome?.search === false || hideOwnSearch || sharedSearch !== undefined}
         hideViews={hideTabs}
         hidePagination={hidePagination}
         sharedFilters={sharedFilters}
@@ -271,15 +274,15 @@ export type SplitViewHostProps = {
  * height — the same technique `DynamicTable` uses for `height: 'fill'`, so the
  * two agree instead of fighting.
  *
- * It also reclaims the page's top padding. With nothing between the top bar and
- * the workspace (no banner, no heading), that padding is an empty strip the
- * owner wants back for the tables (review 2026-09-28, "free the top bar
- * space"): the workspace is pulled up to {@link TOP_GAP_KEEP_PX} under the top
- * bar. Anything rendered above the host keeps its place — no pull then.
+ * It also evens out the page's top padding. With nothing between the top bar
+ * and the workspace (no banner, no heading), the gap ABOVE the workspace's
+ * first control is set equal to the gap on its LEFT — the page padding plus
+ * the bar's own inset — so the bar sits in an even frame instead of hugging
+ * the top edge (owner review 2026-09-28). Anything rendered above the host
+ * keeps its place — no adjustment then. `split` re-measures when the bar
+ * appears or goes.
  */
-const TOP_GAP_KEEP_PX = 8
-
-function useFilledHeight(enabled: boolean) {
+function useFilledHeight(enabled: boolean, split: boolean) {
   const ref = React.useRef<HTMLDivElement>(null)
   const [height, setHeight] = React.useState<number | null>(null)
   const [pull, setPull] = React.useState(0)
@@ -319,7 +322,11 @@ function useFilledHeight(enabled: boolean) {
           }
         }
         const gap = Math.round(naturalTop - paneTop + scrollPane.scrollTop)
-        if (clear && gap > TOP_GAP_KEEP_PX) nextPull = gap - TOP_GAP_KEEP_PX
+        // The first thing drawn inside the host: the bar's first control when
+        // split, else the host itself. Its left inset is the target top gap.
+        const first = element.querySelector('[data-workspace-filter-bar] > *') ?? element
+        const inset = Math.round(first.getBoundingClientRect().left - scrollPane.getBoundingClientRect().left - scrollPane.clientLeft)
+        if (clear && inset > 0) nextPull = gap - inset
       }
       if (nextPull !== pullRef.current) {
         pullRef.current = nextPull
@@ -348,7 +355,7 @@ function useFilledHeight(enabled: boolean) {
       window.removeEventListener('resize', measure)
       observer.disconnect()
     }
-  }, [enabled])
+  }, [enabled, split])
 
   return { ref, height, pull }
 }
@@ -496,7 +503,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
   >(null)
   const [customizeOpen, setCustomizeOpen] = React.useState(false)
   const [fullscreen, setFullscreen] = React.useState(false)
-  const fill = useFilledHeight(!fullscreen)
+  const fill = useFilledHeight(!fullscreen, listAllSlots(layout).length > 1)
   const [areaElement, setAreaElement] = React.useState<HTMLDivElement | null>(null)
   const areaHeight = useClientHeight(areaElement)
   // When sections make the workspace scroll, its scrollbar takes width from
@@ -548,22 +555,29 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
   // same persistence funnel as everything else and a saved layout brings its
   // criteria with it. "Wspólne" is the default for a workspace: the designer's
   // bar opens in shared mode, and a single-pane page never shows the bar.
-  const sharedEnabled = layout.sharedFiltersEnabled ?? true
+  // Filters in the bar always drive every pane. Search is two ⚙ switches
+  // (owner review 2026-09-28 — the Shared/Per pane toggle is gone): the bar's
+  // global search box, and each table's own box. Old layouts keep what they
+  // had: "Shared" = global on / tables off, "Per pane" = the reverse.
+  const legacyShared = layout.sharedFiltersEnabled ?? true
+  const workspaceSearch = layout.workspaceSearch ?? legacyShared
+  const paneSearch = layout.paneSearch ?? !legacyShared
+  const setSearchSwitch = React.useCallback((key: 'workspaceSearch' | 'paneSearch', value: boolean) => {
+    setLayout((current) => ({ ...current, [key]: value }))
+  }, [])
   const criteria = React.useMemo<SharedCriteria>(() => {
     const stored = layout.sharedCriteria
     if (!stored || typeof stored !== 'object') return EMPTY_CRITERIA
     const candidate = stored as Partial<SharedCriteria>
     return Array.isArray(candidate.rules) ? (stored as SharedCriteria) : EMPTY_CRITERIA
   }, [layout.sharedCriteria])
-  const setSharedEnabled = React.useCallback((value: boolean) => {
-    setLayout((current) =>
-      (current.sharedFiltersEnabled ?? true) === value ? current : { ...current, sharedFiltersEnabled: value },
-    )
-  }, [])
   const setCriteria = React.useCallback((next: SharedCriteria) => {
     setLayout((current) => (current.sharedCriteria === next ? current : { ...current, sharedCriteria: next }))
   }, [])
-  const liveCriteria = isSplit && sharedEnabled ? criteria : null
+  const liveCriteria = React.useMemo<SharedCriteria | null>(
+    () => (isSplit ? (workspaceSearch ? criteria : { ...criteria, search: undefined }) : null),
+    [isSplit, workspaceSearch, criteria],
+  )
   const hrefFor = React.useCallback(
     (id: string) => registry.tables.find((table) => table.metadata.id === id)?.metadata.href,
     [registry.tables],
@@ -612,9 +626,8 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
     return { filters, unmapped }
   }, [panes, registry.tables, liveCriteria, t])
 
-  // `''` (bar on, box empty) must reach the panes so their hidden search boxes
-  // stop filtering; `undefined` (bar off) must NOT, so each pane keeps its own.
-  const sharedSearch = liveCriteria ? (liveCriteria.search ?? '') : undefined
+  // See `resolveSharedSearch` for the four switch combinations.
+  const sharedSearch = resolveSharedSearch({ isSplit, workspaceSearch, paneSearch, needle: criteria.search })
 
   // Read `pending` from state, never from inside a `setPending` updater: React
   // calls updaters twice under StrictMode, which once made every split vanish.
@@ -761,6 +774,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
               onToggleChrome={toggleChrome}
               sharedFilters={perPane.filters.get(node.id)}
               sharedSearch={sharedSearch}
+              hideOwnSearch={isSplit && !paneSearch}
             />
           )}
         </div>
@@ -853,7 +867,9 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
       ref={fullscreen ? undefined : fill.ref}
       className={`relative flex min-h-0 flex-col bg-[var(--m3-surface)] ${fullscreen ? 'h-full' : 'h-full'}`}
       data-split-view={isSplit ? 'true' : 'false'}
-      data-shared-filters={isSplit && sharedEnabled ? 'on' : 'off'}
+      data-shared-filters={isSplit ? 'on' : 'off'}
+      data-workspace-search-global={isSplit ? (workspaceSearch ? 'on' : 'off') : undefined}
+      data-workspace-search-panes={isSplit ? (paneSearch ? 'on' : 'off') : undefined}
       data-split-fullscreen={fullscreen ? 'true' : undefined}
       style={
         {
@@ -872,8 +888,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
           criteria={criteria}
           onChange={setCriteria}
           unmappedByPane={perPane.unmapped}
-          shared={sharedEnabled}
-          onSharedChange={setSharedEnabled}
+          showSearch={workspaceSearch}
           trailing={
             <>
               {/* Full screen stays a visible pill while it is ON — the way out
@@ -893,6 +908,9 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
                 onCustomize={() => setCustomizeOpen(true)}
                 onAdd={handleAdd}
                 onToggleFullscreen={() => setFullscreen((value) => !value)}
+                workspaceSearch={workspaceSearch}
+                paneSearch={paneSearch}
+                onSearchSwitch={setSearchSwitch}
               />
             </>
           }

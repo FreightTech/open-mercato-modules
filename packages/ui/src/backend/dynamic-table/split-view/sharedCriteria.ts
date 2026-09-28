@@ -212,3 +212,27 @@ export function mergeSharedFilters(
   const sharedFields = new Set(shared.map((row) => row.field))
   return [...own.filter((row) => !sharedFields.has(row.field)), ...shared]
 }
+
+/**
+ * What reaches a table pane as `sharedSearch`, from the two ⚙ switches:
+ * `undefined` = the pane's own search box applies; a string replaces it
+ * (`''` = no search at all, so a hidden box cannot keep filtering).
+ *
+ *   global on,  tables off → the global needle ('' when empty)
+ *   global on,  tables on  → the global needle when typed, else each pane's own
+ *   global off, tables on  → each pane's own
+ *   global off, tables off → ''
+ *
+ * Unsplit pages have no workspace bar: always the pane's own box.
+ */
+export function resolveSharedSearch(input: {
+  isSplit: boolean
+  workspaceSearch: boolean
+  paneSearch: boolean
+  needle: string | undefined
+}): string | undefined {
+  if (!input.isSplit) return undefined
+  const needle = input.needle ?? ''
+  if (input.workspaceSearch) return input.paneSearch ? needle || undefined : needle
+  return input.paneSearch ? undefined : ''
+}
