@@ -724,6 +724,25 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
     const dropdownRef = useRef<HTMLDivElement>(null);
     const isClickingDropdownRef = useRef(false);
 
+    // Typed text is only a filter: it commits as the option it names (by value
+    // or, case-insensitively, by label), '' clears, anything else is dropped.
+    // Saving raw text sent e.g. "No" for a boolean column — the API refused it
+    // or the cell was cleared.
+    const commitTyped = (raw: string, clearEditing: boolean) => {
+        const text = raw.trim();
+        if (text === '') {
+            onSave('', clearEditing);
+            return;
+        }
+        const match = options.find((opt: any) => {
+            const optValue = typeof opt === 'string' ? opt : opt.value;
+            const optLabel = typeof opt === 'string' ? opt : opt.label;
+            return String(optValue) === text || String(optLabel).toLowerCase() === text.toLowerCase();
+        });
+        if (match) onSave(typeof match === 'string' ? match : match.value, clearEditing);
+        else onCancel();
+    };
+
     useEffect(() => {
         if (cellRef.current) {
             const pos = calculatePopupPosition(cellRef);
@@ -754,7 +773,7 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
 
             if (isOutsideCell && isOutsideDropdown) {
                 setShowDropdown(false);
-                onSave(textValue, true);
+                commitTyped(textValue, true);
             }
         };
 
@@ -818,7 +837,7 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
             } else {
                 // Save without clearing editing - navigation hook will handle clearing
                 setShowDropdown(false);
-                onSave(textValue, false);
+                commitTyped(textValue, false);
             }
         } else if (e.key === 'Escape') {
             e.preventDefault();
@@ -836,7 +855,7 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
         } else if (e.key === 'Tab') {
             // Save without clearing editing - navigation hook will handle clearing
             setShowDropdown(false);
-            onSave(textValue, false);
+            commitTyped(textValue, false);
         }
     };
 
@@ -863,7 +882,7 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
                 onBlur={() => {
                     // Only save if not clicking on dropdown
                     if (!isClickingDropdownRef.current) {
-                        onSave(textValue, true);
+                        commitTyped(textValue, true);
                     }
                 }}
                 className="hot-cell-editor hot-dropdown-editor"

@@ -38,6 +38,10 @@ export function CustomizeTab({ onOpen, active }: { onOpen: () => void; active?: 
   // from THAT edge — the top of the content surface, right under the top bar —
   // not from the host, which can sit a few px lower behind page wrappers.
   const [offset, setOffset] = React.useState<number | null>(null)
+  // Free strip under the top bar. Usually the same as `offset`, but content can
+  // sit between the strip and the host — the "Ostatnia operacja" undo banner —
+  // and the tab must stay above it, not hang into it.
+  const [room, setRoom] = React.useState<number | null>(null)
 
   React.useLayoutEffect(() => {
     const tab = ref.current
@@ -51,12 +55,23 @@ export function CustomizeTab({ onOpen, active }: { onOpen: () => void; active?: 
     }
     const measure = () => {
       if (!scroller || scroller === document.body) return setOffset(null)
-      const gap = Math.round(host.getBoundingClientRect().top - scroller.getBoundingClientRect().top)
+      const top = scroller.getBoundingClientRect().top
+      const gap = Math.round(host.getBoundingClientRect().top - top)
+      let free = gap
+      for (let node: Element | null = host; node && node !== scroller; node = node.parentElement) {
+        for (let sibling = node.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
+          const rect = sibling.getBoundingClientRect()
+          if (rect.height > 0) free = Math.min(free, Math.round(rect.top - top))
+        }
+      }
       setOffset(gap > 0 ? gap : null)
+      setRoom(free > 0 ? free : null)
     }
     measure()
+    // Content inserted above the host (the undo banner) moves it without
+    // resizing it, so watch every box between the host and the scroller.
     const observer = new ResizeObserver(measure)
-    observer.observe(host)
+    for (let node: Element | null = host; node && node !== scroller; node = node.parentElement) observer.observe(node)
     window.addEventListener('resize', measure)
     return () => {
       observer.disconnect()
@@ -64,8 +79,8 @@ export function CustomizeTab({ onOpen, active }: { onOpen: () => void; active?: 
     }
   }, [])
 
-  // 28px like the prototype's bubble, never taller than the gap it hangs in.
-  const height = offset === null ? 24 : Math.max(20, Math.min(28, offset - 4))
+  // 28px like the prototype's bubble, never taller than the strip it hangs in.
+  const height = offset === null ? 24 : Math.max(20, Math.min(28, (room ?? offset) - 4))
   return (
     <button
       ref={ref}

@@ -59,6 +59,8 @@ Each file in `../primitives/` carries a `@deprecated` JSDoc pointing to its repl
 | `Toggle` | `45:80` | Native input role="switch"; on-state uses `--accent-v2` (teal) |
 | `Topbar` | `150:367` | 1440×52 three-slot shell |
 
+| `widget/*` | Widget architecture page `549:542` (FMS-Widget-architecture file) | `WidgetCard` shell + KPI, lists, to-do, activity feed, contacts, info grid, process, banners. Colours from `--m3ft-v2-*` (`../theme/m3-freighttech.css`), not `--*-v2`; `.theme-m3-freighttech` scopes the palette to a page. Tests in `widget/__tests__/`. |
+
 Plus:
 - `index.ts` — barrel re-exporting everything for consumers.
 - `utils.ts` — local `cn(...)` helper (the only "shared" code in this directory).

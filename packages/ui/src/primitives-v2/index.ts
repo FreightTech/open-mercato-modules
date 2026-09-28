@@ -29,3 +29,6 @@ export { Tab, TabBar, type TabProps, type TabBarProps } from './Tab'
 export { Tag, type TagProps, type TagVariant } from './Tag'
 export { Toggle, type ToggleProps, type ToggleSize } from './Toggle'
 export { Topbar, type TopbarProps } from './Topbar'
+
+/* Widget family — Figma "M3 · FreightTech" widget architecture (see widget/WidgetCard.tsx). */
+export * from './widget'

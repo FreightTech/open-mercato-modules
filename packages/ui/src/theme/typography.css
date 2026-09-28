@@ -15,6 +15,16 @@
 */
 
 @theme {
+  /* ── Display — widget KPI values only (Figma "M3 · FreightTech" K1–K4) ── */
+  --text-display-bold-lg: 1.75rem;        /* 28 / 36 */
+  --text-display-bold-lg--line-height: 2.25rem;
+  --text-display-bold-lg--letter-spacing: -0.025em;
+  --text-display-bold-lg--font-weight: 700;
+  --text-display-bold-md: 1.375rem;       /* 22 / 28 */
+  --text-display-bold-md--line-height: 1.75rem;
+  --text-display-bold-md--letter-spacing: -0.025em;
+  --text-display-bold-md--font-weight: 700;
+
   /* ── Headings ─────────────────────────────────────────────────── */
   --text-heading-bold-2xl: 1.5rem;        /* 24 / 32 */
   --text-heading-bold-2xl--line-height: 2rem;

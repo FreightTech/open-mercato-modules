@@ -4,7 +4,7 @@
   `./typography.css` when tokens are added or removed.
 */
 
-export type TypographyGroup = 'heading' | 'body' | 'label' | 'caption' | 'code'
+export type TypographyGroup = 'display' | 'heading' | 'body' | 'label' | 'caption' | 'code'
 
 export type TypographyToken = {
   /** Figma token name (slash-namespaced), e.g. `heading/bold/md`. */
@@ -44,6 +44,7 @@ export type TypographyToken = {
 }
 
 export const TYPOGRAPHY_GROUPS: Record<TypographyGroup, { label: string; subtitle: string }> = {
+  display: { label: 'Display', subtitle: '2 styles · Geist · tabular figures · KPI values only' },
   heading: { label: 'Heading', subtitle: '9 styles · Geist · letter-spacing −2.5%' },
   body: { label: 'Body', subtitle: '6 styles · Geist' },
   /* NOTE: `--text-label-semibold-md` exists in typography.css but has never had
@@ -55,6 +56,33 @@ export const TYPOGRAPHY_GROUPS: Record<TypographyGroup, { label: string; subtitl
 }
 
 export const TYPOGRAPHY_TOKENS: TypographyToken[] = [
+  // ── Display (widget KPI values — Figma "M3 · FreightTech" widgets) ─
+  {
+    name: 'display/bold/lg',
+    group: 'display',
+    className: 'text-display-bold-lg',
+    tailwindEquivalent: 'text-[28px] font-bold',
+    rem: '1.75rem',
+    lineHeightPx: 36,
+    fontWeight: 700,
+    letterSpacingEm: -0.025,
+    restrictedTo: 'KPI widget values (K1–K3)',
+    description: 'Wartość KPI w widżecie',
+    sample: '1 284',
+  },
+  {
+    name: 'display/bold/md',
+    group: 'display',
+    className: 'text-display-bold-md',
+    tailwindEquivalent: 'text-[22px] font-bold',
+    rem: '1.375rem',
+    lineHeightPx: 28,
+    fontWeight: 700,
+    letterSpacingEm: -0.025,
+    restrictedTo: 'KPI period comparison (K4)',
+    description: 'Porównanie okresów w widżecie KPI',
+    sample: '1 391',
+  },
   // ── Heading ───────────────────────────────────────────────────────
   {
     name: 'heading/bold/2xl',

@@ -1,0 +1,224 @@
+/*
+  "M3 · FreightTech" widget theme — the palette of the Figma widget
+  architecture (FMS-Widget-architecture, variable collection
+  "M3 · FreightTech theme", light mode only).
+
+  WHY A SEPARATE FILE
+  -------------------
+  m3.css maps the M3 colour ROLES onto the app's existing identity (navy
+  primary #0E3762, zinc inks and outlines). The widget design uses a
+  different hue set: blue-600 primary #2563EB, slate inks and outlines.
+  Per `.ai/figma-rules.md` new colours land ADDITIVELY as `-v2` tokens and
+  never overwrite a token the app already binds to, so this file:
+
+    1. declares the Figma palette as `--m3ft-v2-*` tokens (plus the warning
+       role #B45309 / #FEF3C7, which the Figma variable set does not have
+       even though every "attention" accent in the design uses it);
+    2. registers them as Tailwind utilities (`bg-m3ft-surface`,
+       `text-m3ft-on-surface-variant`, `shadow-m3ft-card`, …);
+    3. offers `.theme-m3-freighttech`, a SCOPE class that remaps the shared
+       `--m3-*` roles inside one subtree (a CRM page root), so grids,
+       buttons and inputs in that subtree follow the widget palette while
+       the rest of the app keeps its current look.
+
+  Adopting the palette app-wide is a product decision; when it is taken,
+  apply `.theme-m3-freighttech` to <html> (or fold the mapping into m3.css)
+  and nothing else has to change.
+
+  DARK MODE
+  ---------
+  Figma defines light only. The `.dark` values below are DERIVED (slate
+  ramp mirrored, blue-400/500 for primary) so a CRM page is usable in dark
+  mode; they are not a design sign-off.
+
+  DERIVED ROLES AND THE SCOPE CLASS
+  ---------------------------------
+  A custom property that references another one is computed where it is
+  DECLARED and inherited as a value. m3.css declares its state layers and
+  composited fills on :root, so remapping `--m3-on-surface` in a subtree
+  would not reach them. The scope class therefore restates every derived
+  role it depends on (same rule as the `.dark` block in m3.css).
+
+  Consumers: apps/web/src/app/globals.css and .storybook/preview.css,
+  imported directly after m3.css.
+*/
+
+@theme inline {
+  --color-m3ft-primary: var(--m3ft-v2-primary);
+  --color-m3ft-on-primary: var(--m3ft-v2-on-primary);
+  --color-m3ft-primary-container: var(--m3ft-v2-primary-container);
+  --color-m3ft-on-primary-container: var(--m3ft-v2-on-primary-container);
+  --color-m3ft-secondary: var(--m3ft-v2-secondary);
+  --color-m3ft-secondary-container: var(--m3ft-v2-secondary-container);
+  --color-m3ft-on-secondary-container: var(--m3ft-v2-on-secondary-container);
+  --color-m3ft-tertiary: var(--m3ft-v2-tertiary);
+  --color-m3ft-tertiary-container: var(--m3ft-v2-tertiary-container);
+  --color-m3ft-success: var(--m3ft-v2-success);
+  --color-m3ft-success-container: var(--m3ft-v2-success-container);
+  --color-m3ft-on-success-container: var(--m3ft-v2-on-success-container);
+  --color-m3ft-error: var(--m3ft-v2-error);
+  --color-m3ft-error-container: var(--m3ft-v2-error-container);
+  --color-m3ft-on-error-container: var(--m3ft-v2-on-error-container);
+  --color-m3ft-warning: var(--m3ft-v2-warning);
+  --color-m3ft-warning-container: var(--m3ft-v2-warning-container);
+  --color-m3ft-on-warning-container: var(--m3ft-v2-on-warning-container);
+  --color-m3ft-promo-container: var(--m3ft-v2-promo-container);
+  --color-m3ft-on-promo-container: var(--m3ft-v2-on-promo-container);
+  --color-m3ft-background: var(--m3ft-v2-background);
+  --color-m3ft-surface: var(--m3ft-v2-surface);
+  --color-m3ft-surface-container-low: var(--m3ft-v2-surface-container-low);
+  --color-m3ft-surface-container: var(--m3ft-v2-surface-container);
+  --color-m3ft-surface-container-high: var(--m3ft-v2-surface-container-high);
+  --color-m3ft-on-surface: var(--m3ft-v2-on-surface);
+  --color-m3ft-on-surface-variant: var(--m3ft-v2-on-surface-variant);
+  --color-m3ft-outline: var(--m3ft-v2-outline);
+  --color-m3ft-outline-variant: var(--m3ft-v2-outline-variant);
+  --color-m3ft-chart-1: var(--m3ft-v2-chart-1);
+  --color-m3ft-chart-2: var(--m3ft-v2-chart-2);
+  --color-m3ft-chart-3: var(--m3ft-v2-chart-3);
+  --color-m3ft-chart-muted: var(--m3ft-v2-chart-muted);
+  --color-m3ft-avatar-violet: var(--m3ft-v2-avatar-violet);
+  --color-m3ft-avatar-amber: var(--m3ft-v2-avatar-amber);
+  --shadow-m3ft-card: var(--m3ft-v2-card-shadow);
+}
+
+:root {
+  --m3ft-v2-primary: #2563EB;
+  --m3ft-v2-on-primary: #FFFFFF;
+  --m3ft-v2-primary-container: #DBE7FF;
+  --m3ft-v2-on-primary-container: #001A41;
+  --m3ft-v2-secondary: #475569;
+  --m3ft-v2-secondary-container: #DCE3ED;
+  --m3ft-v2-on-secondary-container: #101B29;
+  --m3ft-v2-tertiary: #6D5DD3;
+  --m3ft-v2-tertiary-container: #E6E0FF;
+  --m3ft-v2-success: #16A34A;
+  --m3ft-v2-success-container: #DCFCE7;
+  --m3ft-v2-on-success-container: #15803D;
+  --m3ft-v2-error: #B3261E;
+  --m3ft-v2-error-container: #F9DEDC;
+  --m3ft-v2-on-error-container: #8C1D18;
+  /* Not in the Figma variable set — the design's amber "attention" accent. */
+  --m3ft-v2-warning: #B45309;
+  --m3ft-v2-warning-container: #FEF3C7;
+  --m3ft-v2-on-warning-container: #92400E;
+  /* Promo banner (Figma "Banery · 3 warianty", 03.09). */
+  --m3ft-v2-promo-container: #D5ECF8;
+  --m3ft-v2-on-promo-container: #00344E;
+  --m3ft-v2-background: #F1F5F9;
+  --m3ft-v2-surface: #FFFFFF;
+  --m3ft-v2-surface-container-low: #F8FAFC;
+  --m3ft-v2-surface-container: #F1F5F9;
+  --m3ft-v2-surface-container-high: #E9EEF5;
+  --m3ft-v2-on-surface: #0F172A;
+  --m3ft-v2-on-surface-variant: #64748B;
+  --m3ft-v2-outline: #CBD5E1;
+  --m3ft-v2-outline-variant: #E2E8F0;
+  /* Muted chart palette ("paleta przygaszona"). */
+  --m3ft-v2-chart-1: #5D74A6;
+  --m3ft-v2-chart-2: #A5BCE6;
+  --m3ft-v2-chart-3: #DBE7FF;
+  --m3ft-v2-chart-muted: #C7CBD1;
+  --m3ft-v2-avatar-violet: #7C6FD6;
+  --m3ft-v2-avatar-amber: #F59E0B;
+  /* Widget card: M3 elevation-1 as drawn in Figma. */
+  --m3ft-v2-card-shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.08);
+}
+
+.dark {
+  /* Derived — Figma has no dark mode (see header). */
+  --m3ft-v2-primary: #60A5FA;
+  --m3ft-v2-on-primary: #001A41;
+  --m3ft-v2-primary-container: #1E3A8A;
+  --m3ft-v2-on-primary-container: #DBE7FF;
+  --m3ft-v2-secondary: #94A3B8;
+  --m3ft-v2-secondary-container: #334155;
+  --m3ft-v2-on-secondary-container: #E2E8F0;
+  --m3ft-v2-tertiary: #A99DF0;
+  --m3ft-v2-tertiary-container: #3B3170;
+  --m3ft-v2-success: #4ADE80;
+  --m3ft-v2-success-container: #14532D;
+  --m3ft-v2-on-success-container: #DCFCE7;
+  --m3ft-v2-error: #F2B8B5;
+  --m3ft-v2-error-container: #601410;
+  --m3ft-v2-on-error-container: #F9DEDC;
+  --m3ft-v2-warning: #FBBF24;
+  --m3ft-v2-warning-container: #451A03;
+  --m3ft-v2-on-warning-container: #FEF3C7;
+  --m3ft-v2-promo-container: #0C3A52;
+  --m3ft-v2-on-promo-container: #D5ECF8;
+  --m3ft-v2-background: #020617;
+  --m3ft-v2-surface: #0F172A;
+  --m3ft-v2-surface-container-low: #131C31;
+  --m3ft-v2-surface-container: #1E293B;
+  --m3ft-v2-surface-container-high: #273449;
+  --m3ft-v2-on-surface: #F1F5F9;
+  --m3ft-v2-on-surface-variant: #94A3B8;
+  --m3ft-v2-outline: #475569;
+  --m3ft-v2-outline-variant: #334155;
+  --m3ft-v2-chart-1: #8FA6D6;
+  --m3ft-v2-chart-2: #5D74A6;
+  --m3ft-v2-chart-3: #334A7A;
+  --m3ft-v2-chart-muted: #475569;
+  --m3ft-v2-card-shadow: 0 1px 2px rgb(0 0 0 / 0.40), 0 1px 3px rgb(0 0 0 / 0.30);
+}
+
+/*
+  Scope class: remap the shared M3 roles for one subtree. `.dark` values
+  flow through automatically because every line points at an `--m3ft-v2-*`
+  token, which `.dark` redefines.
+*/
+.theme-m3-freighttech {
+  --m3-surface: var(--m3ft-v2-background);
+  --m3-surface-bright: var(--m3ft-v2-surface);
+  --m3-surface-container-lowest: var(--m3ft-v2-surface);
+  --m3-surface-container-low: var(--m3ft-v2-surface-container-low);
+  --m3-surface-container: var(--m3ft-v2-surface-container);
+  --m3-surface-container-high: var(--m3ft-v2-surface-container-high);
+  --m3-surface-container-highest: var(--m3ft-v2-outline-variant);
+  --m3-on-surface: var(--m3ft-v2-on-surface);
+  --m3-on-surface-variant: var(--m3ft-v2-on-surface-variant);
+  --m3-outline: var(--m3ft-v2-outline);
+  --m3-outline-variant: var(--m3ft-v2-outline-variant);
+  --m3-primary: var(--m3ft-v2-primary);
+  --m3-on-primary: var(--m3ft-v2-on-primary);
+  --m3-primary-hover: color-mix(in srgb, var(--m3ft-v2-on-primary) 8%, var(--m3ft-v2-primary));
+  --m3-primary-container: var(--m3ft-v2-primary-container);
+  --m3-on-primary-container: var(--m3ft-v2-on-primary-container);
+  --m3-error: var(--m3ft-v2-error);
+  --m3-error-container: var(--m3ft-v2-error-container);
+  --m3-on-error-container: var(--m3ft-v2-on-error-container);
+  --m3-success: var(--m3ft-v2-success);
+  --m3-success-container: var(--m3ft-v2-success-container);
+  --m3-on-success-container: var(--m3ft-v2-on-success-container);
+  --m3-warning: var(--m3ft-v2-warning);
+  --m3-warning-container: var(--m3ft-v2-warning-container);
+  --m3-on-warning-container: var(--m3ft-v2-on-warning-container);
+
+  /* Derived roles restated so they resolve against the remapped inks. */
+  --m3-state-layer-hover: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+  --m3-state-layer-focus: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --m3-state-layer-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  --m3-state-layer-dragged: color-mix(in srgb, var(--m3-on-surface) 16%, transparent);
+  --m3-state-layer-on-primary-hover: color-mix(in srgb, var(--m3-on-primary) 8%, transparent);
+  --m3-state-layer-on-primary-pressed: color-mix(in srgb, var(--m3-on-primary) 16%, transparent);
+  --m3-surface-hover: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface));
+  --m3-surface-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, var(--m3-surface-hover));
+  --m3-container-hover: color-mix(in srgb, var(--m3-on-surface) 8%, var(--m3-surface-container));
+  --m3-container-pressed: color-mix(in srgb, var(--m3-on-surface) 10%, var(--m3-container-hover));
+  --m3-focus-ring-ground: var(--m3-surface-container-lowest);
+  --m3-focus-ring: 0 0 0 2px var(--m3-focus-ring-ground), 0 0 0 4px var(--m3-focus-ring-color);
+}
+
+/*
+  Page marker. Figma "Layout" (03_Layout): the grey #F1F5F9 ground lives
+  OUTSIDE the white content panel; inside it, white widget cards separate by
+  their elevation-1 shadow. So a CRM page does not repaint the panel — it only
+  sets the ink.
+*/
+@layer utilities {
+  .m3ft-page {
+    color: var(--m3ft-v2-on-surface);
+  }
+}
+
