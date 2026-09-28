@@ -43,13 +43,16 @@ export function FormField({
   const ariaDescribedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefined
 
   // Clone child to inject accessibility props
+  // `disabled` is OR-ed with the child's own: a field that is not disabled must
+  // not switch off a control the caller disabled itself (e.g. while loading).
+  const childDisabled = React.isValidElement(children) ? (children.props as { disabled?: boolean }).disabled : undefined
   const enhancedChild = React.isValidElement(children)
     ? React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
         id: fieldId,
         'aria-describedby': ariaDescribedBy,
         'aria-invalid': error ? true : undefined,
         'aria-required': required ? true : undefined,
-        disabled: disabled || undefined,
+        disabled: disabled || childDisabled || undefined,
       })
     : children
 

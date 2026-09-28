@@ -42,7 +42,7 @@ import { CustomizeDrawer } from './CustomizeDrawer'
 import { EmptySlot } from './EmptySlot'
 import { PaneMenuRows } from './PaneMenu'
 import { WidgetPane } from './WidgetPane'
-import { AddWidgetMenu, BoxHeader, CustomizeTab, FullscreenToggle, LayoutMenu } from './WorkspaceActions'
+import { BoxHeader, FullscreenToggle, WorkspaceSettingsMenu } from './WorkspaceActions'
 import { WorkspaceFilterBar, type UnmappedPaneReport } from './WorkspaceFilterBar'
 import { PANE_CARD } from './chrome'
 import { mapCriteriaForTable, mapCriteriaForWidget, type SharedCriteria } from './sharedCriteria'
@@ -270,14 +270,26 @@ export type SplitViewHostProps = {
  * Measure the nearest SCROLL ancestor's client bottom and set an explicit
  * height — the same technique `DynamicTable` uses for `height: 'fill'`, so the
  * two agree instead of fighting.
+ *
+ * It also reclaims the page's top padding. With nothing between the top bar and
+ * the workspace (no banner, no heading), that padding is an empty strip the
+ * owner wants back for the tables (review 2026-09-28, "free the top bar
+ * space"): the workspace is pulled up to {@link TOP_GAP_KEEP_PX} under the top
+ * bar. Anything rendered above the host keeps its place — no pull then.
  */
+const TOP_GAP_KEEP_PX = 8
+
 function useFilledHeight(enabled: boolean) {
   const ref = React.useRef<HTMLDivElement>(null)
   const [height, setHeight] = React.useState<number | null>(null)
+  const [pull, setPull] = React.useState(0)
+  const pullRef = React.useRef(0)
 
   React.useLayoutEffect(() => {
     if (!enabled) {
       setHeight(null)
+      pullRef.current = 0
+      setPull(0)
       return
     }
     const element = ref.current
@@ -292,6 +304,27 @@ function useFilledHeight(enabled: boolean) {
 
     const measure = () => {
       const rect = element.getBoundingClientRect()
+      // Where the host would sit without our pull.
+      const naturalTop = rect.top + pullRef.current
+      let nextPull = 0
+      if (scrollPane && scrollPane !== document.body) {
+        const paneTop = scrollPane.getBoundingClientRect().top
+        let clear = true
+        for (let node: HTMLElement | null = element; node && node !== scrollPane && clear; node = node.parentElement) {
+          for (let sibling = node.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
+            if (sibling.getBoundingClientRect().height > 0) {
+              clear = false
+              break
+            }
+          }
+        }
+        const gap = Math.round(naturalTop - paneTop + scrollPane.scrollTop)
+        if (clear && gap > TOP_GAP_KEEP_PX) nextPull = gap - TOP_GAP_KEEP_PX
+      }
+      if (nextPull !== pullRef.current) {
+        pullRef.current = nextPull
+        setPull(nextPull)
+      }
       // The scroll pane's own bottom padding is inside its client box; filling
       // down to that edge overflowed the page by exactly that padding and put
       // a second scrollbar beside the workspace's.
@@ -304,7 +337,7 @@ function useFilledHeight(enabled: boolean) {
                 (parseFloat(getComputedStyle(scrollPane).paddingBottom) || 0),
             )
           : window.innerHeight
-      setHeight(Math.max(Math.floor(bottom - rect.top), 320))
+      setHeight(Math.max(Math.floor(bottom - (naturalTop - nextPull)), 320))
     }
 
     measure()
@@ -317,7 +350,7 @@ function useFilledHeight(enabled: boolean) {
     }
   }, [enabled])
 
-  return { ref, height }
+  return { ref, height, pull }
 }
 
 /**
@@ -678,6 +711,9 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
         current={node.content}
         canSwap={!isPrimary}
         canRemove={isSplit && !isPrimary}
+        // Unsplit there is no workspace bar, so its ⚙ is not there: the way into
+        // "Dostosuj widok" is the page table's own ⋯ menu.
+        onCustomize={!isSplit && isPrimary ? () => setCustomizeOpen(true) : undefined}
         widget={isWidget ? { chrome: node.chrome, hasCta: !!href, onToggleChrome: toggleChrome } : undefined}
         onSplit={(direction, before, anchor) => setPending({ mode: 'split', slotId: node.id, direction, before, anchor })}
         onSwap={(content) => setLayout((current) => replaceContent(current, node.id, content))}
@@ -822,13 +858,13 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
       style={
         {
           ...(!fullscreen && fill.height ? { height: fill.height } : {}),
+          ...(!fullscreen && fill.pull ? { marginTop: -fill.pull } : {}),
           // Read by the bar's and the grid's right padding — see `scrollbar`.
           '--ws-scrollbar': `${scrollbar.classic + scrollbar.overlay}px`,
           '--ws-overlay': `${scrollbar.overlay}px`,
         } as React.CSSProperties
       }
     >
-      {!fullscreen && <CustomizeTab onOpen={() => setCustomizeOpen(true)} active={customizeOpen} />}
 
       {isSplit && (
         <WorkspaceFilterBar
@@ -840,19 +876,24 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
           onSharedChange={setSharedEnabled}
           trailing={
             <>
-              <AddWidgetMenu onAdd={handleAdd} />
-              <LayoutMenu
+              {/* Full screen stays a visible pill while it is ON — the way out
+                  must not hide in a menu. Otherwise every layout control is
+                  behind the one ⚙. */}
+              {fullscreen && <FullscreenToggle active onToggle={() => setFullscreen(false)} />}
+              <WorkspaceSettingsMenu
                 layouts={layouts}
                 activeId={activeLayoutId}
                 isDefault={isDefault}
+                fullscreen={fullscreen}
                 onApply={(saved) => setLayout(() => saved.layout)}
                 onDefault={() => setLayout((current) => resetLayout(current, tableId))}
                 onSaveCurrent={() =>
                   void save(t('splitView.layouts.defaultName', 'Layout {n}', { n: String(layouts.length + 1) }), layout)
                 }
                 onCustomize={() => setCustomizeOpen(true)}
+                onAdd={handleAdd}
+                onToggleFullscreen={() => setFullscreen((value) => !value)}
               />
-              <FullscreenToggle active={fullscreen} onToggle={() => setFullscreen((value) => !value)} />
             </>
           }
         />

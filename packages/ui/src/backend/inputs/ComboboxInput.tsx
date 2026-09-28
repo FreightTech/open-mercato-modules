@@ -20,6 +20,8 @@ export type ComboboxInputProps = {
   autoFocus?: boolean
   disabled?: boolean
   allowCustomValues?: boolean
+  /** Replaces the input's default classes (e.g. to match a surrounding form's field style). */
+  inputClassName?: string
 }
 
 function normalizeOptions(input?: Array<string | ComboboxOption>): ComboboxOption[] {
@@ -53,6 +55,7 @@ export function ComboboxInput({
   autoFocus,
   disabled = false,
   allowCustomValues = true,
+  inputClassName,
 }: ComboboxInputProps) {
   const [input, setInput] = React.useState('')
   const [asyncOptions, setAsyncOptions] = React.useState<ComboboxOption[]>([])
@@ -211,7 +214,7 @@ export function ComboboxInput({
       <input
         ref={inputRef}
         type="text"
-        className="w-full h-9 rounded border px-2 text-sm disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+        className={inputClassName ?? 'w-full h-9 rounded border px-2 text-sm disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed'}
         value={input}
         placeholder={placeholder || 'Type to search...'}
         autoFocus={autoFocus}
@@ -226,6 +229,13 @@ export function ComboboxInput({
           setInput(event.target.value)
           setShowSuggestions(true)
           setSelectedIndex(-1)
+          // Typing an option's exact label commits it now. Waiting for blur
+          // lost it when the user typed "EXW" and clicked Save at once — the
+          // form submitted before the 200 ms blur timer confirmed the value.
+          if (!allowCustomValues) {
+            const exact = findOptionForInput(event.target.value)
+            if (exact && exact.value !== value) onChange(exact.value)
+          }
         }}
         onKeyDown={handleKeyDown}
         onBlur={() => {

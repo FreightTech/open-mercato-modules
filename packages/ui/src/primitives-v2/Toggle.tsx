@@ -44,8 +44,13 @@ export const Toggle = React.forwardRef<HTMLInputElement, ToggleProps>(function T
   const generatedId = React.useId()
   const inputId = id ?? generatedId
 
+  // Without a text label the track itself must be the click target: the
+  // checkbox is `sr-only`, so a plain <span> wrapper would leave the visible
+  // switch dead to the mouse. With a label, the outer <label> does that job
+  // (labels must not nest).
+  const Wrapper = label == null ? 'label' : 'span'
   const control = (
-    <span className="relative inline-flex shrink-0 items-center">
+    <Wrapper {...(label == null ? { htmlFor: inputId } : {})} className="relative inline-flex shrink-0 cursor-pointer items-center">
       <input
         ref={ref}
         id={inputId}
@@ -72,7 +77,7 @@ export const Toggle = React.forwardRef<HTMLInputElement, ToggleProps>(function T
           THUMB_SIZE[toggleSize],
         )}
       />
-    </span>
+    </Wrapper>
   )
 
   if (label == null) return control

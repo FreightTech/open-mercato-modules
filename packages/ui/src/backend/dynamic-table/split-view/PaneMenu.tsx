@@ -21,7 +21,7 @@
  */
 
 import * as React from 'react'
-import { Check, ChevronRight, ExternalLink, PanelBottom, PanelLeft, PanelRight, PanelTop, X } from 'lucide-react'
+import { Check, ChevronRight, ExternalLink, LayoutGrid, PanelBottom, PanelLeft, PanelRight, PanelTop, X } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useToolbarOverflowClose } from '../components/ToolbarOverflow'
 import { AnchoredPanel } from './AnchoredMenu'
@@ -51,6 +51,8 @@ export type PaneMenuRowsProps = {
   onSplit: (direction: SplitDirection, before: boolean, anchor: DOMRect) => void
   onSwap: (content: PaneContentRef) => void
   onRemove: () => void
+  /** Unsplit page table only: opens the layout drawer (there is no workspace bar ⚙ then). */
+  onCustomize?: () => void
 }
 
 /** "Podmień na ▸" — a row that opens the catalogue beside the menu. */
@@ -105,6 +107,7 @@ export function PaneMenuRows({
   onSplit,
   onSwap,
   onRemove,
+  onCustomize,
 }: PaneMenuRowsProps) {
   const t = useT()
   const closeMenu = useToolbarOverflowClose()
@@ -189,6 +192,24 @@ export function PaneMenuRows({
               </button>
             )
           })}
+        </>
+      )}
+
+      {onCustomize && (
+        <>
+          <div className={M3_MENU_DIVIDER} />
+          <button
+            type="button"
+            onClick={() => {
+              onCustomize()
+              closeMenu()
+            }}
+            className={M3_MENU_ROW}
+            data-workspace-customize=""
+          >
+            <span className="flex-1">{t('splitView.bar.customize', 'Customize…')}</span>
+            <span className={TRAIL}><LayoutGrid /></span>
+          </button>
         </>
       )}
 

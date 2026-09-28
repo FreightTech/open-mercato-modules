@@ -42,10 +42,12 @@ const SIZE_CLASSES: Record<InputSize, string> = {
   lg: 'h-10 text-sm',
 }
 
-const PADDING_CLASSES: Record<InputSize, { base: string; left: string; right: string }> = {
-  sm: { base: 'px-3', left: 'pl-9', right: 'pr-9' },
-  md: { base: 'px-3', left: 'pl-9', right: 'pr-9' },
-  lg: { base: 'px-4', left: 'pl-10', right: 'pr-10' },
+// Each side is padded on its own: an input with only a right addon still needs
+// its base left padding (it used to get none, so the value touched the border).
+const PADDING_CLASSES: Record<InputSize, { baseLeft: string; baseRight: string; left: string; right: string }> = {
+  sm: { baseLeft: 'pl-3', baseRight: 'pr-3', left: 'pl-9', right: 'pr-9' },
+  md: { baseLeft: 'pl-3', baseRight: 'pr-3', left: 'pl-9', right: 'pr-9' },
+  lg: { baseLeft: 'pl-4', baseRight: 'pr-4', left: 'pl-10', right: 'pr-10' },
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -53,7 +55,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Inp
   ref,
 ) {
   const pad = PADDING_CLASSES[inputSize]
-  const padClass = cn(leftAddon ? pad.left : null, rightAddon ? pad.right : null, !leftAddon && !rightAddon ? pad.base : null)
+  const padClass = cn(leftAddon ? pad.left : pad.baseLeft, rightAddon ? pad.right : pad.baseRight)
 
   const baseStateClasses = hasError
     ? // Error: red border, red focus ring
