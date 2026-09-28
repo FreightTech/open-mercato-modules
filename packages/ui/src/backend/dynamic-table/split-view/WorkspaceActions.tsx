@@ -12,7 +12,7 @@
  */
 
 import * as React from 'react'
-import { Check, ChevronDown, ChevronLeft, LayoutGrid, Maximize, Minimize, Plus, Save, Settings, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, LayoutGrid, Maximize, Minimize, Plus, Save, Search, Settings, X } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { AnchoredMenu } from './AnchoredMenu'
 import { ContentCatalogList } from './ContentPicker'
@@ -286,6 +286,9 @@ export function WorkspaceSettingsMenu({
   onCustomize,
   onAdd,
   onToggleFullscreen,
+  workspaceSearch,
+  paneSearch,
+  onSearchSwitch,
 }: {
   layouts: SavedSplitLayout[]
   activeId: string | null
@@ -297,6 +300,11 @@ export function WorkspaceSettingsMenu({
   onCustomize: () => void
   onAdd: (content: PaneContentRef) => void
   onToggleFullscreen: () => void
+  /** ⚙ "Global search" — the bar's search box. Omit both to hide the section. */
+  workspaceSearch?: boolean
+  /** ⚙ "Search in tables" — each table pane's own search box. */
+  paneSearch?: boolean
+  onSearchSwitch?: (key: 'workspaceSearch' | 'paneSearch', value: boolean) => void
 }) {
   const t = useT()
   const [catalog, setCatalog] = React.useState(false)
@@ -385,6 +393,35 @@ export function WorkspaceSettingsMenu({
               )
             })}
             {row('splitView.bar.saveCurrent', 'Save current', <Save />, () => { onSaveCurrent(); close() }, 'data-workspace-layout-save')}
+            {onSearchSwitch && (
+              <>
+                <div className={M3_MENU_DIVIDER} />
+                <div className={`px-3 pb-1 pt-1 ${M3_MENU_CAPTION}`}>{t('splitView.bar.searchSection', 'Search')}</div>
+                {([
+                  ['workspaceSearch', !!workspaceSearch, 'splitView.bar.globalSearch', 'Global search'],
+                  ['paneSearch', !!paneSearch, 'splitView.bar.paneSearch', 'Search in tables'],
+                ] as const).map(([key, on, labelKey, fallback]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={on}
+                    // A switch does NOT close the menu, so both can be set in one visit.
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onSearchSwitch(key, !on)
+                    }}
+                    className={M3_MENU_ROW}
+                    data-workspace-search-switch={key}
+                    data-workspace-search-switch-on={on ? 'true' : 'false'}
+                  >
+                    <span className="flex w-4 justify-center text-[var(--m3-on-surface-variant)]"><Search className="h-3.5 w-3.5" /></span>
+                    <span className={`flex-1 truncate ${on ? '' : 'text-[var(--m3-on-surface-variant)]'}`}>{t(labelKey, fallback)}</span>
+                    {on && <Check className="h-3.5 w-3.5 text-[var(--m3-primary)]" />}
+                  </button>
+                ))}
+              </>
+            )}
             <div className={M3_MENU_DIVIDER} />
             {row(
               fullscreen ? 'splitView.bar.exitFullscreen' : 'splitView.bar.fullscreen',

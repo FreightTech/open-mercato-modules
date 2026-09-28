@@ -106,8 +106,13 @@ export type WorkspaceFilterBarProps = {
    * click and the layout does not jump.
    */
   shared?: boolean
-  /** Switch between the two modes. */
+  /**
+   * @deprecated The Shared/Per pane toggle is no longer rendered (0.14.3):
+   * search visibility is two ⚙ switches in the host. Still honoured if passed.
+   */
   onSharedChange?: (shared: boolean) => void
+  /** Show the global search box (⚙ "Global search"). Default `true`. */
+  showSearch?: boolean
   /** Back to per-pane control. Kept for callers that only know "off". */
   onToggleOff?: () => void
   /** Host controls on the right end of the bar — add widget, layouts, full screen. */
@@ -444,17 +449,11 @@ export function WorkspaceFilterBar({
   criteria,
   onChange,
   unmappedByPane,
-  onToggleOff,
   shared = true,
-  onSharedChange,
+  showSearch = true,
   trailing,
   className,
 }: WorkspaceFilterBarProps) {
-  const setShared = (next: boolean) => {
-    if (next === shared) return
-    if (onSharedChange) onSharedChange(next)
-    else if (!next) onToggleOff?.()
-  }
   const t = useT()
   const [editing, setEditing] = React.useState<{ key: SharedCriterionKey; anchorEl: HTMLElement } | null>(null)
 
@@ -569,31 +568,33 @@ export function WorkspaceFilterBar({
       data-workspace-filter-bar=""
       data-workspace-scope={shared ? 'shared' : 'per-pane'}
     >
-      <SearchInput
-        /* NOT `type="search"`: Chrome paints its own cancel "×" on a search
-           input, right beside the primitive's clear button. */
-        type="text"
-        inputSize="sm"
-        className="h-9 min-w-[9rem] flex-1"
-        /* The pill overrides go through `style`, not through classes.
-           `primitives-v2/utils#cn` is a plain string join with no
-           tailwind-merge, so `rounded-m3-full` and the primitive's own
-           `rounded-md` would BOTH land on the element and the winner would be
-           whichever Tailwind happened to emit last. Inline wins deterministically. */
-        style={{
-          borderRadius: 'var(--m3-shape-full)',
-          borderColor: 'var(--m3-outline-variant)',
-          backgroundColor: 'var(--m3-surface-container-lowest)',
-        }}
-        value={draft}
-        disabled={!shared}
-        onChange={(e) => setDraft(e.target.value)}
-        onClear={() => setDraft('')}
-        placeholder={t('splitView.sharedFilter.search', 'Search all panes…')}
-        aria-label={t('splitView.sharedFilter.search', 'Search all panes…')}
-        title={shared ? undefined : t('splitView.sharedFilter.perPaneHint', 'Each pane searches on its own — switch to “Shared” to search them all')}
-        data-workspace-search=""
-      />
+      {showSearch && (
+        <SearchInput
+          /* NOT `type="search"`: Chrome paints its own cancel "×" on a search
+             input, right beside the primitive's clear button. */
+          type="text"
+          inputSize="sm"
+          className="h-9 min-w-[9rem] flex-1"
+          /* The pill overrides go through `style`, not through classes.
+             `primitives-v2/utils#cn` is a plain string join with no
+             tailwind-merge, so `rounded-m3-full` and the primitive's own
+             `rounded-md` would BOTH land on the element and the winner would be
+             whichever Tailwind happened to emit last. Inline wins deterministically. */
+          style={{
+            borderRadius: 'var(--m3-shape-full)',
+            borderColor: 'var(--m3-outline-variant)',
+            backgroundColor: 'var(--m3-surface-container-lowest)',
+          }}
+          value={draft}
+          disabled={!shared}
+          onChange={(e) => setDraft(e.target.value)}
+          onClear={() => setDraft('')}
+          placeholder={t('splitView.sharedFilter.search', 'Search all panes…')}
+          aria-label={t('splitView.sharedFilter.search', 'Search all panes…')}
+          title={shared ? undefined : t('splitView.sharedFilter.perPaneHint', 'Each pane searches on its own — switch to “Shared” to search them all')}
+          data-workspace-search=""
+        />
+      )}
 
       {/* ONE chip per live criterion. M3's input chip puts the trailing "×"
           INSIDE the container — so the chip is the outer element and the
@@ -685,49 +686,11 @@ export function WorkspaceFilterBar({
         </span>
       ))}
 
-      {/* "Wspólne | Per tabela" — an M3 connected button group. The current
-          mode takes the same `secondary-container` every other selection in
-          the app uses, and the other mode is one click away. */}
-      <div
-        className="flex h-9 shrink-0 items-center overflow-hidden rounded-m3-full border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)]"
-        role="radiogroup"
-        aria-label={t('splitView.sharedFilter.scope', 'Filter scope')}
-      >
-        {([true, false] as const).map((value) => {
-          const on = shared === value
-          return (
-            <button
-              key={String(value)}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => setShared(value)}
-              className={`flex h-full items-center px-3 text-label-medium-md transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard ${
-                value ? '' : 'border-l border-[var(--m3-outline-variant)]'
-              } ${
-                on
-                  ? 'bg-[var(--m3-secondary-container)] text-[var(--m3-on-secondary-container)]'
-                  : 'text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)]'
-              }`}
-              title={value
-                ? t('splitView.sharedFilter.toggleOnHint', 'Drive every pane from this search and filter')
-                : t('splitView.sharedFilter.toggleOffHint', 'Give every pane its own search back')}
-              {...(value ? { 'data-workspace-filter-on': '' } : { 'data-workspace-filter-off': '' })}
-            >
-              {value
-                ? t('splitView.sharedFilter.toggleOnLabel', 'Shared')
-                : t('splitView.sharedFilter.toggleOff', 'Per pane')}
-            </button>
-          )
-        })}
-      </div>
+      {/* With the search box hidden nothing stretches, so the trailing ⚙
+          would drift left; a spacer keeps it at the right end. */}
+      {!showSearch && <span className="flex-1" aria-hidden="true" />}
 
-      {trailing && (
-        <>
-          <span className="mx-1 h-5 w-px shrink-0 bg-[var(--m3-outline-variant)]" aria-hidden="true" />
-          {trailing}
-        </>
-      )}
+      {trailing}
 
       {editing && editingRule && (
         <CriterionEditor

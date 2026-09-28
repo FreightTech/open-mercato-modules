@@ -383,25 +383,48 @@ export class SplitViewHarness {
 
   // ── Shared search and filtering ────────────────────────────────────────────
 
+  /**
+   * "on" while the workspace's global search drives the panes (⚙ "Global
+   * search" on, "Search in tables" off) — the old "Shared" mode.
+   */
   async sharedFiltersState(): Promise<'on' | 'off'> {
-    const value = await this.page
-      .locator('[data-shared-filters]')
-      .first()
-      .getAttribute('data-shared-filters')
-    return value === 'on' ? 'on' : 'off'
+    const host = this.page.locator('[data-split-view]').first()
+    const global = await host.getAttribute('data-workspace-search-global')
+    const panes = await host.getAttribute('data-workspace-search-panes')
+    return global === 'on' && panes !== 'on' ? 'on' : 'off'
   }
 
-  /** "Wspólne" in the workspace bar — the default for a workspace. */
+  /** Current ⚙ search switches, or null when the page is not split. */
+  async searchSwitches(): Promise<{ global: boolean; panes: boolean } | null> {
+    const host = this.page.locator('[data-split-view]').first()
+    const global = await host.getAttribute('data-workspace-search-global')
+    if (global === null) return null
+    return { global: global === 'on', panes: (await host.getAttribute('data-workspace-search-panes')) === 'on' }
+  }
+
+  /** Set the ⚙ "Global search" / "Search in tables" switches. */
+  async setSearchSwitches(target: { global?: boolean; panes?: boolean }): Promise<void> {
+    const current = await this.searchSwitches()
+    if (!current) throw new Error('setSearchSwitches: the page is not split — there is no workspace ⚙')
+    const flips: Array<'workspaceSearch' | 'paneSearch'> = []
+    if (target.global !== undefined && target.global !== current.global) flips.push('workspaceSearch')
+    if (target.panes !== undefined && target.panes !== current.panes) flips.push('paneSearch')
+    if (flips.length === 0) return
+    const menu = await this.openSettings()
+    for (const key of flips) await menu.locator(`[data-workspace-search-switch="${key}"]`).click()
+    await this.page.keyboard.press('Escape')
+    const want = { global: target.global ?? current.global, panes: target.panes ?? current.panes }
+    await expect.poll(() => this.searchSwitches(), { timeout: 10_000 }).toEqual(want)
+  }
+
+  /** The old "Shared": global search on, table searches off. */
   async enableSharedFilters(): Promise<void> {
-    if ((await this.sharedFiltersState()) === 'on') return
-    await this.page.locator('[data-workspace-filter-on]').first().click()
-    await expect.poll(() => this.sharedFiltersState(), { timeout: 10_000 }).toBe('on')
+    await this.setSearchSwitches({ global: true, panes: false })
   }
 
-  /** "Per tabela" — every pane gets its own search back. */
+  /** The old "Per pane": every pane gets its own search back, the global box goes. */
   async disableSharedFilters(): Promise<void> {
-    await this.page.locator('[data-workspace-filter-off]').first().click()
-    await expect.poll(() => this.sharedFiltersState(), { timeout: 10_000 }).toBe('off')
+    await this.setSearchSwitches({ global: false, panes: true })
   }
 
   sharedSearchInput(): Locator {
