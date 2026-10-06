@@ -104,6 +104,12 @@ export type AppShellProps = {
   profileSectionTitle?: string
   profilePathPrefixes?: string[]
   mobileSidebarSlot?: React.ReactNode
+  /**
+   * The yellow "last operation · Undo" strip above every page. Off by default:
+   * FreightTech modules keep undo inside their own screens (2026-09-29). An app
+   * that wants the global strip passes `true`.
+   */
+  showLastOperationBanner?: boolean
 }
 
 type Breadcrumb = Array<{ label: string; href?: string }>
@@ -355,7 +361,7 @@ const DataTableIcon = (
   </svg>
 )
 
-export function AppShell({ productName, email, brandId, brandLogo, groups, rightHeaderSlot, children, sidebarCollapsedDefault = false, currentTitle, breadcrumb, adminNavApi, version, settingsSectionTitle, settingsPathPrefixes = [], settingsSections, profileSections, profileSectionTitle, profilePathPrefixes = [], mobileSidebarSlot }: AppShellProps) {
+export function AppShell({ productName, email, brandId, brandLogo, groups, rightHeaderSlot, children, sidebarCollapsedDefault = false, currentTitle, breadcrumb, adminNavApi, version, settingsSectionTitle, settingsPathPrefixes = [], settingsSections, profileSections, profileSectionTitle, profilePathPrefixes = [], mobileSidebarSlot, showLastOperationBanner = false }: AppShellProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useT()
@@ -1420,7 +1426,7 @@ export function AppShell({ productName, email, brandId, brandLogo, groups, right
           <SseEventIndicator />
           <PartialIndexBanner />
           <UpgradeActionBanner />
-          <LastOperationBanner />
+          {showLastOperationBanner ? <LastOperationBanner /> : null}
           <InjectionSpot spotId={BACKEND_RECORD_CURRENT_INJECTION_SPOT_ID} context={injectionContext} />
           <InjectionSpot
             spotId={LEGACY_GLOBAL_MUTATION_INJECTION_SPOT_ID}

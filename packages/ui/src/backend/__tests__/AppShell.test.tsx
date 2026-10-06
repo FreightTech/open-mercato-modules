@@ -193,6 +193,24 @@ describe('AppShell', () => {
     )
   })
 
+  it('shows no "last operation · Undo" strip unless the app asks for it', async () => {
+    const { unmount } = renderWithProviders(
+      <AppShell email="demo@example.com" groups={groups}>
+        <div>Child content</div>
+      </AppShell>,
+      { dict },
+    )
+    expect(screen.queryByTestId('last-operation-banner')).not.toBeInTheDocument()
+    unmount()
+    renderWithProviders(
+      <AppShell email="demo@example.com" groups={groups} showLastOperationBanner>
+        <div>Child content</div>
+      </AppShell>,
+      { dict },
+    )
+    expect(screen.getByTestId('last-operation-banner')).toBeInTheDocument()
+  })
+
   it('renders nested settings links when settings parent route is active', async () => {
     mockPathname = '/backend/entities/user'
 
