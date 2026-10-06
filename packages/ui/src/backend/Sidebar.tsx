@@ -104,6 +104,8 @@ export type SidebarProps = {
   /** `false` = collapsed. Missing key defaults to expanded. */
   openGroups?: Record<string, boolean>
   onToggleGroup?: (groupId: string) => void
+  /** Render every group's items as one list — no group headings, no dividers. */
+  flat?: boolean
   settingsActive?: boolean
   settingsHref?: string
   settingsLabel?: string
@@ -628,6 +630,7 @@ function FullSidebar(props: SidebarProps) {
     groups = [],
     openGroups,
     onToggleGroup,
+    flat,
     sections = [],
     sectionTitle,
     backHref,
@@ -695,7 +698,14 @@ function FullSidebar(props: SidebarProps) {
         ) : mode === 'main' ? (
           <>
             {navSlot}
-            {groups
+            {flat ? (
+              <MainNavGroup
+                group={{ id: 'all', name: '', items: groups.flatMap((g) => g.items) }}
+                open
+                pathname={pathname}
+                onItemNavigate={onItemNavigate}
+              />
+            ) : groups
               .filter((g) => g.items.some((i) => i.hidden !== true))
               .map((g, idx, visible) => {
                 const open = openGroups ? openGroups[g.id] !== false : true
