@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { Check } from 'lucide-react';
+import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { Calendar } from '../../../primitives/calendar';
 import { apiCall } from '../../utils/apiCall';
 
@@ -712,6 +713,7 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
     col,
     inputRef
 }) => {
+    const t = useT();
     const options = col.source || [];
     const [showDropdown, setShowDropdown] = useState(true);
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0, openAbove: false });
@@ -886,7 +888,7 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
                     }
                 }}
                 className="hot-cell-editor hot-dropdown-editor"
-                placeholder="Type to filter..."
+                placeholder={t('dynamicTable.dropdown.typeToFilter', 'Type to filter...')}
             />
 
             {showDropdown && filteredOptions.length > 0 && (

@@ -313,9 +313,9 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
                   }
                   onSaveNewRow(rowIndex);
                 }}
-                title="Save"
+                title={t('dynamicTable.newRow.save', 'Save')}
               >
-                Save
+                {t('dynamicTable.newRow.save', 'Save')}
               </button>
             ) : rowData == null ? null : actionsRenderer ? (
               actionsRenderer(rowData, rowIndex)

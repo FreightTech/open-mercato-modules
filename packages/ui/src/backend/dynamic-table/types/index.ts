@@ -271,6 +271,12 @@ export interface ColumnDef {
    * When omitted, the raw cell value is stringified — matching the Copy button.
    */
   exportValue?: (value: any, rowData: any) => string | number | null | undefined;
+  /**
+   * How a `numeric` column prints its numbers: `Intl.NumberFormat` options plus `locale`, which
+   * defaults to the app's locale. `culture` is read as `locale`; `pattern` is accepted and ignored
+   * (both are Handsontable-style keys older columns still pass).
+   */
+  numericFormat?: Intl.NumberFormatOptions & { locale?: string; culture?: string; pattern?: string };
 }
 
 export interface DragState {
