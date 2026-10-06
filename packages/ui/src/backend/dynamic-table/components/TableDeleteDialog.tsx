@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from '../../../primitives/dialog'
 import { Button } from '../../../primitives/button'
+import { useT } from '@open-mercato/shared/lib/i18n/context'
 
 export interface TableDeleteDialogProps<TRow = any> {
   row: TRow | null
@@ -22,6 +23,8 @@ export interface TableDeleteDialogProps<TRow = any> {
   description?: string | ((row: TRow) => string)
   /** Column key to use for the row name in the default description */
   nameColumn?: string
+  /** Bulk delete: `row` is `{ count }` and this names what is being deleted ("invoices"). */
+  bulkNoun?: string
 }
 
 export default function TableDeleteDialog<TRow = any>({
@@ -33,18 +36,29 @@ export default function TableDeleteDialog<TRow = any>({
   title,
   description,
   nameColumn = 'name',
+  bulkNoun,
 }: TableDeleteDialogProps<TRow>) {
+  const t = useT()
+  if (bulkNoun !== undefined && row && title === undefined && description === undefined) {
+    const count = String((row as any).count ?? '')
+    title = t('dynamicTable.delete.bulkTitle', 'Delete {count} {noun}').replace('{count}', count).replace('{noun}', bulkNoun).replace(/\s+/g, ' ').trim()
+    description = t('dynamicTable.delete.bulkDescription', 'Are you sure you want to delete {count} selected items? This action cannot be undone.').replace('{count}', count)
+  }
+  const defaultTitle = t('dynamicTable.delete.title', 'Delete item')
   const resolvedTitle = row
     ? typeof title === 'function'
       ? title(row)
-      : title ?? 'Delete Item'
-    : 'Delete Item'
+      : title ?? defaultTitle
+    : defaultTitle
 
   const resolvedDescription = row
     ? typeof description === 'function'
       ? description(row)
       : description ??
-        `Are you sure you want to delete "${(row as any)[nameColumn] ?? 'this item'}"? This action cannot be undone.`
+        t('dynamicTable.delete.description', 'Are you sure you want to delete "{name}"? This action cannot be undone.').replace(
+          '{name}',
+          String((row as any)[nameColumn] ?? t('dynamicTable.delete.thisItem', 'this item')),
+        )
     : ''
 
   return (
@@ -62,10 +76,10 @@ export default function TableDeleteDialog<TRow = any>({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={isDeleting}>
-            Cancel
+            {t('dynamicTable.delete.cancel', 'Cancel')}
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={isDeleting}>
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {isDeleting ? t('dynamicTable.delete.deleting', 'Deleting...') : t('dynamicTable.delete.confirm', 'Delete')}
           </Button>
         </DialogFooter>
       </DialogContent>
