@@ -110,6 +110,12 @@ export type AppShellProps = {
    * that wants the global strip passes `true`.
    */
   showLastOperationBanner?: boolean
+  /**
+   * One flat list in the main sidebar: no group headings, no dividers. Groups
+   * still decide the order and stay editable in "Customize sidebar". Off by
+   * default; FMS turns it on (2026-10-06).
+   */
+  flatNav?: boolean
 }
 
 type Breadcrumb = Array<{ label: string; href?: string }>
@@ -361,7 +367,7 @@ const DataTableIcon = (
   </svg>
 )
 
-export function AppShell({ productName, email, brandId, brandLogo, groups, rightHeaderSlot, children, sidebarCollapsedDefault = false, currentTitle, breadcrumb, adminNavApi, version, settingsSectionTitle, settingsPathPrefixes = [], settingsSections, profileSections, profileSectionTitle, profilePathPrefixes = [], mobileSidebarSlot, showLastOperationBanner = false }: AppShellProps) {
+export function AppShell({ productName, email, brandId, brandLogo, groups, rightHeaderSlot, children, sidebarCollapsedDefault = false, currentTitle, breadcrumb, adminNavApi, version, settingsSectionTitle, settingsPathPrefixes = [], settingsSections, profileSections, profileSectionTitle, profilePathPrefixes = [], mobileSidebarSlot, showLastOperationBanner = false, flatNav = false }: AppShellProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useT()
@@ -1238,6 +1244,7 @@ export function AppShell({ productName, email, brandId, brandLogo, groups, right
         collapseLabel={t(compact ? 'appShell.expandSidebar' : 'appShell.collapseSidebar')}
         onItemNavigate={() => setMobileOpen(false)}
         groups={chromeGroups}
+        flat={flatNav}
         openGroups={openGroups}
         onToggleGroup={toggleGroup}
         settingsActive={settingsLinkActive}
