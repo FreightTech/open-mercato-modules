@@ -757,11 +757,20 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     } else {
       raw = [];
     }
+    // A number reads the way the app's language writes it ("500 000,00" in Polish) unless the
+    // column names its own locale — the renderer's en-US default showed "500,000.00" everywhere.
+    if (locale) {
+      raw = raw.map((c) =>
+        c.type === 'numeric' && !c.numericFormat?.locale && !c.numericFormat?.culture
+          ? { ...c, numericFormat: { ...c.numericFormat, locale } }
+          : c,
+      );
+    }
     // Virtual columns go LAST and in a fixed order (linked, then summarised) so
     // adding one never shifts the index of a native column.
     if (lookupColumnDefs.length === 0 && rollupColumnDefs.length === 0) return raw;
     return [...raw, ...lookupColumnDefs, ...rollupColumnDefs];
-  }, [columns, data, lookupColumnDefs, rollupColumnDefs]);
+  }, [columns, data, lookupColumnDefs, rollupColumnDefs, locale]);
 
   // A formula may reference native and linked columns, never another formula —
   // `fields` is therefore derived from the NON-formula set. Memoised per

@@ -28,9 +28,14 @@ export const numericRenderer: CellRendererFunction = (value, rowData, columnConf
     const num = typeof value === 'number' ? value : parseFloat(value);
     if (isNaN(num)) return value;
 
-    const locale = columnConfig.numericFormat?.locale || 'en-US';
-    const options = { ...columnConfig.numericFormat };
+    // `culture` / `pattern` are the Handsontable-style keys some columns still pass; Intl
+    // understands neither, so the culture is taken as the locale and both are dropped.
+    const fmt = columnConfig.numericFormat ?? {};
+    const locale = fmt.locale || fmt.culture || 'en-US';
+    const options = { ...fmt };
     delete options.locale;
+    delete options.culture;
+    delete options.pattern;
 
     // Default format if no options provided
     if (Object.keys(options).length === 0) {

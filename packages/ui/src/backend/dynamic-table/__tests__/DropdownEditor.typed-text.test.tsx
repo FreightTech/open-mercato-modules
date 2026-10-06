@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import * as React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
 import { DropdownEditor } from '../components/editors'
 
 // Typed text in a dropdown cell is a filter, never a value: "No" typed into a
@@ -11,7 +12,11 @@ const col = { source: [{ value: 'true', label: 'Yes' }, { value: 'false', label:
 function setup() {
   const onSave = jest.fn()
   const onCancel = jest.fn()
-  render(<DropdownEditor value="" onChange={() => {}} onSave={onSave} onCancel={onCancel} col={col} />)
+  render(
+    <I18nProvider locale="en" dict={{}}>
+      <DropdownEditor value="" onChange={() => {}} onSave={onSave} onCancel={onCancel} col={col} />
+    </I18nProvider>,
+  )
   const input = screen.getByPlaceholderText('Type to filter...')
   return { input, onSave, onCancel }
 }
