@@ -1650,9 +1650,7 @@ export function useDynamicTablePage<TRow = any>(
         onConfirm={handleConfirmBulkDelete}
         onCancel={cancelBulkDelete}
         restoreFocusRef={tableRef}
-        title={(row: any) => `Delete ${row?.count ?? ''} ${tableName}`.replace(/\s+/g, ' ').trim()}
-        description={(row: any) =>
-          `Are you sure you want to delete ${row?.count ?? 'these'} selected items? This action cannot be undone.`}
+        bulkNoun={tableName}
       />
     </>
   ) : null
