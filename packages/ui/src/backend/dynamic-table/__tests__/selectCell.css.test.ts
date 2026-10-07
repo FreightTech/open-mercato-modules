@@ -37,3 +37,19 @@ describe('select cell styling', () => {
     expect(rulesFor('cell-select:has(> .cell-comment-indicator)').some(({ body }) => /background-position:\s*right 34px/.test(body))).toBe(true)
   })
 })
+
+describe('select cell at every density', () => {
+  const density = readFileSync(join(__dirname, '../styles/density.css'), 'utf8')
+
+  // The generic `[data-density-level] .hot-table td.hot-cell` block (0,6,1 incl. td) reset the 22px
+  // gutter to `--dt-cell-pad-x` — 8px measured on RFS, 0.14.13 — so the chevron sat on long values.
+  it('keeps the 22px chevron gutter, out-specifying the generic density padding', () => {
+    expect(density).toMatch(/\[data-density-level\] \.hot-table td\.hot-cell\.cell-select \{\s*padding-right: 22px;/)
+  })
+
+  it('has no pill left on the value box', () => {
+    const box = density.match(/\[data-density-level\] \.hot-cell\.cell-select > \.cell-content \{([^}]*)\}/)
+    expect(box?.[1]).toMatch(/padding: 0;/)
+    expect(box?.[1]).not.toMatch(/padding-right: 20px/)
+  })
+})
