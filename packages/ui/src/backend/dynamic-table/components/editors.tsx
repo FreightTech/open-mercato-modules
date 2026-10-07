@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { Check } from 'lucide-react';
-import { useT } from '@open-mercato/shared/lib/i18n/context';
+import { useLocale, useT } from '@open-mercato/shared/lib/i18n/context';
 import { Calendar } from '../../../primitives/calendar';
+import { dateFnsLocaleFor, isoDatePlaceholderFor } from '../../inputs/dateLocale';
 import { apiCall } from '../../utils/apiCall';
 
 interface BaseEditorProps {
@@ -180,6 +181,10 @@ export const DateEditor: React.FC<BaseEditorProps> = ({
     onCancel,
     inputRef
 }) => {
+    // The app's language, as the form DatePicker has it: Polish month and day names,
+    // Monday first, "Wyczyść" / "Dzisiaj" (the picker's own keys).
+    const t = useT();
+    const appLocale = useLocale();
     const [showCalendar, setShowCalendar] = useState(true);
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0, openAbove: false });
     const cellRef = useRef<HTMLTextAreaElement>(null);
@@ -305,7 +310,7 @@ export const DateEditor: React.FC<BaseEditorProps> = ({
                     // Don't save on blur - handled by click-outside or calendar selection
                 }}
                 className="hot-cell-editor hot-date-editor"
-                placeholder="YYYY-MM-DD"
+                placeholder={t('dynamicTable.dateEditor.placeholder', isoDatePlaceholderFor(appLocale))}
             />
 
             {showCalendar && (
@@ -331,6 +336,7 @@ export const DateEditor: React.FC<BaseEditorProps> = ({
                             onSelect={(day: Date | undefined) => {
                                 if (day) handleDateChange(day);
                             }}
+                            locale={dateFnsLocaleFor(appLocale)}
                             navLayout="around"
                         />
                         <div className="hot-calendar-footer">
@@ -346,7 +352,7 @@ export const DateEditor: React.FC<BaseEditorProps> = ({
                                     onSave('', true);
                                 }}
                             >
-                                Clear
+                                {t('ui.datePicker.clearButton', 'Clear')}
                             </button>
                             <button
                                 type="button"
@@ -357,7 +363,7 @@ export const DateEditor: React.FC<BaseEditorProps> = ({
                                     handleDateChange(new Date());
                                 }}
                             >
-                                Today
+                                {t('ui.datePicker.todayButton', 'Today')}
                             </button>
                         </div>
                     </div>
@@ -375,6 +381,8 @@ export const DateTimeEditor: React.FC<BaseEditorProps> = ({
     onCancel,
     inputRef
 }) => {
+    const t = useT();
+    const appLocale = useLocale();
     const [showPopup, setShowPopup] = useState(true);
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0, openAbove: false });
     const cellRef = useRef<HTMLTextAreaElement>(null);
@@ -535,7 +543,7 @@ export const DateTimeEditor: React.FC<BaseEditorProps> = ({
                 onKeyDown={handleKeyDown}
                 onBlur={() => {}}
                 className="hot-cell-editor hot-date-editor"
-                placeholder="YYYY-MM-DD HH:mm"
+                placeholder={`${t('dynamicTable.dateEditor.placeholder', isoDatePlaceholderFor(appLocale))} HH:mm`}
             />
 
             {showPopup && (
@@ -559,6 +567,7 @@ export const DateTimeEditor: React.FC<BaseEditorProps> = ({
                             onSelect={(day: Date | undefined) => {
                                 if (day) handleDateChange(day);
                             }}
+                            locale={dateFnsLocaleFor(appLocale)}
                             classNames={{
                                 month: 'relative space-y-4',
                                 month_caption: 'flex justify-center pt-1 items-center',
@@ -566,7 +575,7 @@ export const DateTimeEditor: React.FC<BaseEditorProps> = ({
                             }}
                         />
                         <div style={{ padding: '8px 12px', borderTop: '1px solid var(--m3-outline-variant)', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                            <span style={{ fontSize: 'var(--text-body-regular-xs)', color: 'var(--m3-on-surface-variant)', whiteSpace: 'nowrap' }}>Time:</span>
+                            <span style={{ fontSize: 'var(--text-body-regular-xs)', color: 'var(--m3-on-surface-variant)', whiteSpace: 'nowrap' }}>{t('ui.dateTimePicker.timeLabel', 'Time')}:</span>
                             <input
                                 type="text"
                                 inputMode="numeric"
@@ -642,7 +651,7 @@ export const DateTimeEditor: React.FC<BaseEditorProps> = ({
                                     onSave('', true);
                                 }}
                             >
-                                Clear
+                                {t('ui.dateTimePicker.clearButton', 'Clear')}
                             </button>
                             <button
                                 type="button"

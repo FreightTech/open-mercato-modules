@@ -8,10 +8,17 @@ import { cn } from '@open-mercato/shared/lib/utils'
 
 export type CalendarProps = DayPickerProps
 
-export function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+/**
+ * Always six weeks (`fixedWeeks`, filled with the neighbouring months' days): a
+ * calendar whose height follows the month (4–6 rows) resizes its popover on every
+ * month switch, which flips it across its field and moves the ‹ › arrows away from
+ * the cursor. Pass `fixedWeeks={false}` for a calendar that is not in a popover.
+ */
+export function Calendar({ className, classNames, showOutsideDays = true, fixedWeeks = true, ...props }: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      fixedWeeks={fixedWeeks}
       className={cn('p-3', className)}
       classNames={{
         months: 'flex flex-col sm:flex-row gap-4',

@@ -8,6 +8,7 @@ import { cn } from '@open-mercato/shared/lib/utils'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { Popover, PopoverContent, PopoverTrigger } from '../../primitives/popover'
 import { Calendar } from '../../primitives/calendar'
+import { useCalendarPopover } from './useCalendarPopover'
 import { TimeInput } from './TimeInput'
 
 export type DateTimePickerProps = {
@@ -70,7 +71,7 @@ export function DateTimePicker({
   maxDate,
 }: DateTimePickerProps) {
   const t = useT()
-  const [open, setOpen] = React.useState(false)
+  const { open, setOpen, month, setMonth, triggerRef, contentRef, contentProps } = useCalendarPopover(value)
 
   const resolvedFormat = displayFormat ?? deriveDisplayFormat(locale)
   const placeholderText = placeholder ?? t('ui.dateTimePicker.placeholder', 'Pick date and time')
@@ -131,6 +132,7 @@ export function DateTimePicker({
     <Popover open={open} onOpenChange={isInteractive ? setOpen : undefined}>
       <PopoverTrigger asChild>
         <button
+          ref={triggerRef}
           type="button"
           data-crud-focus-target=""
           disabled={disabled}
@@ -152,10 +154,12 @@ export function DateTimePicker({
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-auto">
+      <PopoverContent ref={contentRef} className="p-0 w-auto" {...contentProps}>
         <Calendar
           mode="single"
           selected={value ?? undefined}
+          month={month}
+          onMonthChange={setMonth}
           onSelect={handleDaySelect}
           locale={locale}
           disabled={disabledMatcher}
