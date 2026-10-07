@@ -13,6 +13,7 @@
 // Pure: no store, no React, no DOM.
 
 import type { ColumnDef } from '../types/index';
+import { columnKeepsTime } from './dateTimeColumn';
 import type { CoerceResult } from '../handlers/cellWrites';
 
 /** Empty in the "user cleared the cell" sense. Clearing is always allowed. */
@@ -70,6 +71,13 @@ export function coerceCellValue(value: unknown, column: ColumnDef): CoerceResult
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
+      // A date-and-time column keeps the hour the user picked (wall clock, "YYYY-MM-DDTHH:mm").
+      // Cutting it to the day sent 08.10 14:45 as "2026-10-08" (FMS RFS board, 07.10).
+      if (columnKeepsTime(column)) {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return { ok: true, value: `${year}-${month}-${day}T${hours}:${minutes}` };
+      }
       return { ok: true, value: `${year}-${month}-${day}` };
     }
 

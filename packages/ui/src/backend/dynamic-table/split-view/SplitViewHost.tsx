@@ -49,6 +49,7 @@ import { mapCriteriaForTable, mapCriteriaForWidget, resolveSharedSearch, type Sh
 import type { FilterRow } from '../types/index'
 import { useSplitViewLayouts } from './useSplitViewLayouts'
 import { readStoredLayout, writeStoredLayout } from './layoutPersistence'
+import { DynamicTableSizingProvider, PANE_CONTENT_SIZING } from '../sizing'
 import {
   BOX_MAX_SLOTS,
   PANE_MIN_HEIGHT_PX,
@@ -753,6 +754,9 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
       >
         {isWidget && headerHidden && <WidgetRestoreMenu>{paneRows}</WidgetRestoreMenu>}
         <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+          {/* Split, a pane's tables are as tall as their rows and stop at the pane's bottom — a three-row table
+              is three rows, not a pane of empty grid. Unsplit, the one pane is the page: its table fills it. */}
+          <DynamicTableSizingProvider value={isSplit ? PANE_CONTENT_SIZING : null}>
           {node.content.kind === 'widget' ? (
             <WidgetPane
               content={node.content}
@@ -777,6 +781,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
               hideOwnSearch={isSplit && !paneSearch}
             />
           )}
+          </DynamicTableSizingProvider>
         </div>
       </div>
     )
