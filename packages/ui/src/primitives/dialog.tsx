@@ -5,6 +5,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { cn } from '@open-mercato/shared/lib/utils'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
+import { DynamicTableSizingProvider } from '../backend/dynamic-table/sizing'
 
 const Dialog = DialogPrimitive.Root
 
@@ -67,7 +68,8 @@ const DialogContent = React.forwardRef<
         >
           <X className="h-4 w-4" />
         </DialogClose>
-        {children}
+        {/* A table in an overlay sizes itself: the widget or pane that opened it does not reach in here. */}
+        <DynamicTableSizingProvider value={null}>{children}</DynamicTableSizingProvider>
       </DialogPrimitive.Content>
     </DialogPortal>
   )

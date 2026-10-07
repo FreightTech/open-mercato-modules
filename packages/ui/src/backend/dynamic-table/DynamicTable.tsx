@@ -3704,16 +3704,19 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   const heightMode = sizing?.height ?? height
   const isContentHeight = heightMode === 'content'
   const contentMaxHeight = sizing?.maxHeight ?? maxHeight ?? CONTENT_MAX_HEIGHT
+  // A `'fill'` cap stops the whole table at its scroll pane's bottom (a split-view pane), measured like `'fill'`.
+  const isPaneCapped = isContentHeight && contentMaxHeight === 'fill'
   // Determine if we should fill available height
   const shouldFillHeight = heightMode === '100%' || heightMode === 'fill'
   const isViewportFill = heightMode === 'fill'
+  const measuresPane = isViewportFill || isPaneCapped
   const outerContainerRef = useRef<HTMLDivElement>(null)
   const [fillHeight, setFillHeight] = useState<number | null>(null)
 
   // When height='fill', measure available viewport space and set explicit height.
   // This avoids relying on CSS flex chain from parent containers.
   useLayoutEffect(() => {
-    if (!isViewportFill || isFullscreen) return
+    if (!measuresPane || isFullscreen) return
     const el = outerContainerRef.current
     if (!el) return
     // Find the nearest SCROLL-PANE ancestor (e.g. the app shell's scroll
@@ -3748,13 +3751,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       window.removeEventListener('resize', measure)
       ro.disconnect()
     }
-  }, [isViewportFill, isFullscreen])
+  }, [measuresPane, isFullscreen])
 
   // Table content shared between normal and fullscreen modes
   const tableContent = (
     <div
       ref={outerContainerRef}
-      className={`hot-container ${shouldFillHeight ? 'flex flex-col flex-1' : ''}${borderless ? ' hot-borderless' : ''} hot-appearance-v2`}
+      className={`hot-container ${shouldFillHeight ? 'flex flex-col flex-1' : isPaneCapped ? 'flex flex-col' : ''}${borderless ? ' hot-borderless' : ''} hot-appearance-v2`}
       data-range-phase={rangePhase === 'idle' ? undefined : rangePhase}
       data-readonly-style={readOnlyStyle}
       data-density={density || undefined}
@@ -3767,6 +3770,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       // for re-matching the container. React already knows the answer.
       data-has-toolbar={!hideToolbar ? 'true' : undefined}
       data-has-card={hasCard ? 'true' : undefined}
+      data-content-height={isContentHeight && !isFullscreen ? 'true' : undefined}
+      data-pane-capped={isPaneCapped && !isFullscreen ? 'true' : undefined}
       data-actions-scroll-shadow={actionsScrollShadow ? 'true' : undefined}
       data-firstcol-scroll-shadow={firstColScrollShadow ? 'true' : undefined}
       data-frozen-shadow={frozenColShadow ? 'true' : undefined}
@@ -3777,6 +3782,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         width: isFullscreen ? '100%' : width,
         position: 'relative',
         ...(shouldFillHeight && { minHeight: 0 }),
+        ...(isPaneCapped && !isFullscreen && fillHeight && { maxHeight: fillHeight }),
       }}
     >
       {/* Toolbar row 1 (Figma 220:2935): [title  search] … [add  actions  expand].
@@ -3798,7 +3804,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           is inert and they keep rendering flush. */}
       {/* A host that hides the tabs row still wants the card: the tabs are a
           user choice there, not a sign that this is an embedded sub-table. */}
-      <div className={!hasCard ? 'contents' : `hot-card${shouldFillHeight ? ' flex flex-col flex-1 min-h-0' : ''}`}>
+      <div className={!hasCard ? 'contents' : `hot-card${shouldFillHeight ? ' flex flex-col flex-1 min-h-0' : isPaneCapped ? ' flex flex-col min-h-0' : ''}`}>
 
       {/* Toolbar hidden inside a host: the ⚙ and ⋯ float in the corner on
           hover, or hiding the toolbar would hide the way to bring it back. */}
@@ -4111,7 +4117,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         style={{
           // 'content': no height of its own — the header and the rows give it one, up to the cap.
           height: isFullscreen ? 'calc(100% - 90px)' : (shouldFillHeight || isContentHeight ? undefined : (typeof heightMode === 'string' && heightMode !== 'auto' ? heightMode : '600px')),
-          ...(isContentHeight && !isFullscreen && { maxHeight: contentMaxHeight }),
+          ...(isContentHeight && !isPaneCapped && !isFullscreen && { maxHeight: contentMaxHeight }),
+          // Capped by the pane: the rows region gives way first, so the toolbar and footer stay in view.
+          ...(isPaneCapped && !isFullscreen && { flex: '0 1 auto', minHeight: 0 }),
           overflow: 'auto',
           position: 'relative',
           outline: 'none',

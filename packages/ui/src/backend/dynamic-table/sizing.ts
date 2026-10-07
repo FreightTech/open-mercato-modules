@@ -14,7 +14,11 @@ export type DynamicTableHeight = 'auto' | 'fill' | '100%' | 'content' | (string 
 
 export type DynamicTableSizing = {
   height?: DynamicTableHeight
-  /** With `height: 'content'`: the tallest the rows region grows before it scrolls. */
+  /**
+   * With `height: 'content'`: the tallest the rows region grows before it scrolls. `'fill'` caps the whole
+   * table at the bottom of its scroll pane instead (a split-view pane): short rows end the table early,
+   * long ones scroll inside the pane.
+   */
   maxHeight?: number | string
 }
 
@@ -24,7 +28,11 @@ export const CONTENT_MAX_HEIGHT = 480
 /**
  * A host (a board slot, a record-page widget) sizes every DynamicTable inside it — e.g. a registered list
  * page shown as a widget is a `'fill'` page table, and its slot wants `'content'`. Wins over the table's
- * own `height` / `maxHeight`.
+ * own `height` / `maxHeight`. `null` gives the tables back their own: a Sheet or Dialog opened from a
+ * widget renders through a portal but inside the widget's React tree, so the overlays reset it.
  */
 export const DynamicTableSizingContext = createContext<DynamicTableSizing | null>(null)
 export const DynamicTableSizingProvider = DynamicTableSizingContext.Provider
+
+/** Content height for a split-view pane: as tall as the rows, never past the pane. */
+export const PANE_CONTENT_SIZING: DynamicTableSizing = { height: 'content', maxHeight: 'fill' }

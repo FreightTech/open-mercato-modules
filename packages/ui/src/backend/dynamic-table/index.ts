@@ -1,7 +1,7 @@
 // index.ts
 
 export { default as DynamicTable } from './DynamicTable';
-export { DynamicTableSizingContext, DynamicTableSizingProvider, CONTENT_MAX_HEIGHT } from './sizing';
+export { DynamicTableSizingContext, DynamicTableSizingProvider, CONTENT_MAX_HEIGHT, PANE_CONTENT_SIZING } from './sizing';
 export type { DynamicTableHeight, DynamicTableSizing } from './sizing';
 export { DynamicTableBadge } from './components/renderers';
 export { default as TableSkeleton } from './components/TableSkeleton';

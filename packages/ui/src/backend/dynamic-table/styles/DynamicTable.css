@@ -46,6 +46,14 @@
     overflow: auto;
 }
 
+/* height="content" capped by its split-view pane: only the rows region gives way. A bar that clips its
+   overflow (the tabs row) has no content minimum, so it shrank along with the rows and lost its pills. */
+.hot-container[data-pane-capped="true"] > *:not(.hot-card),
+.hot-container[data-pane-capped="true"] > .contents > *,
+.hot-container[data-pane-capped="true"] > .hot-card > * {
+    flex-shrink: 0;
+}
+
 .hot-headers-sticky {
     position: sticky;
     top: 0;
@@ -1375,6 +1383,13 @@ td[data-row-save-state="error"] {
    at half the viewport so a short window still shows it without scrolling. */
 .hot-empty-message:has(.hot-empty-state) {
     min-height: min(360px, 50vh);
+}
+
+/* height="content": an empty table is its message, not a 360 px panel — a widget with nothing in it
+   stays small (a board of empty widgets was a board of tall blank boxes). */
+.hot-container[data-content-height="true"] .hot-empty-message:has(.hot-empty-state) {
+    min-height: 0;
+    padding: 16px;
 }
 
 .hot-empty-state {
