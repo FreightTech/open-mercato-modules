@@ -10,8 +10,10 @@ import React, {
   useRef,
   useMemo,
   useCallback,
+  useContext,
 } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { CONTENT_MAX_HEIGHT, DynamicTableSizingContext, type DynamicTableHeight } from './sizing';
 
 import { createCellStore, CellStore } from './store/index';
 import {
@@ -181,7 +183,13 @@ export interface DynamicTableProps {
   columns?: ColumnDef[];
   colHeaders?: boolean;
   rowHeaders?: boolean;
-  height?: string | number;
+  /**
+   * `'auto'` (600 px body), `'fill'`, `'100%'`, `'content'` (as tall as its rows, up to `maxHeight`) or a
+   * CSS length. A `DynamicTableSizingProvider` around the table overrides it — see `./sizing`.
+   */
+  height?: DynamicTableHeight;
+  /** With `height="content"`: the tallest the rows region grows before it scrolls. Default `CONTENT_MAX_HEIGHT`. */
+  maxHeight?: number | string;
   width?: string | number;
   idColumnName?: string;
   /**
@@ -512,6 +520,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   colHeaders = true,
   rowHeaders = false,
   height = 'auto',
+  maxHeight,
   width = 'auto',
   idColumnName = 'id',
   rowKeyColumn,
@@ -3689,9 +3698,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
 
   // -------------------- RENDER --------------------
 
+  // The host's sizing (a board slot) wins over the table's own: a registered list page shown as a
+  // widget asks for 'fill', and its slot wants 'content'.
+  const sizing = useContext(DynamicTableSizingContext)
+  const heightMode = sizing?.height ?? height
+  const isContentHeight = heightMode === 'content'
+  const contentMaxHeight = sizing?.maxHeight ?? maxHeight ?? CONTENT_MAX_HEIGHT
   // Determine if we should fill available height
-  const shouldFillHeight = height === '100%' || height === 'fill'
-  const isViewportFill = height === 'fill'
+  const shouldFillHeight = heightMode === '100%' || heightMode === 'fill'
+  const isViewportFill = heightMode === 'fill'
   const outerContainerRef = useRef<HTMLDivElement>(null)
   const [fillHeight, setFillHeight] = useState<number | null>(null)
 
@@ -3758,7 +3773,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       data-clickable-rows={onRowClick ? 'true' : undefined}
       data-row-hover-style={onRowClick ? rowHoverStyle : undefined}
       style={{
-        height: isFullscreen ? '100%' : (isViewportFill && fillHeight ? fillHeight : (shouldFillHeight ? '100%' : height)),
+        height: isFullscreen ? '100%' : (isViewportFill && fillHeight ? fillHeight : (shouldFillHeight ? '100%' : isContentHeight ? undefined : heightMode)),
         width: isFullscreen ? '100%' : width,
         position: 'relative',
         ...(shouldFillHeight && { minHeight: 0 }),
@@ -4094,7 +4109,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         onDoubleClick={usingCustomBody ? undefined : handleDoubleClick}
         onKeyDown={usingCustomBody ? undefined : handleKeyDown}
         style={{
-          height: isFullscreen ? 'calc(100% - 90px)' : (shouldFillHeight ? undefined : (typeof height === 'string' && height !== 'auto' ? height : '600px')),
+          // 'content': no height of its own — the header and the rows give it one, up to the cap.
+          height: isFullscreen ? 'calc(100% - 90px)' : (shouldFillHeight || isContentHeight ? undefined : (typeof heightMode === 'string' && heightMode !== 'auto' ? heightMode : '600px')),
+          ...(isContentHeight && !isFullscreen && { maxHeight: contentMaxHeight }),
           overflow: 'auto',
           position: 'relative',
           outline: 'none',
