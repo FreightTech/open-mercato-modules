@@ -42,6 +42,7 @@ import { useColumnWidthPersistence } from './hooks/useColumnWidthPersistence';
 import { useColumnVirtualizer } from './hooks/useColumnVirtualizer';
 import { getPinnedColumnIndices } from './utils/columnWindow';
 import { computeColumnFill } from './utils/columnFill';
+import { columnOpensOnClick } from './utils/pickerColumn';
 import { useDensityPreference } from './hooks/useDensityPreference';
 import { DENSITY_ATTRIBUTE, resolveDensityRowHeight } from './types/density';
 import { DensityControl } from './components/DensityControl';
@@ -2190,6 +2191,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     // Don't trigger row click if clicking on action buttons, inputs, etc.
     if (target.closest('button, input, select, textarea, a, [data-no-row-click]')) return;
 
+    // A picker cell's click opens its editor (handlers `pendingPickerOpen`), not the row.
+    const cell = target.closest('td[data-col]');
+    if (cell && columnOpensOnClick(cols[parseInt(cell.getAttribute('data-col') || '', 10)])) return;
+
     // Find the row element
     const row = target.closest('tr[data-row]');
     if (!row) return;
@@ -2201,7 +2206,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     if (rowData) {
       onRowClick(rowIndex, rowData, e);
     }
-  }, [store, onRowClick]);
+  }, [store, onRowClick, cols]);
 
   /**
    * Every cell of a selection, as annotation TARGETS.

@@ -6,6 +6,7 @@ import { Calendar } from '../../../primitives/calendar';
 import { dateFnsLocaleFor, isoDatePlaceholderFor } from '../../inputs/dateLocale';
 import { apiCall } from '../../utils/apiCall';
 import { markDateTimeEditor, parseLocaleNumber } from '../utils/dateTimeColumn';
+import { markPickerEditor } from '../utils/pickerColumn';
 
 interface BaseEditorProps {
     value: any;
@@ -705,7 +706,7 @@ export function createDateTimeEditor(): (
     colIndex: number
 ) => React.ReactNode {
     // Marked so coerceCellValue keeps the time on a `type: 'date'` column edited through it.
-    return markDateTimeEditor((value: any, onChange: (v: any) => void, onSave: (v?: any, clearEditing?: boolean) => void, onCancel: () => void, _rowData: any, col: any, _rowIndex: number, _colIndex: number) => (
+    return markPickerEditor(markDateTimeEditor((value: any, onChange: (v: any) => void, onSave: (v?: any, clearEditing?: boolean) => void, onCancel: () => void, _rowData: any, col: any, _rowIndex: number, _colIndex: number) => (
         <DateTimeEditor
             value={value}
             onChange={onChange}
@@ -713,7 +714,7 @@ export function createDateTimeEditor(): (
             onCancel={onCancel}
             col={col}
         />
-    ));
+    )));
 }
 
 // DROPDOWN EDITOR with Custom Popup
@@ -727,11 +728,15 @@ export const DropdownEditor: React.FC<BaseEditorProps> = ({
 }) => {
     const t = useT();
     const options = col.source || [];
+    // Opens on the current choice: its LABEL in the box (the raw value read as a code — "true",
+    // an id) and the list highlighted on it, so Enter keeps it and the arrows move from it.
+    const currentIndex = options.findIndex((opt: any) => String(typeof opt === 'string' ? opt : opt.value) === String(value ?? ''));
+    const currentOption = currentIndex >= 0 ? options[currentIndex] : null;
     const [showDropdown, setShowDropdown] = useState(true);
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0, openAbove: false });
-    const [textValue, setTextValue] = useState(String(value ?? ''));
+    const [textValue, setTextValue] = useState(currentOption ? String(typeof currentOption === 'string' ? currentOption : currentOption.label) : String(value ?? ''));
     const [filteredOptions, setFilteredOptions] = useState(options); // Start with ALL options
-    const [highlightedIndex, setHighlightedIndex] = useState(0);
+    const [highlightedIndex, setHighlightedIndex] = useState(Math.max(0, currentIndex));
     const [hasUserTyped, setHasUserTyped] = useState(false); // Track if user has typed
 
     const cellRef = useRef<HTMLTextAreaElement>(null);
@@ -1644,7 +1649,7 @@ export const MultiSelectEntitySearchEditor: React.FC<EntitySearchEditorProps> = 
 
 // Factory function to create MultiSelectEntitySearchEditor
 export function createMultiSelectEntitySearchEditor(config: EntitySearchEditorConfig) {
-    return (
+    return markPickerEditor((
         value: unknown,
         onChange: (v: unknown) => void,
         onSave: (v?: unknown, clearEditing?: boolean) => void,
@@ -1658,7 +1663,7 @@ export function createMultiSelectEntitySearchEditor(config: EntitySearchEditorCo
             onCancel={onCancel}
             col={{}}
         />
-    );
+    ));
 }
 
 // EDITOR FACTORY

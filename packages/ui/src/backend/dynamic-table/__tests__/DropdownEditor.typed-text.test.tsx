@@ -48,3 +48,37 @@ describe('DropdownEditor — typed text', () => {
     expect(onSave).toHaveBeenCalledWith('', false)
   })
 })
+
+// Owner 07.10: the editor opens on the current choice — its label in the box, the list on it.
+describe('DropdownEditor — opens on the current choice', () => {
+  beforeAll(() => {
+    Element.prototype.scrollIntoView = jest.fn()
+  })
+
+  function open(value: string) {
+    const onSave = jest.fn()
+    render(
+      <I18nProvider locale="en" dict={{}}>
+        <DropdownEditor value={value} onChange={() => {}} onSave={onSave} onCancel={() => {}} col={col} />
+      </I18nProvider>,
+    )
+    return { input: screen.getByPlaceholderText('Type to filter...') as HTMLTextAreaElement, onSave }
+  }
+
+  it('shows the label, not the stored value', () => {
+    expect(open('false').input.value).toBe('No')
+  })
+
+  it('highlights the current option, so Enter keeps it', () => {
+    const { input, onSave } = open('false')
+    expect(document.querySelector('.hot-dropdown-option.highlighted')?.textContent).toBe('No')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSave).toHaveBeenCalledWith('false', false)
+  })
+
+  it('a value that is no option opens as typed, on the first option', () => {
+    const { input } = open('legacy')
+    expect(input.value).toBe('legacy')
+    expect(document.querySelector('.hot-dropdown-option.highlighted')?.textContent).toBe('Yes')
+  })
+})

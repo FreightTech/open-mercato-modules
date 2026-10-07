@@ -554,36 +554,27 @@
   line-height: var(--text-code-regular-sm--line-height, 1rem);
 }
 
-/* Select / dropdown cell (type:'dropdown' | 'multiselect') — bordered control
-   at rest (Figma `select`: radius 10, border #D4D4D8, "Wybierz…" + chevron).
-   Scoped to v2 so legacy dropdown cells keep plain text. */
-.hot-appearance-v2 .hot-cell.cell-select { padding: 4px 6px; }
+/* Select / dropdown cell (type:'dropdown' | 'multiselect') — plain text at rest, like every other
+   cell. A bordered "Wybierz…" pill in every row was noise (owner 07.10: "the input is too
+   intrusive"); a single click opens the list (`openOnClick`), so the only hint the cell needs is a
+   faint chevron on the hovered or selected cell. Scoped to v2 so legacy cells are untouched. */
 .hot-appearance-v2 .hot-cell.cell-select > .cell-content {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--m3-outline);
-  /* Density floor: this pill lives inside a 32px row, so it takes `sm` — the
-     largest rung the floor allows — and now matches the row pill exactly. */
-  border-radius: var(--m3-shape-sm);
-  padding: 5px 30px 5px 10px;
-  background-color: var(--background-v2);
-  /* `stroke='currentColor'` — the chevron used to be a hardcoded #71717A, i.e.
-     invisible to dark mode. It now follows the cell's ink. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  padding-right: 18px;
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  color: var(--m3-on-surface);
-  line-height: 18px;
+  background-position: right 0 center;
+  background-size: 14px 14px;
   cursor: pointer;
-  transition: var(--m3-transition-state);
 }
-.hot-appearance-v2 .hot-cell.cell-select:hover > .cell-content {
-  border-color: var(--m3-on-surface-variant);
+.hot-appearance-v2 .hot-cell.cell-select:hover > .cell-content,
+.hot-appearance-v2 .hot-cell.cell-select[data-cell-selected="true"] > .cell-content {
+  /* `currentColor` does not reach a background image, so the muted ink is spelled out per theme. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
-/* Empty select cell → "Wybierz…" placeholder (overrides the em-dash). */
-.hot-appearance-v2 .hot-cell.cell-select > .cell-content:empty::after {
-  content: "Wybierz\2026";
-  color: var(--m3-on-surface-variant);
+.dark .hot-appearance-v2 .hot-cell.cell-select:hover > .cell-content,
+.dark .hot-appearance-v2 .hot-cell.cell-select[data-cell-selected="true"] > .cell-content {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /* Status badge pill (type:'badge') — Figma `label/semibold/xs`, radius 9999.

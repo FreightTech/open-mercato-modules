@@ -4,6 +4,7 @@ import * as React from 'react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { apiFetch } from '../../utils/api'
+import { markPickerEditor } from '../utils/pickerColumn'
 
 // Dynamically load editor styles
 if (typeof window !== 'undefined') {
@@ -512,7 +513,7 @@ export type DynamicTableEditorFn = (
 export function createEntitySearchEditor(
   config: EntitySearchEditorConfig
 ): DynamicTableEditorFn {
-  return (value, onChange, onSave, onCancel, rowData) => (
+  return markPickerEditor((value, onChange, onSave, onCancel, rowData) => (
     <EntitySearchEditor
       config={config}
       value={value}
@@ -521,5 +522,5 @@ export function createEntitySearchEditor(
       onCancel={onCancel}
       rowData={rowData}
     />
-  )
+  ))
 }
