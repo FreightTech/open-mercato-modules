@@ -199,14 +199,11 @@ export function EntitySearchEditor({
   const isClickingDropdownRef = useRef(false)
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  // Position cursor at end of text on mount
+  // Select the current value on open: typing a new name replaces it. With the caret at the end,
+  // "TRANSKOR" + "Balt" searched for "TRANSKORBalt" and found nothing (RFS board, 07.10).
   useEffect(() => {
     setTimeout(() => {
-      if (cellRef.current) {
-        const length = cellRef.current.value?.length || 0
-        cellRef.current.selectionStart = length
-        cellRef.current.selectionEnd = length
-      }
+      cellRef.current?.select()
     }, 0)
   }, [])
 
