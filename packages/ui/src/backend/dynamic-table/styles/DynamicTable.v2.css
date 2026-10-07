@@ -562,24 +562,46 @@
    (FMS Telex / Nadwozie / Przewóz), and the hint must not depend on who renders the value. The
    right gutter is reserved at rest too, so the text does not re-ellipsize under the pointer.
    `currentColor` does not reach a background image, so the muted ink is spelled out per theme. */
-.hot-appearance-v2 td.hot-cell.cell-select {
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select {
   padding-right: 22px;
   background-repeat: no-repeat;
-  background-position: right 6px center;
+  /* !important: a range cell's base `background` shorthand (!important) would reset it to 0 0;
+     the comment-marker rule below is more specific and still moves it. */
+  background-position: right 6px center !important;
   background-size: 14px 14px;
   cursor: pointer;
 }
-.hot-appearance-v2 td.hot-cell.cell-select:not([data-cell-editing]):hover,
-.hot-appearance-v2 td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]) {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover,
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-range-top="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"]:not([data-cell-editing]) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
 }
-.dark .hot-appearance-v2 td.hot-cell.cell-select:not([data-cell-editing]):hover,
-.dark .hot-appearance-v2 td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]) {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover,
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]),
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-range-top="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"]:not([data-cell-editing]) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+/* "Selected" = `data-cell-selected` (keyboard) or a 1×1 range (a mouse click — Cell.tsx B9). A
+   range cell's base rule sets the `background` SHORTHAND with !important, which resets every
+   longhand above, so the selected state restates them. */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-range-top="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"]:not([data-cell-editing]) {
+  background-repeat: no-repeat !important;
+  background-size: 14px 14px !important;
 }
 /* The comment marker owns the right edge (right:10px) — the chevron steps left of it. */
-.hot-appearance-v2 td.hot-cell.cell-select:has(> .cell-comment-indicator) {
-  background-position: right 34px center;
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator) {
+  background-position: right 34px center !important;
+}
+/* The hover-only ghost "add comment" button sits exactly where the chevron would. While it shows, it
+   owns that slot and the chevron is not drawn — stepping it left put it on top of the text, because a
+   cell with only a ghost reserves 28px, not 50 (browser check 08.10: "Niezwolniony" ran under it).
+   One click on the cell still opens the list. A real comment keeps the chevron beside it (50px). */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover:has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover),
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover:has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]):has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover),
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]):has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover) {
+  background-image: none !important;
 }
 .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator-ghost:not(.cell-comment-indicator-hover)),
 .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator:not(.cell-comment-indicator-ghost)) {
