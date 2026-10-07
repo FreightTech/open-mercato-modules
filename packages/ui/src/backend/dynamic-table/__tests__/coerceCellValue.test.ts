@@ -115,3 +115,34 @@ describe('coerceCellValue', () => {
     })
   })
 })
+
+describe('coerceCellValue — date columns that hold a time (FMS RFS 07.10: hours were lost)', () => {
+  it('keeps the wall-clock time for a column flagged withTime', () => {
+    const col: ColumnDef = { data: 'ptd', type: 'date', withTime: true }
+    expect(coerceCellValue('2026-10-08 14:45', col)).toEqual({ ok: true, value: '2026-10-08T14:45' })
+    expect(coerceCellValue('2026-10-08T07:05', col)).toEqual({ ok: true, value: '2026-10-08T07:05' })
+  })
+
+  it('keeps the time for a column edited through createDateTimeEditor()', async () => {
+    const { createDateTimeEditor } = await import('../components/editors')
+    const col: ColumnDef = { data: 'eta', type: 'date', editor: createDateTimeEditor() }
+    expect(coerceCellValue('2026-10-08 14:45', col)).toEqual({ ok: true, value: '2026-10-08T14:45' })
+  })
+
+  it('still cuts a plain date column to the day', () => {
+    expect(coerceCellValue('2026-10-08 14:45', { data: 'due', type: 'date' })).toEqual({ ok: true, value: '2026-10-08' })
+  })
+})
+
+describe('parseLocaleNumber — the Polish decimal comma', () => {
+  it('reads a comma decimal and spaced thousands', async () => {
+    const { parseLocaleNumber } = await import('../utils/dateTimeColumn')
+    expect(parseLocaleNumber('1850,50')).toBe(1850.5)
+    expect(parseLocaleNumber('1 850,50')).toBe(1850.5)
+    expect(parseLocaleNumber('1 850,5')).toBe(1850.5)
+    expect(parseLocaleNumber('-3,25')).toBe(-3.25)
+    expect(parseLocaleNumber('12.5')).toBe(12.5)
+    expect(Number.isNaN(parseLocaleNumber('abc'))).toBe(true)
+    expect(Number.isNaN(parseLocaleNumber(''))).toBe(true)
+  })
+})

@@ -262,6 +262,12 @@ export interface ColumnDef {
     rowIndex: number,
     colIndex: number
   ) => React.ReactNode;
+  /**
+   * A `type: 'date'` column whose cells hold a time as well: edits are kept as "YYYY-MM-DDTHH:mm"
+   * (wall clock) instead of being cut to the day. Implied for columns edited through
+   * `createDateTimeEditor()`.
+   */
+  withTime?: boolean;
   /** Returns CSS class name(s) for conditional cell styling based on value/row data */
   cellClassName?: (value: any, rowData: any, rowIndex: number, colIndex: number) => string | undefined;
   /**

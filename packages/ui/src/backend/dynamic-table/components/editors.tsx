@@ -5,6 +5,7 @@ import { useLocale, useT } from '@open-mercato/shared/lib/i18n/context';
 import { Calendar } from '../../../primitives/calendar';
 import { dateFnsLocaleFor, isoDatePlaceholderFor } from '../../inputs/dateLocale';
 import { apiCall } from '../../utils/apiCall';
+import { markDateTimeEditor, parseLocaleNumber } from '../utils/dateTimeColumn';
 
 interface BaseEditorProps {
     value: any;
@@ -137,8 +138,9 @@ export const NumericEditor: React.FC<BaseEditorProps> = ({
 }) => {
     const [textValue, setTextValue] = useState(String(value ?? ''));
 
+    // Polish decimal comma and spaced thousands: "1 850,50" is 1850.5 — parseFloat read it as 1 (07.10).
     const getNumericValue = () => {
-        const numVal = parseFloat(textValue);
+        const numVal = parseLocaleNumber(textValue);
         return textValue === '' ? '' : (isNaN(numVal) ? textValue : numVal);
     };
 
@@ -163,7 +165,7 @@ export const NumericEditor: React.FC<BaseEditorProps> = ({
             onChange={(e) => {
                 const val = e.target.value;
                 setTextValue(val);
-                const numVal = parseFloat(val);
+                const numVal = parseLocaleNumber(val);
                 onChange(val === '' ? '' : (isNaN(numVal) ? val : numVal));
             }}
             onKeyDown={handleKeyDown}
@@ -702,7 +704,8 @@ export function createDateTimeEditor(): (
     rowIndex: number,
     colIndex: number
 ) => React.ReactNode {
-    return (value, onChange, onSave, onCancel, _rowData, col, _rowIndex, _colIndex) => (
+    // Marked so coerceCellValue keeps the time on a `type: 'date'` column edited through it.
+    return markDateTimeEditor((value: any, onChange: (v: any) => void, onSave: (v?: any, clearEditing?: boolean) => void, onCancel: () => void, _rowData: any, col: any, _rowIndex: number, _colIndex: number) => (
         <DateTimeEditor
             value={value}
             onChange={onChange}
@@ -710,7 +713,7 @@ export function createDateTimeEditor(): (
             onCancel={onCancel}
             col={col}
         />
-    );
+    ));
 }
 
 // DROPDOWN EDITOR with Custom Popup
