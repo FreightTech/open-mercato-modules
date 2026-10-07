@@ -557,24 +557,37 @@
 /* Select / dropdown cell (type:'dropdown' | 'multiselect') — plain text at rest, like every other
    cell. A bordered "Wybierz…" pill in every row was noise (owner 07.10: "the input is too
    intrusive"); a single click opens the list (`openOnClick`), so the only hint the cell needs is a
-   faint chevron on the hovered or selected cell. Scoped to v2 so legacy cells are untouched. */
-.hot-appearance-v2 .hot-cell.cell-select > .cell-content {
-  flex: 1;
-  min-width: 0;
-  padding-right: 18px;
+   faint chevron on the hovered or selected cell.
+   Drawn on the CELL, not on `.cell-content`: a column with its own `renderer` has no `.cell-content`
+   (FMS Telex / Nadwozie / Przewóz), and the hint must not depend on who renders the value. The
+   right gutter is reserved at rest too, so the text does not re-ellipsize under the pointer.
+   `currentColor` does not reach a background image, so the muted ink is spelled out per theme. */
+.hot-appearance-v2 td.hot-cell.cell-select {
+  padding-right: 22px;
   background-repeat: no-repeat;
-  background-position: right 0 center;
+  background-position: right 6px center;
   background-size: 14px 14px;
   cursor: pointer;
 }
-.hot-appearance-v2 .hot-cell.cell-select:hover > .cell-content,
-.hot-appearance-v2 .hot-cell.cell-select[data-cell-selected="true"] > .cell-content {
-  /* `currentColor` does not reach a background image, so the muted ink is spelled out per theme. */
+.hot-appearance-v2 td.hot-cell.cell-select:not([data-cell-editing]):hover,
+.hot-appearance-v2 td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]) {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
-.dark .hot-appearance-v2 .hot-cell.cell-select:hover > .cell-content,
-.dark .hot-appearance-v2 .hot-cell.cell-select[data-cell-selected="true"] > .cell-content {
+.dark .hot-appearance-v2 td.hot-cell.cell-select:not([data-cell-editing]):hover,
+.dark .hot-appearance-v2 td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]) {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+/* The comment marker owns the right edge (right:10px) — the chevron steps left of it. */
+.hot-appearance-v2 td.hot-cell.cell-select:has(> .cell-comment-indicator) {
+  background-position: right 34px center;
+}
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator-ghost:not(.cell-comment-indicator-hover)),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator:not(.cell-comment-indicator-ghost)) {
+  padding-right: 50px;
+}
+.hot-appearance-v2 .hot-cell.cell-select > .cell-content {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Status badge pill (type:'badge') — Figma `label/semibold/xs`, radius 9999.
@@ -886,15 +899,9 @@
    The select pill and cell editor above are dimensioned for the md (44px) row
    (the editor's line-height:32px = "md row 44px → 40px cell → 32px editor"). A
    table that doesn't set `density` renders 32px rows (a 24px content box), so
-   those controls overflow and stretch the row (default-state targets/finance
-   grids). Compact them to the 32px row: a ~22px select pill and a 24px editor
-   line-box both center cleanly in the 24px content. Scoped to `:not([data-density])`
+   the editor would overflow and stretch the row (default-state targets/finance
+   grids). Compact it to the 32px row: a 24px editor line-box centers cleanly. Scoped to `:not([data-density])`
    so the sm/md tables (which set the attribute) keep their Figma sizing. */
-.hot-appearance-v2:not([data-density]) .hot-cell.cell-select > .cell-content {
-  padding-top: 2px;
-  padding-bottom: 2px;
-  line-height: 16px;
-}
 .hot-appearance-v2:not([data-density]) textarea.hot-cell-editor {
   line-height: 24px;
 }

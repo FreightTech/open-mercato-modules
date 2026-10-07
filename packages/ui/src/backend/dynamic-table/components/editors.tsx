@@ -673,7 +673,7 @@ export const DateTimeEditor: React.FC<BaseEditorProps> = ({
                                     onSave(formatted, true);
                                 }}
                             >
-                                Now
+                                {t('ui.dateTimePicker.nowButton', 'Now')}
                             </button>
                             <button
                                 type="button"
@@ -684,7 +684,7 @@ export const DateTimeEditor: React.FC<BaseEditorProps> = ({
                                     handleConfirm();
                                 }}
                             >
-                                Confirm
+                                {t('ui.dateTimePicker.confirmButton', 'Confirm')}
                             </button>
                         </div>
                     </div>
