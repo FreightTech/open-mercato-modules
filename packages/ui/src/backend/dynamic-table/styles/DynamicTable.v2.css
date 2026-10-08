@@ -163,27 +163,24 @@
   }
 }
 
-/* Grouped-actions (bulk) bar — dark navy band shown when >1 row is selected
-   (Figma 546:12289). Floats inside the card with an 8px gutter and rounded
-   corners; the 8px top/bottom margin is the requested breathing room above and
-   below the bar. */
+/* Grouped-actions (bulk) bar — shown while rows are selected on a table that
+   defines a bulk action. FMS visual language (GT, 2026-10-08): a neutral
+   surface like the other controls, not a primary-coloured floating pill — no
+   shadow, an 8px corner, a 36px control height. The 16px L/R margin lines the
+   band up with the grid (`.hot-virtual-container`); the 8px top/bottom is the
+   breathing room above and below it. */
 .hot-appearance-v2.hot-container .hot-bulk-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Match a md data row: 44px tall, and the 16px L/R margin lines the band up
-     with the grid (`.hot-virtual-container`) so its width equals the row width.
-     The 8px top/bottom is the breathing room above/below the band. */
-  height: 44px;
+  height: 36px;
   box-sizing: border-box;
   margin: 8px 16px;
   padding: 4px 10px;
-  /* The M3 floating selection bar: a full pill, lifted off the grid on the
-     level-2 two-shadow elevation. Height and margins are unchanged. */
-  border-radius: var(--m3-shape-full);
-  background: var(--m3-primary);
-  color: var(--m3-on-primary);
-  box-shadow: var(--m3-elevation-2);
+  border-radius: var(--m3-shape-sm);
+  background: var(--m3-surface-container-high);
+  color: var(--m3-on-surface);
+  box-shadow: none;
 }
 /* Scoped under `.hot-bulk-bar` for specificity (0,3,0) so it beats the
    later-defined `.hot-row-select { width:16px }` (0,2,0) and renders at the
@@ -194,30 +191,26 @@
   height: 16px;
   margin: 0;
 }
-/* Count + deselect text use the same body/regular/xs ramp as the grid cells. */
+/* The count uses the same body/regular/xs ramp as the grid cells. */
 .hot-appearance-v2 .hot-bulk-bar-count {
+  margin-right: 4px;
   font-size: var(--text-caption-medium-md, 0.75rem);
   line-height: var(--text-caption-medium-md--line-height, 1rem);
   font-weight: var(--text-caption-medium-md--font-weight, 500);
   white-space: nowrap;
 }
-.hot-appearance-v2 .hot-bulk-bar-spacer {
-  flex: 1;
-}
-/* xs action pill. */
+/* A text button on the neutral band: no box at rest, the ordinary on-surface
+   state layer on interaction. */
 .hot-appearance-v2 .hot-bulk-bar-action {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 24px;
-  padding: 0 10px;
-  /* M3 text button ON a primary container: no box at rest, a state layer built
-     from `on-primary` on interaction. The old `#ffffff 8%/16%` mixes were raw
-     hex and therefore invisible to any retint of the bar. */
-  border-radius: var(--m3-shape-full);
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--m3-shape-xs);
   background-color: transparent;
   border: none;
-  color: var(--m3-on-primary);
+  color: var(--m3-on-surface);
   font-size: var(--text-caption-medium-md, 0.75rem);
   line-height: var(--text-caption-medium-md--line-height, 1rem);
   font-weight: var(--text-caption-medium-md--font-weight, 500);
@@ -225,10 +218,10 @@
   transition: var(--m3-transition-state);
 }
 .hot-appearance-v2 .hot-bulk-bar-action:hover {
-  background-color: var(--m3-state-layer-on-primary-hover);
+  background-color: var(--m3-state-layer-hover);
 }
 .hot-appearance-v2 .hot-bulk-bar-action:active {
-  background-color: var(--m3-state-layer-on-primary-pressed);
+  background-color: var(--m3-state-layer-pressed);
 }
 .hot-appearance-v2 .hot-bulk-bar-action:disabled {
   opacity: var(--m3-disabled-content-opacity);
@@ -257,30 +250,6 @@
 }
 .hot-export-menu-item:active {
   background-color: var(--m3-state-layer-pressed);
-}
-.hot-appearance-v2 .hot-bulk-bar-clear {
-  padding: 0 10px;
-  border-radius: var(--m3-shape-full);
-  background-color: transparent;
-  border: none;
-  /* Full-strength `on-primary`, not a 60% alpha wash. Dimming ink with
-     transparency is the one thing this system never does; the button is
-     distinguished by having no container until you touch it. */
-  color: var(--m3-on-primary);
-  font-size: var(--text-body-regular-xs, 0.75rem);
-  line-height: var(--text-body-regular-xs--line-height, 1rem);
-  cursor: pointer;
-  transition: var(--m3-transition-state);
-}
-.hot-appearance-v2 .hot-bulk-bar-clear:hover {
-  background-color: var(--m3-state-layer-on-primary-hover);
-}
-.hot-appearance-v2 .hot-bulk-bar-clear:active {
-  background-color: var(--m3-state-layer-on-primary-pressed);
-}
-.hot-appearance-v2 .hot-bulk-bar-clear:disabled {
-  opacity: var(--m3-disabled-content-opacity);
-  cursor: not-allowed;
 }
 
 /* The base sticky-shadow rules paint an always-on `box-shadow` on sticky
@@ -1558,6 +1527,27 @@
 /* Actions column kebab (•••) — opens the row actions menu. */
 .hot-appearance-v2 td.hot-actions-cell {
   justify-content: center;
+  gap: 4px;
+}
+/* A draft row's ✕ next to Save, on a table without the checkbox column (which
+   is where the ✕ lives otherwise). Same icon-button shape as the kebab. */
+.hot-appearance-v2 .hot-row-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--m3-shape-full);
+  background-color: transparent;
+  color: var(--m3-on-surface-variant);
+  cursor: pointer;
+  transition: var(--m3-transition-state);
+}
+.hot-appearance-v2 .hot-row-cancel-btn:hover {
+  background-color: var(--m3-state-layer-error-hover);
+  color: var(--m3-error);
 }
 .hot-appearance-v2 .hot-row-actions-btn {
   display: inline-flex;

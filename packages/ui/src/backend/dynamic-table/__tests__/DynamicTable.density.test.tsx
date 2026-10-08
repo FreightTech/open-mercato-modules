@@ -223,7 +223,8 @@ describe('column virtualization — the guardrail and the default', () => {
   })
 
   it('counts the row-header gutter in aria-colcount when there is one', () => {
-    render(harness({ rowHeaders: true }))
+    // The gutter is the row-selection column — present only with selection on.
+    render(harness({ rowSelection: true }))
     expect(Number(scroller().getAttribute('aria-colcount'))).toBe(13)
   })
 

@@ -244,6 +244,12 @@ export interface DynamicTablePageConfig<TRow = any> {
   idColumn?: string
 
   delete?: boolean | string | DynamicTablePageDeleteConfig<TRow>
+  /**
+   * Show the checkbox column so users can select rows. Off by default (GT,
+   * 2026-10-08). With `delete` configured, selected rows get a Delete action
+   * in the bar above the grid; add more with `tableProps.uiConfig.bulkActions`.
+   */
+  rowSelection?: boolean
   create?: boolean | DynamicTablePageCreateConfig
   cellEdit?: false | DynamicTablePageCellEditConfig
 
@@ -1574,6 +1580,7 @@ export function useDynamicTablePage<TRow = any>(
       ...(config.loadLookupSources ? { loadLookupSources: config.loadLookupSources } : {}),
       ...(config.loadRollupSources ? { loadRollupSources: config.loadRollupSources } : {}),
       ...(config.delete ? { onBulkDelete: requestBulkDelete } : {}),
+      ...(config.rowSelection !== undefined ? { rowSelection: config.rowSelection } : {}),
       ...config.tableProps,
       // LAST, so it cannot be overridden: while a workspace search is driving
       // this pane, that pane's own search box is ignored (see `sharedSearch`).
@@ -1611,6 +1618,7 @@ export function useDynamicTablePage<TRow = any>(
     config.loadRollupSources,
     config.delete,
     requestBulkDelete,
+    config.rowSelection,
     config.tableProps,
     sharedSearch,
   ])
