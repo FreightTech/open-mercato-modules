@@ -9,6 +9,7 @@ import { semanticEventIdFor, pickVesselVisit, parseCargoCategory } from '../lib/
 import { impedimentsChanged, isEmptyReady, isImportHoldsCleared } from '../lib/availability'
 import { parseTerminalStops, stopsChanged, type TerminalStops } from '../lib/stops'
 import { terminalLogger } from '../lib/logger'
+import encryptionMaps from '../encryption'
 
 /** Default TTL for a cached /VESSEL visit lookup. Vessel ETA/ATA move on the
  * scale of hours and the shared rate bucket is mostly spent on /unit polls, so
@@ -31,6 +32,43 @@ function chunk<T>(items: T[], size: number): T[][] {
  * (container not found / unmapped states) — keep polling. */
 function isFullyDeparted(events: TerminalFetchedEvent[]): boolean {
   return events.length > 0 && events.every((e) => e.eventCode === 'DEPA')
+}
+
+// Snake-case names of the fields this module encrypts at rest, read from its own
+// encryption map so any field added there is covered without touching this code.
+const ENCRYPTED_CONFIG_FIELDS: string[] =
+  encryptionMaps.find((m) => m.entityId === 'terminal_tracking:terminal_config')?.fields.map((f) => f.field) ?? []
+
+const toCamelKey = (snake: string): string => snake.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())
+
+/**
+ * Re-hydrate encrypted object fields after `findOneWithDecryption`.
+ *
+ * `@open-mercato/shared` `decryptFields` returns decrypted values as raw strings
+ * and never calls its own `parseDecryptedFieldValue`, so a field encrypted from a
+ * JSON object (e.g. `auth_config` = `{ username, password }`) is handed back as a
+ * STRING. Adapters then read `authConfig.password` off a string → `undefined` →
+ * empty credential (Baltic Hub ROPC then returns `AADB2C90083`). Parse any such
+ * field back into object form; plain-string secrets (no leading `{`/`[`) are left
+ * untouched. No-op — and harmless — once the upstream `decryptFields` is fixed.
+ */
+function rehydrateEncryptedFields(config: TerminalConfig | null): TerminalConfig | null {
+  if (!config) return config
+  const record = config as unknown as Record<string, unknown>
+  for (const snake of ENCRYPTED_CONFIG_FIELDS) {
+    for (const key of new Set([snake, toCamelKey(snake)])) {
+      const value = record[key]
+      if (typeof value !== 'string') continue
+      const head = value.trimStart()[0]
+      if (head !== '{' && head !== '[') continue
+      try {
+        record[key] = JSON.parse(value)
+      } catch {
+        // Not valid JSON (already plaintext, or a bare string) — leave as-is.
+      }
+    }
+  }
+  return config
 }
 
 type Deps = {
@@ -164,12 +202,14 @@ export class TerminalTrackingService {
     tenantId: string
   }): Promise<{ success: boolean; message: string; latencyMs?: number }> {
     const em = this.deps.em().fork()
-    const config = await findOneWithDecryption(em, TerminalConfig, {
-      id: input.id,
-      organizationId: input.organizationId,
-      tenantId: input.tenantId,
-      deletedAt: null,
-    })
+    const config = rehydrateEncryptedFields(
+      await findOneWithDecryption(em, TerminalConfig, {
+        id: input.id,
+        organizationId: input.organizationId,
+        tenantId: input.tenantId,
+        deletedAt: null,
+      }),
+    )
     if (!config) return { success: false, message: 'Terminal config not found' }
 
     const adapter = this.deps.terminalRegistry.get(config.adapterType)
@@ -228,13 +268,15 @@ export class TerminalTrackingService {
     if (!job) throw new Error('Terminal tracking job not found')
 
     try {
-      const config = await findOneWithDecryption(em, TerminalConfig, {
-        organizationId: job.organizationId,
-        tenantId: job.tenantId,
-        terminalCode: job.terminalCode,
-        isActive: true,
-        deletedAt: null,
-      })
+      const config = rehydrateEncryptedFields(
+        await findOneWithDecryption(em, TerminalConfig, {
+          organizationId: job.organizationId,
+          tenantId: job.tenantId,
+          terminalCode: job.terminalCode,
+          isActive: true,
+          deletedAt: null,
+        }),
+      )
       if (!config) throw new Error(`No active terminal config for '${job.terminalCode}'`)
 
       const limit = await checkRateLimit(
@@ -356,13 +398,15 @@ export class TerminalTrackingService {
 
     let config: TerminalConfig | null = null
     try {
-      config = await findOneWithDecryption(em, TerminalConfig, {
-        organizationId: scope.organizationId,
-        tenantId: scope.tenantId,
-        terminalCode: scope.terminalCode,
-        isActive: true,
-        deletedAt: null,
-      })
+      config = rehydrateEncryptedFields(
+        await findOneWithDecryption(em, TerminalConfig, {
+          organizationId: scope.organizationId,
+          tenantId: scope.tenantId,
+          terminalCode: scope.terminalCode,
+          isActive: true,
+          deletedAt: null,
+        }),
+      )
     } catch {
       config = null
     }
