@@ -27,7 +27,7 @@ import { Sheet, SheetContent } from '../../../primitives/sheet'
 import { Button, IconButton } from '../../../primitives-v2'
 import { useContentById } from '../registry/ContentRegistryContext'
 import { AnchoredPanel, MenuPortalContext } from './AnchoredMenu'
-import { ContentCatalogList, contentTitle } from './ContentPicker'
+import { ContentCatalogList, contentTitle, useInstanceTitle } from './ContentPicker'
 import { SharePanel } from './SharePanel'
 import { TemplateTiles } from './TemplatePreview'
 import { ICON_BUTTON, TEXT_FIELD } from './chrome'
@@ -111,7 +111,9 @@ function SlotChip({
   const [anchor, setAnchor] = React.useState<HTMLElement | null>(null)
   const content = node.kind === 'pane' ? node.content : null
   const { item } = useContentById(content)
-  const title = item ? contentTitle(t, item) : content?.kind === 'table' ? content.tableId : content?.kind === 'widget' ? content.widgetId : ''
+  // A slot showing a saved instance is named by it, not by its widget type.
+  const instanceTitle = useInstanceTitle(content)
+  const title = instanceTitle ?? (item ? contentTitle(t, item) : content?.kind === 'table' ? content.tableId : content?.kind === 'widget' ? content.widgetId : '')
 
   const picker = anchor && (
     <AnchoredPanel
