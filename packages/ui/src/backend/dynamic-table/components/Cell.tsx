@@ -206,6 +206,7 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
       data-col={col}
       aria-colindex={ariaColIndex}
       data-cell-selected={state.isSelected}
+      data-cell-editing={state.isEditing || undefined}
       data-in-range={state.isInRange}
       data-range-top={state.rangeEdges.top}
       data-range-bottom={state.rangeEdges.bottom}

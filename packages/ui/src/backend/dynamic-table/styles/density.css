@@ -316,20 +316,15 @@
   line-height: var(--dt-editor-line-height);
 }
 
-.hot-appearance-v2.hot-container[data-density-level] .hot-cell.cell-select {
-  padding-top: var(--dt-cell-pad-y);
-  padding-bottom: var(--dt-cell-pad-y);
-  padding-left: var(--dt-cell-pad-x);
-  padding-right: var(--dt-cell-pad-x);
+/* Select cells are plain text (no pill since 0.14.11) — same box as every other cell, plus the
+   fixed right gutter the hover/selected chevron needs (DynamicTable.v2.css). Not scaled with
+   density: the chevron is a fixed 14px sprite at `right: 6px`, like the comment badge above.
+   At (0,6,1) the generic `td.hot-cell` block above would otherwise reset it to `--dt-cell-pad-x`. */
+.hot-appearance-v2.hot-container[data-density-level] .hot-table td.hot-cell.cell-select {
+  padding-right: 22px;
 }
-
-/* The select pill's own box: zero vertical padding, line-height carrying the
-   height, and just enough right padding to clear the chevron sprite. */
 .hot-appearance-v2.hot-container[data-density-level] .hot-cell.cell-select > .cell-content {
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: var(--dt-cell-pad-x);
-  padding-right: 20px;
+  padding: 0;
   line-height: var(--dt-cell-line-height);
 }
 

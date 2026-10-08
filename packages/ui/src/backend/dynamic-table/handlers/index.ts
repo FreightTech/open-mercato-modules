@@ -25,6 +25,7 @@ import {
 import { dispatch } from '../events/events';
 import { isCellValueUnchanged } from './cellWrites';
 import { coerceCellValue } from '../utils/coerceCellValue';
+import { columnOpensOnClick } from '../utils/pickerColumn';
 
 // ============================================
 // CELL HANDLERS
@@ -273,7 +274,13 @@ export function createMouseHandlers(
 ) {
   const { handleDragStart, handleDragMove, handleDragEnd } = dragHandlers;
 
+  // A plain press on a picker cell (dropdown, date, entity search…) opens its editor on release —
+  // if the release lands on the same cell. A drag, a modified click (Shift / Cmd / Ctrl extend or
+  // add to a selection) or a press on an in-cell affordance only selects.
+  let pendingPickerOpen: { row: number; col: number } | null = null;
+
   const handleMouseDown = (e: React.MouseEvent) => {
+    pendingPickerOpen = null;
     // Don't clear editing here - let blur/click-outside handlers save first.
     // The editor's blur handler calls onSave -> handleCellSave -> clearEditing,
     // ensuring the value is saved before the editing state is cleared.
@@ -327,6 +334,11 @@ export function createMouseHandlers(
     if (!isNaN(row) && !isNaN(col)) {
       handleDragStart(row, col, 'cell');
       e.preventDefault();
+      const plain = e.button === 0 && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey;
+      const onAffordance = (e.target as HTMLElement).closest('button, a, input, [data-no-row-click], .cell-comment-indicator');
+      if (plain && !onAffordance && columnOpensOnClick(columns[col])) {
+        pendingPickerOpen = { row, col };
+      }
     }
   };
 
@@ -371,6 +383,15 @@ export function createMouseHandlers(
     if (dragStateRef.current.isDragging) {
       handleDragEnd();
     }
+    const pending = pendingPickerOpen;
+    pendingPickerOpen = null;
+    if (!pending) return;
+    const { type, anchor, focus } = store.getSelection();
+    const stillOneCell =
+      type === 'range' &&
+      anchor?.row === pending.row && anchor.col === pending.col &&
+      focus?.row === pending.row && focus.col === pending.col;
+    if (stillOneCell) store.setEditingCell(pending.row, pending.col);
   };
 
   /**

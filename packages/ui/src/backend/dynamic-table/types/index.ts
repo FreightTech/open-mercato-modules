@@ -224,6 +224,13 @@ export interface ColumnDef {
   badgeMap?: Record<string, DynamicTableBadgeVariant>;
   readOnly?: boolean;
   /**
+   * One click opens this column's editor (no double-click). Default: on for `dropdown`,
+   * `multiselect` and `date` columns and for editors from `createEntitySearchEditor` /
+   * `createMultiSelectEntitySearchEditor` / `createDateTimeEditor`; off for everything else.
+   * Set it to opt a custom picker editor in, or `false` to opt a column out.
+   */
+  openOnClick?: boolean;
+  /**
    * The module refuses an empty value for this field (its create/update
    * validator would 400). Multi-cell writes reject an emptying write on a
    * required column up front with reason `'required'`, rather than firing N

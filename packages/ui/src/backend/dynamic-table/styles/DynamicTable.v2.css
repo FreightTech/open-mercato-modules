@@ -554,36 +554,62 @@
   line-height: var(--text-code-regular-sm--line-height, 1rem);
 }
 
-/* Select / dropdown cell (type:'dropdown' | 'multiselect') — bordered control
-   at rest (Figma `select`: radius 10, border #D4D4D8, "Wybierz…" + chevron).
-   Scoped to v2 so legacy dropdown cells keep plain text. */
-.hot-appearance-v2 .hot-cell.cell-select { padding: 4px 6px; }
+/* Select / dropdown cell (type:'dropdown' | 'multiselect') — plain text at rest, like every other
+   cell. A bordered "Wybierz…" pill in every row was noise (owner 07.10: "the input is too
+   intrusive"); a single click opens the list (`openOnClick`), so the only hint the cell needs is a
+   faint chevron on the hovered or selected cell.
+   Drawn on the CELL, not on `.cell-content`: a column with its own `renderer` has no `.cell-content`
+   (FMS Telex / Nadwozie / Przewóz), and the hint must not depend on who renders the value. The
+   right gutter is reserved at rest too, so the text does not re-ellipsize under the pointer.
+   `currentColor` does not reach a background image, so the muted ink is spelled out per theme. */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select {
+  padding-right: 22px;
+  background-repeat: no-repeat;
+  /* !important: a range cell's base `background` shorthand (!important) would reset it to 0 0;
+     the comment-marker rule below is more specific and still moves it. */
+  background-position: right 6px center !important;
+  background-size: 14px 14px;
+  cursor: pointer;
+}
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover,
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-range-top="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"]:not([data-cell-editing]) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover,
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]),
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-range-top="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"]:not([data-cell-editing]) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+/* "Selected" = `data-cell-selected` (keyboard) or a 1×1 range (a mouse click — Cell.tsx B9). A
+   range cell's base rule sets the `background` SHORTHAND with !important, which resets every
+   longhand above, so the selected state restates them. */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-range-top="true"][data-range-bottom="true"][data-range-left="true"][data-range-right="true"]:not([data-cell-editing]) {
+  background-repeat: no-repeat !important;
+  background-size: 14px 14px !important;
+}
+/* The comment marker owns the right edge (right:10px) — the chevron steps left of it. */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator) {
+  background-position: right 34px center !important;
+}
+/* The hover-only ghost "add comment" button sits exactly where the chevron would. While it shows, it
+   owns that slot and the chevron is not drawn — stepping it left put it on top of the text, because a
+   cell with only a ghost reserves 28px, not 50 (browser check 08.10: "Niezwolniony" ran under it).
+   One click on the cell still opens the list. A real comment keeps the chevron beside it (50px). */
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover:has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover),
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:not([data-cell-editing]):hover:has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]):has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover),
+.dark .hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select[data-cell-selected="true"]:not([data-cell-editing]):has(> .cell-comment-indicator-ghost.cell-comment-indicator-hover) {
+  background-image: none !important;
+}
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator-ghost:not(.cell-comment-indicator-hover)),
+.hot-appearance-v2.hot-container .hot-table td.hot-cell.cell-select:has(> .cell-comment-indicator:not(.cell-comment-indicator-ghost)) {
+  padding-right: 50px;
+}
 .hot-appearance-v2 .hot-cell.cell-select > .cell-content {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--m3-outline);
-  /* Density floor: this pill lives inside a 32px row, so it takes `sm` — the
-     largest rung the floor allows — and now matches the row pill exactly. */
-  border-radius: var(--m3-shape-sm);
-  padding: 5px 30px 5px 10px;
-  background-color: var(--background-v2);
-  /* `stroke='currentColor'` — the chevron used to be a hardcoded #71717A, i.e.
-     invisible to dark mode. It now follows the cell's ink. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  color: var(--m3-on-surface);
-  line-height: 18px;
-  cursor: pointer;
-  transition: var(--m3-transition-state);
-}
-.hot-appearance-v2 .hot-cell.cell-select:hover > .cell-content {
-  border-color: var(--m3-on-surface-variant);
-}
-/* Empty select cell → "Wybierz…" placeholder (overrides the em-dash). */
-.hot-appearance-v2 .hot-cell.cell-select > .cell-content:empty::after {
-  content: "Wybierz\2026";
-  color: var(--m3-on-surface-variant);
 }
 
 /* Status badge pill (type:'badge') — Figma `label/semibold/xs`, radius 9999.
@@ -895,15 +921,9 @@
    The select pill and cell editor above are dimensioned for the md (44px) row
    (the editor's line-height:32px = "md row 44px → 40px cell → 32px editor"). A
    table that doesn't set `density` renders 32px rows (a 24px content box), so
-   those controls overflow and stretch the row (default-state targets/finance
-   grids). Compact them to the 32px row: a ~22px select pill and a 24px editor
-   line-box both center cleanly in the 24px content. Scoped to `:not([data-density])`
+   the editor would overflow and stretch the row (default-state targets/finance
+   grids). Compact it to the 32px row: a 24px editor line-box centers cleanly. Scoped to `:not([data-density])`
    so the sm/md tables (which set the attribute) keep their Figma sizing. */
-.hot-appearance-v2:not([data-density]) .hot-cell.cell-select > .cell-content {
-  padding-top: 2px;
-  padding-bottom: 2px;
-  line-height: 16px;
-}
 .hot-appearance-v2:not([data-density]) textarea.hot-cell-editor {
   line-height: 24px;
 }
