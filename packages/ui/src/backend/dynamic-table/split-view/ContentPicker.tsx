@@ -27,6 +27,7 @@ import { Search } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useAccessibleContent, useContentRegistry, type PaneContentItem } from '../registry/ContentRegistryContext'
 import { WIDGET_KINDS, widgetPresentation, type WidgetKind } from '../registry/widgetPresentation'
+import { instanceContent, useWidgetInstances, type WidgetInstanceItem } from '../../dashboard/widgetInstances'
 import { AnchoredPanel } from './AnchoredMenu'
 import { M3_MENU_CAPTION, M3_MENU_ROW } from './chrome'
 import type { PaneContentRef } from './types'
@@ -52,6 +53,41 @@ export function isSameContent(item: PaneContentItem, ref: PaneContentRef | null 
     : item.kind === 'widget' && ref.widgetId === item.id
 }
 
+/**
+ * Is `instance` what `ref` shows? Its widget, and every setting the instance
+ * names is held by the slot. Containment, not equality: a placed widget keeps
+ * the viewer's own state (filters, a page) next to the instance's settings and
+ * is still that instance.
+ */
+export function isSameInstance(instance: WidgetInstanceItem, ref: PaneContentRef | null | undefined): boolean {
+  if (!ref || ref.kind !== 'widget' || ref.widgetId !== instance.widgetId) return false
+  return containsSettings(ref.settings, instance.instance.settings)
+}
+
+/**
+ * The name of the saved instance a widget slot shows ("Revenue by carrier"),
+ * or null — a table, an empty slot, or a widget with no instances. For labels
+ * that would otherwise repeat the widget type's title once per slot.
+ */
+export function useInstanceTitle(content: PaneContentRef | null | undefined): string | null {
+  const widget = React.useMemo(
+    () => (content?.kind === 'widget' && content.settings != null ? [{ id: content.widgetId, loaderKey: content.loaderKey }] : []),
+    [content],
+  )
+  const { items } = useWidgetInstances(widget)
+  return React.useMemo(() => items.find((entry) => isSameInstance(entry, content))?.instance.title ?? null, [items, content])
+}
+
+function containsSettings(held: unknown, wanted: unknown): boolean {
+  if (wanted === null || wanted === undefined) return true
+  if (typeof wanted !== 'object') return Object.is(held, wanted)
+  if (Array.isArray(wanted)) {
+    return Array.isArray(held) && held.length === wanted.length && wanted.every((w, i) => containsSettings(held[i], w))
+  }
+  if (!held || typeof held !== 'object' || Array.isArray(held)) return false
+  return Object.entries(wanted as Record<string, unknown>).every(([k, v]) => containsSettings((held as Record<string, unknown>)[k], v))
+}
+
 /** A title in the user's language — tables carry an i18n key, widgets get one here. */
 export function contentTitle(t: Translate, item: PaneContentItem): string {
   if (item.kind === 'table') {
@@ -74,7 +110,15 @@ const KIND_FALLBACK: Record<WidgetKind, string> = {
   other: 'Other',
 }
 
-export type ContentGroup = { key: string; label: string; items: Array<{ item: PaneContentItem; title: string }> }
+export type ContentRow = {
+  item: PaneContentItem
+  title: string
+  /** Present on a saved instance of a widget: what it shows and where it comes from. */
+  instance?: WidgetInstanceItem
+  description?: string | null
+}
+
+export type ContentGroup = { key: string; label: string; items: ContentRow[] }
 
 /**
  * The catalogue as display groups, filtered by `query` and without `exclude`.
@@ -83,8 +127,17 @@ export type ContentGroup = { key: string; label: string; items: Array<{ item: Pa
 export function useContentGroups(query = '', exclude?: PaneContentRef | null): ContentGroup[] {
   const t = useT()
   const items = useAccessibleContent()
+  const widgetItems = React.useMemo(
+    () => items.filter((item): item is Extract<PaneContentItem, { kind: 'widget' }> => item.kind === 'widget'),
+    [items],
+  )
+  // Saved instances of the widgets in the catalogue ("Revenue by carrier"),
+  // listed by name. Only widgets the user may place are asked.
+  const { items: instances } = useWidgetInstances(widgetItems)
   return React.useMemo(() => {
     const needle = query.trim().toLowerCase()
+    const matches = (...texts: Array<string | null | undefined>) =>
+      !needle || texts.some((text) => !!text && text.toLowerCase().includes(needle))
     const rows = items
       .filter((item) => !exclude || !isSameContent(item, exclude))
       .map((item) => ({ item, title: contentTitle(t, item) }))
@@ -93,12 +146,31 @@ export function useContentGroups(query = '', exclude?: PaneContentRef | null): C
       )
       .sort((a, b) => a.title.localeCompare(b.title))
 
+    // One group per widget that has saved instances, named after the widget
+    // (a module may give the group its own words: splitView.widgetInstances.<id>).
+    const instanceGroups: ContentGroup[] = widgetItems
+      .map((source) => {
+        const sourceTitle = contentTitle(t, source)
+        const groupRows: ContentRow[] = instances
+          .filter((entry) => entry.widgetId === source.id)
+          .filter((entry) => !exclude || !isSameInstance(entry, exclude))
+          .filter((entry) => matches(entry.instance.title, entry.instance.description, sourceTitle))
+          .map((entry) => ({ item: source, title: entry.instance.title, instance: entry, description: entry.instance.description ?? null }))
+          .sort((a, b) => a.title.localeCompare(b.title))
+        return {
+          key: `instances:${source.id}`,
+          label: t(`splitView.widgetInstances.${source.id}`, sourceTitle),
+          items: groupRows,
+        }
+      })
+
     const groups: ContentGroup[] = [
       {
         key: 'tables',
         label: t('splitView.picker.tables', 'Whole sections'),
         items: rows.filter((row) => row.item.kind === 'table'),
       },
+      ...instanceGroups,
       ...WIDGET_KINDS.map((kind) => ({
         key: `widgets:${kind}`,
         label: t(`splitView.picker.kind.${kind}`, KIND_FALLBACK[kind]),
@@ -108,7 +180,7 @@ export function useContentGroups(query = '', exclude?: PaneContentRef | null): C
       })),
     ]
     return groups.filter((group) => group.items.length > 0)
-  }, [items, query, exclude, t])
+  }, [items, widgetItems, instances, query, exclude, t])
 }
 
 /**
@@ -177,22 +249,37 @@ export function ContentCatalogList({
             // The hairline between groups is the group's own top border, so the
             // caption stays its first child (specs read the label from it).
             className={index > 0 ? 'mt-1 border-t border-[var(--m3-outline-variant)] pt-1' : undefined}
-            data-split-picker-kind={group.key === 'tables' ? 'table' : 'widget'}
+            data-split-picker-kind={group.key === 'tables' ? 'table' : group.key.startsWith('instances:') ? 'widget-instance' : 'widget'}
             data-split-picker-group={group.key}
           >
             <div className={`px-3 pb-1 pt-2 ${M3_MENU_CAPTION}`}>{group.label}</div>
-            {group.items.map(({ item, title }) => (
-              <button
-                key={`${item.kind}:${item.id}`}
-                type="button"
-                onClick={() => onPick(contentRefFor(item), item)}
-                className={M3_MENU_ROW}
-                data-split-picker-item={item.id}
-                data-split-picker-item-kind={item.kind}
-              >
-                <span className="truncate">{title}</span>
-              </button>
-            ))}
+            {group.items.map(({ item, title, instance, description }) =>
+              instance ? (
+                <button
+                  key={`instance:${instance.widgetId}:${instance.instance.key}`}
+                  type="button"
+                  onClick={() => onPick(instanceContent(instance), item)}
+                  className={M3_MENU_ROW}
+                  title={description ? `${title} — ${description}` : title}
+                  data-split-picker-item={item.id}
+                  data-split-picker-item-kind="widget-instance"
+                  data-split-picker-instance={instance.instance.key}
+                >
+                  <span className="truncate">{title}</span>
+                </button>
+              ) : (
+                <button
+                  key={`${item.kind}:${item.id}`}
+                  type="button"
+                  onClick={() => onPick(contentRefFor(item), item)}
+                  className={M3_MENU_ROW}
+                  data-split-picker-item={item.id}
+                  data-split-picker-item-kind={item.kind}
+                >
+                  <span className="truncate">{title}</span>
+                </button>
+              ),
+            )}
           </div>
         ))}
         {widgetsLoading && (

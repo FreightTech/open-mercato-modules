@@ -37,6 +37,7 @@ import type {
   DashboardWidgetRenderContext,
 } from '@open-mercato/shared/modules/dashboard/widgets'
 import { loadDashboardWidgetModule } from '../../dashboard/widgetRegistry'
+import type { PaneWidgetProps } from '../../dashboard/widgetInstances'
 import { AnchoredMenu } from './AnchoredMenu'
 import { ICON_BUTTON } from './chrome'
 import { contentTitle } from './ContentPicker'
@@ -174,7 +175,19 @@ function WidgetPaneBody({
   sharedFilters?: FilterRow[]
 }) {
   const t = useT()
-  const title = contentTitle(t, item)
+  const typeTitle = contentTitle(t, item)
+  // A widget may name this placement ("Revenue by carrier") through
+  // `onTitleChange`; the header shows that instead of the widget type's title.
+  // Only offered while the header is drawn, so a widget that reports a title
+  // can leave its own out of its body without it vanishing.
+  const [reportedTitle, setReportedTitle] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    setReportedTitle(null)
+  }, [content.widgetId])
+  const handleTitleChange = React.useCallback((next: string | null) => {
+    setReportedTitle(typeof next === 'string' && next.trim() ? next.trim() : null)
+  }, [])
+  const title = reportedTitle ?? typeTitle
   const description = item.description
     ? t(`splitView.widgetDescription.${item.id}`, item.description)
     : null
@@ -270,7 +283,8 @@ function WidgetPaneBody({
     setRefreshToken((value) => value + 1)
   }, [loading, loadFailed])
 
-  const Widget = module?.Widget ?? null
+  // The upstream prop type, plus what a pane offers beyond it (`onTitleChange`).
+  const PaneWidget = (module?.Widget ?? null) as React.ComponentType<PaneWidgetProps<any>> | null
 
   // The settings the widget SEES: its own, plus the workspace filters on top.
   // Never written back — `handleSettingsChange` persists what the widget sends,
@@ -365,8 +379,8 @@ function WidgetPaneBody({
             {t('splitView.pane.widgetFailed', 'This widget could not be loaded.')}
           </div>
         )}
-        {!loading && !loadFailed && Widget && (
-          <Widget
+        {!loading && !loadFailed && PaneWidget && (
+          <PaneWidget
             mode="view"
             layout={layout}
             settings={widgetSettings}
@@ -374,6 +388,7 @@ function WidgetPaneBody({
             onSettingsChange={handleSettingsChange}
             refreshToken={refreshToken}
             onRefreshStateChange={setRefreshing}
+            onTitleChange={hideToolbar ? undefined : handleTitleChange}
           />
         )}
       </div>
