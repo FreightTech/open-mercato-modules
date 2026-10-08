@@ -8,6 +8,10 @@
 // feature owns its own vocabulary; `PerspectiveConfig` picks it up through
 // `ConditionalFormatCarrier` below.
 
+import type { ColumnDef } from '../types/index';
+import { getColumnOptions } from './columnOptions';
+import { readCellValue } from './cellPath';
+
 /** Palette variants. Each maps 1:1 onto an existing `cell-*` class in DynamicTable.css. */
 export type ConditionalFormatStyle =
   | 'green'
@@ -141,6 +145,7 @@ export function parseConditionalFormats(raw: unknown): ConditionalFormatRule[] {
 
 // ─── Evaluation ──────────────────────────────────────────────────────────────
 
+
 type Predicate = (value: unknown, rowData: any) => boolean;
 
 interface CompiledRule {
@@ -189,7 +194,40 @@ function asComparable(v: unknown): number | null {
   return null;
 }
 
-function compileRule(rule: ConditionalFormatRule): CompiledRule | null {
+/**
+ * What the user SEES for a cell, beside the stored value: an option column's
+ * label (stored `basic`, shown `Basic`) and the column's `exportValue` text
+ * (a relation stored as an id, shown as a name). The value picker offers
+ * exactly these strings — the filter's suggestions are display text — so a
+ * rule must match them, or picking "Basic" would paint nothing.
+ */
+type ShownText = (value: unknown, rowData: any) => unknown[];
+
+function shownTextFor(col: ColumnDef | undefined): ShownText | undefined {
+  if (!col) return undefined;
+  const options = getColumnOptions(col);
+  const labels = options ? new Map(options.map((o) => [o.value, o.label])) : null;
+  const exportValue = col.exportValue;
+  if (!labels && !exportValue) return undefined;
+  return (value, rowData) => {
+    const shown: unknown[] = [];
+    if (labels && !isBlank(value)) {
+      const label = labels.get(String(value));
+      if (label !== undefined) shown.push(label);
+    }
+    if (exportValue) {
+      try {
+        const text = exportValue(value, rowData);
+        if (!isBlank(text)) shown.push(text);
+      } catch {
+        // A formatter that throws must not break painting for the whole grid.
+      }
+    }
+    return shown;
+  };
+}
+
+function compileRule(rule: ConditionalFormatRule, shownText?: ShownText): CompiledRule | null {
   const className = `cell-${rule.style}`;
   const literal = rule.value;
 
@@ -201,13 +239,17 @@ function compileRule(rule: ConditionalFormatRule): CompiledRule | null {
     case 'contains': {
       const needle = String(literal ?? '').toLowerCase();
       if (!needle) return null;
-      return { test: (v) => !isBlank(v) && String(v).toLowerCase().includes(needle), className };
+      const has = (v: unknown) => !isBlank(v) && String(v).toLowerCase().includes(needle);
+      return {
+        test: (v, row) => has(v) || (!!shownText && shownText(v, row).some(has)),
+        className,
+      };
     }
     case 'eq':
     case 'neq': {
       const wantNumber = asNumber(literal);
       const wantText = String(literal ?? '').toLowerCase();
-      const eq: Predicate = (v) => {
+      const same = (v: unknown) => {
         if (wantNumber !== null) {
           const n = asNumber(v);
           if (n !== null) return n === wantNumber;
@@ -215,6 +257,8 @@ function compileRule(rule: ConditionalFormatRule): CompiledRule | null {
         if (isBlank(v)) return isBlank(literal);
         return String(v).toLowerCase() === wantText;
       };
+      const eq: Predicate = (v, row) =>
+        same(v) || (!isBlank(v) && !!shownText && shownText(v, row).some(same));
       return rule.operator === 'eq'
         ? { test: eq, className }
         : { test: (v, row) => !eq(v, row), className };
@@ -246,7 +290,7 @@ function compileRule(rule: ConditionalFormatRule): CompiledRule | null {
       return {
         test: (v, rowData) => {
           const a = asComparable(v);
-          const b = asComparable(rowData?.[other]);
+          const b = asComparable(readCellValue(rowData, other));
           if (a === null || b === null) return false;
           return wantBefore ? a < b : a > b;
         },
@@ -265,11 +309,13 @@ function compileRule(rule: ConditionalFormatRule): CompiledRule | null {
  */
 export function compileConditionalFormats(
   rules: ConditionalFormatRule[] | undefined | null,
+  /** The grid's columns — lets `eq`/`neq`/`contains` match the shown text too. */
+  columns?: ColumnDef[],
 ): CompiledConditionalFormats {
   if (!rules || rules.length === 0) return EMPTY_CONDITIONAL_FORMATS;
   const byField = new Map<string, CompiledRule[]>();
   for (const rule of rules.slice(0, MAX_CONDITIONAL_FORMAT_RULES)) {
-    const compiled = compileRule(rule);
+    const compiled = compileRule(rule, shownTextFor(columns?.find((c) => c.data === rule.field)));
     if (!compiled) continue;
     const list = byField.get(rule.field);
     if (list) list.push(compiled);
@@ -293,8 +339,11 @@ export function conditionalFormatClassName(
   if (compiled.isEmpty) return undefined;
   const rules = compiled.byField.get(field);
   if (!rules) return undefined;
+  // A dotted `data` path (`status.transport`) leaves the grid's own cell value
+  // undefined — read the nested field the column actually shows.
+  const resolved = value === undefined ? readCellValue(rowData, field) : value;
   for (const rule of rules) {
-    if (rule.test(value, rowData)) return rule.className;
+    if (rule.test(resolved, rowData)) return rule.className;
   }
   return undefined;
 }

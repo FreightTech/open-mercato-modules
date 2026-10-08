@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '../../../primitives/calendar';
 import { useEscapeLayer } from '../hooks/useEscapeLayer';
+import { portalContainerFor } from '../utils/portalContainer';
 
 interface FilterDatePickerProps {
   /** ISO date string (YYYY-MM-DD), or empty string when unset. */
@@ -186,7 +187,9 @@ export const FilterDatePicker: React.FC<FilterDatePickerProps> = ({
         </span>
         <CalendarIcon className="w-3.5 h-3.5 text-[var(--m3-on-surface-variant)]" />
       </button>
-      {popup && typeof document !== 'undefined' ? ReactDOM.createPortal(popup, document.body) : popup}
+      {popup && typeof document !== 'undefined'
+        ? ReactDOM.createPortal(popup, portalContainerFor(triggerRef.current))
+        : popup}
     </>
   );
 };

@@ -6,6 +6,7 @@ import {
   MAX_CONDITIONAL_FORMAT_RULES,
   type ConditionalFormatRule,
 } from '../utils/conditionalFormat'
+import type { ColumnDef } from '../types/index'
 
 const rule = (over: Partial<ConditionalFormatRule>): ConditionalFormatRule => ({
   id: 'cf-1',
@@ -171,5 +172,88 @@ describe('parseConditionalFormats — persistence boundary', () => {
       style: 'red',
     }))
     expect(parseConditionalFormats(many)).toHaveLength(MAX_CONDITIONAL_FORMAT_RULES)
+  })
+})
+
+describe('conditionalFormat — matches what the user sees, not only the stored value', () => {
+  // Stored codes that differ from their labels beyond letter case, so a pass
+  // here cannot come from the case-insensitive raw comparison.
+  const statusColumn = {
+    data: 'status',
+    title: 'Status',
+    type: 'dropdown',
+    source: [
+      { value: 'b1', label: 'Basic' },
+      { value: 'p2', label: 'Premium plus' },
+    ],
+  } as unknown as ColumnDef
+  const clientColumn: ColumnDef = {
+    data: 'clientId',
+    title: 'Client',
+    exportValue: (_v: unknown, row: any) => row.clientName,
+  }
+  const paintShown = (r: ConditionalFormatRule, value: unknown, row: any = {}) =>
+    conditionalFormatClassName(
+      compileConditionalFormats([r], [statusColumn, clientColumn]),
+      r.field,
+      value,
+      row,
+    )
+
+  it('an option picked from the list (raw value) paints its rows', () => {
+    expect(paintShown(rule({ field: 'status', operator: 'eq', value: 'b1', style: 'yellow' }), 'b1'))
+      .toBe('cell-yellow')
+  })
+
+  it('a label typed or suggested ("Basic") paints rows that store its code', () => {
+    expect(paintShown(rule({ field: 'status', operator: 'eq', value: 'Basic', style: 'yellow' }), 'b1'))
+      .toBe('cell-yellow')
+    expect(paintShown(rule({ field: 'status', operator: 'contains', value: 'plus', style: 'red' }), 'p2'))
+      .toBe('cell-red')
+  })
+
+  it('"is not" stays false when the label matches', () => {
+    expect(paintShown(rule({ field: 'status', operator: 'neq', value: 'Basic', style: 'yellow' }), 'b1'))
+      .toBeUndefined()
+    expect(paintShown(rule({ field: 'status', operator: 'neq', value: 'Basic', style: 'yellow' }), 'p2'))
+      .toBe('cell-yellow')
+  })
+
+  it('a relation stored as an id matches the name its exportValue shows', () => {
+    const row = { clientId: 'c-42', clientName: 'Freight Tech Sp. z o.o.' }
+    expect(paintShown(rule({ field: 'clientId', operator: 'contains', value: 'freight tech', style: 'green' }), 'c-42', row))
+      .toBe('cell-green')
+    expect(paintShown(rule({ field: 'clientId', operator: 'eq', value: 'Freight Tech Sp. z o.o.', style: 'green' }), 'c-42', row))
+      .toBe('cell-green')
+  })
+
+  it('without columns it compares the stored value only, as before', () => {
+    expect(paint([rule({ field: 'status', operator: 'eq', value: 'Basic', style: 'yellow' })], 'status', 'b1'))
+      .toBeUndefined()
+  })
+})
+
+describe('conditionalFormat — columns that point into a nested row object', () => {
+  // The folders list's Status column is `status.transport`; the grid hands the
+  // cell `undefined` for it, and only the renderer reads the nested field.
+  const row = { status: { transport: 'PLANNING', financial: 'NO_LINES' } }
+
+  it('a rule on a dotted path reads the nested value', () => {
+    const compiled = compileConditionalFormats([
+      rule({ field: 'status.transport', operator: 'eq', value: 'Planning', style: 'yellow' }),
+    ])
+    expect(conditionalFormatClassName(compiled, 'status.transport', undefined, row)).toBe('cell-yellow')
+    expect(
+      conditionalFormatClassName(compiled, 'status.transport', undefined, { status: { transport: 'NEW' } }),
+    ).toBeUndefined()
+  })
+
+  it('a flattened key on the row wins, so it reads what the grid reads', () => {
+    const compiled = compileConditionalFormats([
+      rule({ field: 'status.transport', operator: 'eq', value: 'NEW', style: 'red' }),
+    ])
+    expect(
+      conditionalFormatClassName(compiled, 'status.transport', 'NEW', { 'status.transport': 'NEW', status: { transport: 'PLANNING' } }),
+    ).toBe('cell-red')
   })
 })

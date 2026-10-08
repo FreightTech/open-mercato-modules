@@ -16,6 +16,7 @@ import { FilterDatePicker } from './FilterDatePicker';
 import FilterValueInput from './FilterValueInput';
 import SelectMenu from './SelectMenu';
 import { useFieldSuggestionLoader } from '../hooks/useSuggestionFetch';
+import { getColumnOptions } from '../utils/columnOptions';
 
 interface ConfigureViewFiltersProps {
   columns: ColumnDef[];
@@ -23,27 +24,6 @@ interface ConfigureViewFiltersProps {
   onFiltersChange: (filters: FilterRow[]) => void;
   loadFilterSuggestions?: LoadFilterSuggestions;
 }
-
-// Normalize a column's `source` (dropdown options) to a {value,label} list.
-// Options may be plain strings or {value,label}/{id,name} objects. Returns null
-// when the column has no option set (free-text/numeric/date columns).
-const getColumnOptions = (col?: ColumnDef): { value: string; label: string }[] | null => {
-  const src = (col as { source?: unknown })?.source;
-  if (!Array.isArray(src) || src.length === 0) return null;
-  return src.map((o) =>
-    o && typeof o === 'object'
-      ? {
-          value: String((o as Record<string, unknown>).value ?? (o as Record<string, unknown>).id ?? ''),
-          label: String(
-            (o as Record<string, unknown>).label ??
-              (o as Record<string, unknown>).name ??
-              (o as Record<string, unknown>).value ??
-              '',
-          ),
-        }
-      : { value: String(o), label: String(o) },
-  );
-};
 
 // Default operator for a column type. Option-backed columns (dropdown/multiselect)
 // default to `is_any_of` so the value picker shows their options.
