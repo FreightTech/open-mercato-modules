@@ -339,3 +339,62 @@ describe('WidgetPane — host chrome', () => {
     expect(container.querySelector('[data-pane-widget-menu-btn]')).toBeNull()
   })
 })
+
+describe('WidgetPane — the placement names itself', () => {
+  function titledModule() {
+    const seen: Array<{ onTitleChange?: (title: string | null) => void }> = []
+    const module: DashboardWidgetModule<any> = {
+      metadata: { id: WIDGET_ID, title: 'Wpływy' },
+      Widget: (props: any) => {
+        seen.push(props)
+        return (
+          <div data-testid="fake-widget">
+            <button type="button" onClick={() => props.onTitleChange?.('Revenue by carrier')}>name</button>
+            <button type="button" onClick={() => props.onTitleChange?.('   ')}>blank</button>
+            <button type="button" onClick={() => props.onTitleChange?.(null)}>clear</button>
+          </div>
+        )
+      },
+    }
+    return { module, seen }
+  }
+  const header = (container: HTMLElement) => container.querySelector('[data-pane-widget-header]')!.textContent
+
+  it('a title the widget reports replaces the widget type’s in the header; null or blank gives it back', async () => {
+    const { module } = titledModule()
+    loadDashboardWidgetModule.mockResolvedValue(module)
+    const { container } = renderPane()
+    await screen.findByTestId('fake-widget')
+    expect(header(container)).toContain('Wpływy')
+    fireEvent.click(screen.getByText('name'))
+    await waitFor(() => expect(header(container)).toContain('Revenue by carrier'))
+    expect(header(container)).not.toContain('Wpływy')
+    fireEvent.click(screen.getByText('blank'))
+    await waitFor(() => expect(header(container)).toContain('Wpływy'))
+    fireEvent.click(screen.getByText('name'))
+    fireEvent.click(screen.getByText('clear'))
+    await waitFor(() => expect(header(container)).toContain('Wpływy'))
+  })
+
+  it('offers onTitleChange only while it draws a header', async () => {
+    const { module, seen } = titledModule()
+    loadDashboardWidgetModule.mockResolvedValue(module)
+    render(
+      <I18nProvider locale="en" dict={{}}>
+        <ContentRegistryProvider value={{ widgets: [CATALOG_ENTRY], context: RENDER_CONTEXT, ready: true }}>
+          <WidgetPane content={{ kind: 'widget', widgetId: WIDGET_ID, loaderKey: LOADER_KEY }} slotId={SLOT_ID} hideToolbar />
+        </ContentRegistryProvider>
+      </I18nProvider>,
+    )
+    await screen.findByTestId('fake-widget')
+    expect(seen[seen.length - 1].onTitleChange).toBeUndefined()
+  })
+
+  it('with a header, the widget gets a function', async () => {
+    const { module, seen } = titledModule()
+    loadDashboardWidgetModule.mockResolvedValue(module)
+    renderPane()
+    await screen.findByTestId('fake-widget')
+    expect(typeof seen[seen.length - 1].onTitleChange).toBe('function')
+  })
+})
