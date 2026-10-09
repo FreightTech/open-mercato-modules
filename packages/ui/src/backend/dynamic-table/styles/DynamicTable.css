@@ -2294,6 +2294,19 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     font-size: 12px;
 }
 
+/* Highlighting's value box wraps the filter's own pickers (text with
+   suggestions, date) so the row can mark it; the wrapper takes the input's
+   place in the flex row. */
+.hot-config-cf-value {
+    display: flex;
+    flex: 1;
+    min-width: 70px;
+}
+.hot-config-cf-value > * {
+    flex: 1;
+    min-width: 0;
+}
+
 .hot-config-filter-input {
     flex: 1;
     min-width: 70px;

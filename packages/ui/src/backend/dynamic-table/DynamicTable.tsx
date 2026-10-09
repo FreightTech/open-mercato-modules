@@ -114,7 +114,6 @@ import ColumnHeaders from './components/ColumnHeaders';
 import BulkActionsBar from './components/BulkActionsBar';
 import ExportMenu from './components/ExportMenu';
 import {
-  extractExportRows,
   extractExportRowsFromData,
   toCsv,
   toXlsxBlob,
@@ -183,7 +182,26 @@ export interface DynamicTableProps {
   data?: any[];
   columns?: ColumnDef[];
   colHeaders?: boolean;
+  /**
+   * Legacy switch for the leading checkbox column. On its own it no longer
+   * shows anything: the column is the row-selection column, and it renders only
+   * when selection is on (see `rowSelection`).
+   */
   rowHeaders?: boolean;
+  /**
+   * Show the leading checkbox column so users can select rows.
+   *
+   * Off unless a table asks for it (GT, 2026-10-08: selecting rows is not
+   * useful on every list, and an empty checkbox on every row is noise).
+   * When omitted, selection is on only for a table with `rowHeaders` that also
+   * does something with the selection: an `onSelectionChange` listener or
+   * `uiConfig.bulkActions`. `onBulkDelete` alone does not turn it on, because
+   * the page hook passes it to every table with `delete`.
+   *
+   * The bar above the grid appears only while rows are selected AND the table
+   * defines an action for it (`onBulkDelete` or `uiConfig.bulkActions`).
+   */
+  rowSelection?: boolean;
   /**
    * `'auto'` (600 px body), `'fill'`, `'100%'`, `'content'` (as tall as its rows, up to `maxHeight`) or a
    * CSS length. A `DynamicTableSizingProvider` around the table overrides it — see `./sizing`.
@@ -244,8 +262,9 @@ export interface DynamicTableProps {
   /** Called with the selected row IDs whenever the v2 checkbox-column selection changes. */
   onSelectionChange?: (selectedIds: string[]) => void;
   /**
-   * Batch-delete the given row IDs. When provided, selecting more than one row
-   * via the checkbox column reveals a grouped-actions bar with a Delete action.
+   * Batch-delete the given row IDs. On a table with row selection on (see
+   * `rowSelection`), selecting rows reveals the grouped-actions bar with a
+   * Delete action. It does not turn row selection on by itself.
    */
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   /**
@@ -519,7 +538,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   data = [],
   columns = [],
   colHeaders = true,
-  rowHeaders = false,
+  rowHeaders: rowHeadersProp = false,
+  rowSelection,
   height = 'auto',
   maxHeight,
   width = 'auto',
@@ -658,6 +678,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     viewModes,
     onViewModeChange,
   } = uiConfig;
+
+  // Row selection (the leading checkbox column) is opt-in — see `rowSelection`.
+  // The column exists only for selection, so it renders exactly when selection
+  // is on; every `rowHeaders` use below means "the checkbox column is shown".
+  const selectable =
+    rowSelection ?? (rowHeadersProp && (!!onSelectionChange || (bulkActions?.length ?? 0) > 0));
+  const rowHeaders = selectable;
 
   // -------------------- DENSITY (PER-USER) --------------------
   // One attribute on the container flips a block of CSS custom properties
@@ -1044,8 +1071,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // Compile the highlighting rule set ONCE per change. `Cell` must never
   // compile: it runs per cell per render, and a 57-column page mounts thousands.
   const compiledFormats = useMemo(
-    () => compileConditionalFormats(conditionalFormats),
-    [conditionalFormats],
+    () => compileConditionalFormats(conditionalFormats, cols),
+    [conditionalFormats, cols],
   );
 
   // -------------------- STORE INITIALIZATION --------------------
@@ -1130,9 +1157,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   }, [data, rowActions]);
   const showActionsColumn = !hideActionsColumn && (anyRowHasActions || !!actionsRenderer || store.hasNewRows());
   // A kebab-only column is the design's narrow trailing column; a custom
-  // renderer, or a new row's "Save" button, keeps the wider default.
+  // renderer, or a new row's "Save" button, keeps the wider default. Without
+  // the checkbox column the draft row's ✕ joins Save here, so it widens again.
   const actionsColumnWidth =
-    actionsColumnWidthProp ?? (actionsRenderer || store.hasNewRows() ? 80 : ACTIONS_KEBAB_COLUMN_WIDTH);
+    actionsColumnWidthProp ??
+    (store.hasNewRows() && !rowHeaders
+      ? 112
+      : actionsRenderer || store.hasNewRows()
+        ? 80
+        : ACTIONS_KEBAB_COLUMN_WIDTH);
 
   // Sticky-column scroll shadows (v2 affordance — CSS scopes them):
   //  • Actions column gets a LEFT-edge shadow while there's content still to
@@ -1256,7 +1289,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // `idColumnName`, but allow consumers to point at a distinct unique column
   // when `idColumnName` is a repeating entity key (see `rowKeyColumn`).
   const selectionColumnName = rowKeyColumn ?? idColumnName;
-  const selectable = rowHeaders;
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   // v2 Actions column shows a kebab (•••) menu built from `rowActions`, unless
@@ -2471,17 +2503,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     onCopy: handleCopied,
   });
 
-  // Grouped-actions-bar Copy button: actively write the selected rows to the
-  // clipboard (the Ctrl+C path relies on the browser copy event; a button click
-  // can't, so it uses the async clipboard API directly). Flashes on success.
-  const handleBulkCopy = useCallback(() => {
-    const text = copyRowSelectionText();
-    if (!text) return;
-    void navigator.clipboard?.writeText(text)
-      .then(() => flash(t('dynamicTable.cellMenu.copied', 'Copied to clipboard'), 'success'))
-      .catch(() => flash(t('dynamicTable.cellMenu.copyFailed', 'Could not copy to clipboard'), 'error'));
-  }, [copyRowSelectionText, t]);
-
   // Shared serializer: turn an extracted table into a downloaded CSV/Excel file.
   // The xlsx serializer is imported lazily so the CSV path never loads SheetJS.
   const serializeAndDownload = useCallback(async (table: ExtractedTable, format: ExportFormat) => {
@@ -2503,15 +2524,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       flash(t('dynamicTable.export.failed', 'Could not export'), 'error');
     }
   }, [exportFileName, displayTableName, t]);
-
-  // Grouped-actions-bar export: the checkbox-selected rows, visible columns in
-  // view order. Mirrors the Copy extraction (`store.getCellValue`).
-  const handleExportSelection = useCallback((format: ExportFormat) => {
-    void serializeAndDownload(
-      extractExportRows(store, cols, selectedRowIds, selectionColumnName),
-      format,
-    );
-  }, [serializeAndDownload, store, cols, selectedRowIds, selectionColumnName]);
 
   // Toolbar export: the WHOLE table — every column (ignoring the active
   // perspective's column visibility) and every row. When the page supplies
@@ -4001,13 +4013,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         <StaleDataBar tableName={tableName} onRetry={onRetryLoad} />
       )}
 
-      {/* Grouped-actions bar — shown whenever ≥1 row is selected (Figma 546:12289).
-          Sits between the perspective tabs and the column headers. Kept mounted
-          (not conditionally rendered) so it can animate open/closed via the
-          grid-rows collapse on the wrapper — avoids the hard layout shift.
-          `bulkBarCountRef` freezes the last visible count so the text doesn't
-          flash "0 selected" mid-collapse. */}
-      {selectable && (() => {
+      {/* Grouped-actions bar — shown while ≥1 row is selected, and ONLY on a
+          table that defines something to do with the selection (`onBulkDelete`
+          or `uiConfig.bulkActions`). A bar that can only count and deselect is
+          noise (GT, 2026-10-08), so there are no built-in Copy / Export buttons:
+          Ctrl/Cmd+C still copies the selected rows. Sits between the perspective
+          tabs and the column headers. Kept mounted (not conditionally rendered)
+          so it can animate open/closed via the grid-rows collapse on the
+          wrapper — avoids the hard layout shift. `bulkBarCountRef` freezes the
+          last visible count so the text doesn't flash "0 selected" mid-collapse. */}
+      {selectable && (!!onBulkDelete || (bulkActions?.length ?? 0) > 0) && (() => {
         const bulkBarOpen = selectedRowIds.size >= 1;
         if (bulkBarOpen) bulkBarCountRef.current = selectedRowIds.size;
         return (
@@ -4019,9 +4034,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
               <BulkActionsBar
                 count={bulkBarOpen ? selectedRowIds.size : bulkBarCountRef.current}
                 busy={isBulkDeleting}
-                onCopy={handleBulkCopy}
                 onDelete={onBulkDelete ? handleBulkDelete : undefined}
-                onExport={hideExportButton ? undefined : handleExportSelection}
                 onClear={clearSelection}
                 actions={bulkActions}
                 selectedIds={Array.from(selectedRowIds)}
@@ -4411,6 +4424,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           formulas={formulas}
           conditionalFormats={conditionalFormats}
           sampleRow={data[0]}
+          loadedRows={data}
           dateFormat={dateFormat}
           viewMode={viewMode}
           dateFormatOptions={dateFormatOptions}

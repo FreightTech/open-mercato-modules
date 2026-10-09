@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import { computeAnchoredPosition } from '../utils/anchoredPosition';
 import { useEscapeLayer } from '../hooks/useEscapeLayer';
+import { portalContainerFor } from '../utils/portalContainer';
 
 /**
  * The Configure View drawer's dropdown.
@@ -229,7 +230,9 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({
         </span>
         <ChevronDown className="hot-select-trigger-chevron" aria-hidden />
       </button>
-      {menu && typeof document !== 'undefined' ? ReactDOM.createPortal(menu, document.body) : menu}
+      {menu && typeof document !== 'undefined'
+        ? ReactDOM.createPortal(menu, portalContainerFor(triggerRef.current))
+        : menu}
     </>
   );
 };

@@ -564,9 +564,9 @@ export type ReadOnlyStyle = 'muted' | 'normal' | 'subtle';
 export type RowHoverStyle = 'default' | 'subtle' | 'accent';
 
 /**
- * A custom batch action shown in the grouped-actions (bulk) bar that appears
- * when ≥1 row is selected. Configured per-table via `uiConfig.bulkActions`;
- * rendered after the built-in Copy (and optional Delete) buttons.
+ * A batch action shown in the grouped-actions (bulk) bar that appears while
+ * rows are selected. Configured per-table via `uiConfig.bulkActions`; rendered
+ * after the optional Delete (`onBulkDelete`). There are no built-in actions.
  */
 export interface BulkActionConfig {
   /** Stable identifier (used as the React key). */
@@ -777,9 +777,11 @@ export interface TableUIConfig {
    */
   borderless?: boolean;
   /**
-   * Custom batch actions appended to the grouped-actions (bulk) bar shown when
-   * ≥1 row is selected. Each is rendered after the built-in Copy / Delete
-   * buttons and receives the selected row ids on click.
+   * Batch actions for the grouped-actions (bulk) bar shown while rows are
+   * selected. The bar exists only when the table defines an action — these or
+   * `onBulkDelete` (rendered first). Each receives the selected row ids on
+   * click. Defining one also turns row selection on, unless `rowSelection` is
+   * set explicitly.
    */
   bulkActions?: BulkActionConfig[];
   /**
@@ -927,7 +929,16 @@ export interface DynamicTableProps {
   data?: any[];
   columns?: ColumnDef[];
   colHeaders?: boolean;
+  /** Legacy switch for the checkbox column — see `rowSelection`. */
   rowHeaders?: boolean;
+  /**
+   * Show the leading checkbox column so users can select rows. Off unless the
+   * table asks for it; when omitted it is on only for a table with `rowHeaders`
+   * that also has an `onSelectionChange` listener or `uiConfig.bulkActions`.
+   * The bar above the grid appears only when the table defines an action
+   * (`onBulkDelete` or `uiConfig.bulkActions`). Mirrors `DynamicTable.tsx`.
+   */
+  rowSelection?: boolean;
   height?: string | number;
   width?: string | number;
   idColumnName?: string;

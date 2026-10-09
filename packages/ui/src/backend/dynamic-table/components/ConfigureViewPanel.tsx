@@ -71,6 +71,8 @@ interface ConfigureViewPanelProps {
   conditionalFormats?: ConditionalFormatRule[];
   /** One loaded row, so the formula editor can show a live first-row preview. */
   sampleRow?: Record<string, unknown>;
+  /** The rows the grid has loaded — Highlighting offers their values when the server has none. */
+  loadedRows?: Record<string, unknown>[];
   /** Active view-scoped date/time format (opaque host token); undefined = default. */
   dateFormat?: string;
   /** Host-supplied date-format presets. When non-empty, the "Date format"
@@ -143,6 +145,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
   formulas = [],
   conditionalFormats = [],
   sampleRow,
+  loadedRows,
   dateFormat,
   dateFormatOptions = [],
   onGroupRulesChange,
@@ -441,8 +444,9 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
          * is a live editor for the table behind it, so clicking a cell must not
          * tear it down.
          *
-         * The drawer's OWN dropdowns need no exemption here even though they
-         * render through `createPortal(…, document.body)`. Radix decides
+         * The drawer's OWN dropdowns need no exemption here. They portal into
+         * this content (see `utils/portalContainer` — outside it, Radix's
+         * scroll lock cancels the mouse wheel), and Radix decides
          * "outside" from the REACT tree, not the DOM tree, and a portal's
          * content still belongs to the React subtree that rendered it — so a
          * click on a dropdown option is already inside. Verified in a browser
@@ -685,6 +689,8 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                     columns={filterableColumns}
                     rules={conditionalFormats}
                     onRulesChange={onConditionalFormatsChange}
+                    loadFilterSuggestions={loadFilterSuggestions}
+                    loadedRows={loadedRows}
                   />
                 )}
               </div>

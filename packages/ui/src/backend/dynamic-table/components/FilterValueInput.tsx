@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { useSuggestionFetch } from '../hooks/useSuggestionFetch';
 import { useEscapeLayer } from '../hooks/useEscapeLayer';
+import { portalContainerFor } from '../utils/portalContainer';
 
 /**
  * The filter value picker.
@@ -48,8 +49,9 @@ export interface FilterValueInputProps {
   onValueChange: (id: string, value: string) => void;
   onValueAdd: (id: string, value: string) => void;
   /**
-   * Static option labels for a column that declares `source`. Filtered
-   * client-side, because the whole set is already in memory.
+   * Values already in memory, filtered client-side. Used on their own when
+   * there is no loader, and as the fallback when the loader finds nothing for
+   * the needle (Highlighting passes the loaded rows' values here).
    */
   staticSuggestions?: string[];
   /** Server-backed suggestions for this column. Given the typed needle. */
@@ -92,16 +94,22 @@ export const FilterValueInput: React.FC<FilterValueInputProps> = ({
   } = useSuggestionFetch(loadSuggestions, localValue, open);
 
   const suggestions = useMemo(() => {
+    const fromMemory = () => {
+      const all = staticSuggestions ?? [];
+      const needle = localValue.trim().toLowerCase();
+      if (!needle) return all.slice(0, MAX_VISIBLE_SUGGESTIONS);
+      return all.filter((s) => s.toLowerCase().includes(needle)).slice(0, MAX_VISIBLE_SUGGESTIONS);
+    };
     if (loadSuggestions) {
       // The server already applied the needle and the cap; re-filtering here
       // would drop values it deliberately returned.
-      return asyncSuggestions.slice(0, MAX_VISIBLE_SUGGESTIONS);
+      if (asyncSuggestions.length > 0) return asyncSuggestions.slice(0, MAX_VISIBLE_SUGGESTIONS);
+      // Nothing from the server (yet, or at all): offer what is in memory once
+      // the request has settled, rather than an empty list.
+      return loading ? [] : fromMemory();
     }
-    const all = staticSuggestions ?? [];
-    const needle = localValue.trim().toLowerCase();
-    if (!needle) return all.slice(0, MAX_VISIBLE_SUGGESTIONS);
-    return all.filter((s) => s.toLowerCase().includes(needle)).slice(0, MAX_VISIBLE_SUGGESTIONS);
-  }, [loadSuggestions, asyncSuggestions, staticSuggestions, localValue]);
+    return fromMemory();
+  }, [loadSuggestions, asyncSuggestions, loading, staticSuggestions, localValue]);
 
   const hasPicker = !!loadSuggestions || (staticSuggestions?.length ?? 0) > 0;
 
@@ -286,7 +294,9 @@ export const FilterValueInput: React.FC<FilterValueInputProps> = ({
           }, 150);
         }}
       />
-      {menu && typeof document !== 'undefined' ? ReactDOM.createPortal(menu, document.body) : menu}
+      {menu && typeof document !== 'undefined'
+        ? ReactDOM.createPortal(menu, portalContainerFor(inputRef.current))
+        : menu}
     </>
   );
 };

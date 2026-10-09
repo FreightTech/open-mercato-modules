@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { render, fireEvent } from '@testing-library/react'
+import { render, fireEvent, act, waitFor } from '@testing-library/react'
 import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
 import ConfigureViewFormatting from '../components/ConfigureViewFormatting'
 import type { ColumnDef } from '../types/index'
@@ -121,5 +121,140 @@ describe('ConfigureViewFormatting', () => {
     )
     renderEditor(rules)
     expect(q<HTMLButtonElement>('[data-cf-add]').disabled).toBe(true)
+  })
+})
+
+describe('ConfigureViewFormatting — the value box offers the values, like the filter', () => {
+  // Stored codes that differ from their labels, as on a real status column.
+  const pickerColumns: ColumnDef[] = [
+    { data: 'clientName', title: 'Client' },
+    {
+      data: 'status',
+      title: 'Status',
+      type: 'dropdown',
+      source: [
+        { value: 'b1', label: 'Basic' },
+        { value: 'p2', label: 'Premium plus' },
+      ],
+    } as unknown as ColumnDef,
+    { data: 'paid', title: 'Paid', type: 'boolean' },
+  ]
+
+  function renderPicker(rules: ConditionalFormatRule[], loadFilterSuggestions?: jest.Mock) {
+    const onRulesChange = jest.fn()
+    render(
+      React.createElement(
+        I18nProvider as any,
+        { locale: 'en', dict: {} },
+        React.createElement(ConfigureViewFormatting, {
+          columns: pickerColumns,
+          rules,
+          onRulesChange,
+          loadFilterSuggestions: loadFilterSuggestions as any,
+        }),
+      ),
+    )
+    return { onRulesChange }
+  }
+
+  it('an option column lists its options and stores the picked code', () => {
+    const { onRulesChange } = renderPicker([
+      { id: 'cf-1', field: 'status', operator: 'eq', value: '', style: 'yellow' },
+    ])
+    expect(menuOptionValues('[data-cf-value]')).toEqual(['Basic', 'Premium plus'])
+    const basic = Array.from(document.querySelectorAll('.hot-select-menu [role="option"]')).find(
+      (el) => el.textContent === 'Basic',
+    )!
+    fireEvent.click(basic)
+    expect(onRulesChange.mock.calls[0][0][0]).toMatchObject({ value: 'b1' })
+  })
+
+  it('the option picker is there for "contains" too', () => {
+    renderPicker([{ id: 'cf-1', field: 'status', operator: 'contains', value: 'p2', style: 'red' }])
+    expect(q('[data-cf-value]').textContent).toBe('Premium plus')
+  })
+
+  it('a yes/no column offers Yes and No', () => {
+    renderPicker([{ id: 'cf-1', field: 'paid', operator: 'eq', value: '', style: 'green' }])
+    expect(menuOptionValues('[data-cf-value]')).toEqual(['Yes', 'No'])
+  })
+
+  describe('a text column', () => {
+    beforeEach(() => jest.useFakeTimers())
+    afterEach(() => {
+      jest.runOnlyPendingTimers()
+      jest.useRealTimers()
+    })
+
+    it('suggests the values from the filter loader and stores the picked one', async () => {
+      const load = jest.fn().mockResolvedValue(['Freight Tech Sp. z o.o.', 'Acme'])
+      const { onRulesChange } = renderPicker(
+        [{ id: 'cf-1', field: 'clientName', operator: 'contains', value: '', style: 'yellow' }],
+        load,
+      )
+      const input = q<HTMLInputElement>('[data-cf-value] input')
+      fireEvent.focus(input)
+      await act(async () => {
+        jest.advanceTimersByTime(250)
+      })
+      expect(load).toHaveBeenCalledWith('clientName', '')
+      const options = () =>
+        Array.from(document.querySelectorAll('.hot-filter-suggestions [role="option"]')) as HTMLElement[]
+      await waitFor(() => expect(options()).toHaveLength(2))
+      fireEvent.click(options()[0])
+      expect(onRulesChange).toHaveBeenCalledWith([
+        expect.objectContaining({ id: 'cf-1', value: 'Freight Tech Sp. z o.o.' }),
+      ])
+    })
+
+    it('offers the loaded rows\' values when the server has none for the column', async () => {
+      const load = jest.fn().mockResolvedValue([])
+      const onRulesChange = jest.fn()
+      render(
+        React.createElement(
+          I18nProvider as any,
+          { locale: 'en', dict: {} },
+          React.createElement(ConfigureViewFormatting, {
+            columns: pickerColumns,
+            rules: [{ id: 'cf-1', field: 'clientName', operator: 'eq', value: '', style: 'yellow' }],
+            onRulesChange,
+            loadFilterSuggestions: load as any,
+            loadedRows: [
+              { clientName: 'Basic' },
+              { clientName: 'Premium' },
+              { clientName: 'Basic' },
+              { clientName: null },
+            ],
+          }),
+        ),
+      )
+      fireEvent.focus(q<HTMLInputElement>('[data-cf-value] input'))
+      await act(async () => {
+        jest.advanceTimersByTime(250)
+      })
+      const options = () =>
+        Array.from(document.querySelectorAll('.hot-filter-suggestions [role="option"]')) as HTMLElement[]
+      await waitFor(() => expect(options().map((o) => o.textContent)).toEqual(['Basic', 'Premium']))
+      fireEvent.click(options()[0])
+      expect(onRulesChange).toHaveBeenCalledWith([expect.objectContaining({ value: 'Basic' })])
+    })
+
+    it('still takes free text without a loader', () => {
+      const { onRulesChange } = renderPicker([
+        { id: 'cf-1', field: 'clientName', operator: 'contains', value: '', style: 'yellow' },
+      ])
+      const input = q<HTMLInputElement>('[data-cf-value] input')
+      fireEvent.change(input, { target: { value: 'acme' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+      expect(onRulesChange).toHaveBeenCalledWith([expect.objectContaining({ value: 'acme' })])
+    })
+  })
+
+  it('starts the value empty when the rule moves to another column', () => {
+    const { onRulesChange } = renderPicker([
+      { id: 'cf-1', field: 'clientName', operator: 'eq', value: 'Acme', style: 'yellow' },
+    ])
+    chooseOption('[data-cf-field]', 'Status')
+    expect(onRulesChange.mock.calls[0][0][0]).toMatchObject({ field: 'status', value: '' })
   })
 })

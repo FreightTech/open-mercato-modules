@@ -1,6 +1,6 @@
 import React, { memo, useRef } from 'react';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, X } from 'lucide-react';
 import { VirtualItem } from '@tanstack/react-virtual';
 import { useCellStore, useRowRangeState } from '../hooks/index';
 import { ColumnDef } from '../types/index';
@@ -279,6 +279,7 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
             data-sticky-right={true}
           >
             {isNewRow ? (
+              <>
               <button
                 className="hot-row-save-btn"
                 /* SAVES ON MOUSEDOWN, not on click — ledger 4.10.
@@ -317,6 +318,25 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
               >
                 {t('dynamicTable.newRow.save', 'Save')}
               </button>
+              {/* The ✕ that cancels a draft row lives in the checkbox column. A
+                  table without row selection has no such column, so the ✕ sits
+                  next to Save instead — otherwise the draft could not be dropped. */}
+              {!rowHeaders && (
+                <button
+                  type="button"
+                  className="hot-row-cancel-btn"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancelNewRow(rowIndex);
+                  }}
+                  title={t('dynamicTable.newRow.cancel', 'Cancel')}
+                  aria-label={t('dynamicTable.newRow.cancel', 'Cancel')}
+                >
+                  <X size={14} aria-hidden="true" />
+                </button>
+              )}
+              </>
             ) : rowData == null ? null : actionsRenderer ? (
               actionsRenderer(rowData, rowIndex)
             ) : showRowActionsMenu && (!rowActions || rowActions(rowData, rowIndex).length > 0) ? (

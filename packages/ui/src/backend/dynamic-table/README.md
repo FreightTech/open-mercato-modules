@@ -98,7 +98,8 @@ const MyTable = () => {
 | `data` | `any[]` | `[]` | Array of row data objects |
 | `columns` | `ColumnDef[]` | `[]` | Column definitions (auto-generated from data if not provided) |
 | `colHeaders` | `boolean` | `true` | Show column headers |
-| `rowHeaders` | `boolean` | `false` | Show row numbers |
+| `rowHeaders` | `boolean` | `false` | Legacy switch for the checkbox column; shows nothing on its own (see `rowSelection`) |
+| `rowSelection` | `boolean` | see note | Show the checkbox column so users can select rows. Off unless set; when omitted it is on only for a table with `rowHeaders` that also has `onSelectionChange` or `uiConfig.bulkActions`. The bar above the grid appears only while rows are selected AND the table defines an action (`onBulkDelete` or `uiConfig.bulkActions`) — there are no built-in Copy/Export buttons |
 | `height` | `string \| number` | `'auto'` | Table height |
 | `width` | `string \| number` | `'auto'` | Table width |
 | `idColumnName` | `string` | `'id'` | Name of the ID column (included in edit events) |
