@@ -416,19 +416,22 @@ export class SplitViewHarness {
     return { global: global === 'on', panes: (await host.getAttribute('data-workspace-search-panes')) === 'on' }
   }
 
-  /** Set the "Search" switches in "Dostosuj widok" (the shared row, each table's box). */
+  /**
+   * Set the "Search" switches in "Dostosuj widok" (the shared row, each table's
+   * box). Turning the shared row on turns the tables' boxes off (it replaces
+   * them), so the shared switch goes first and the tables' box is set after it.
+   */
   async setSearchSwitches(target: { global?: boolean; panes?: boolean }): Promise<void> {
-    const current = await this.searchSwitches()
-    if (!current) throw new Error('setSearchSwitches: the page is not split — there is no shared search')
-    const flips: Array<'workspaceSearch' | 'paneSearch'> = []
-    if (target.global !== undefined && target.global !== current.global) flips.push('workspaceSearch')
-    if (target.panes !== undefined && target.panes !== current.panes) flips.push('paneSearch')
-    if (flips.length === 0) return
+    if (!(await this.searchSwitches())) throw new Error('setSearchSwitches: the page is not split — there is no shared search')
     const sheet = await this.openCustomize()
+    const row = (key: 'workspaceSearch' | 'paneSearch') => sheet.locator(`[data-split-search-switch="${key}"]`)
+    const isOn = async (key: 'workspaceSearch' | 'paneSearch') => (await row(key).getAttribute('data-on')) === 'true'
     // The row's label, not the input: the toggle's input is visually hidden under its track.
-    for (const key of flips) await sheet.locator(`[data-split-search-switch="${key}"] label`).first().click()
+    const flip = (key: 'workspaceSearch' | 'paneSearch') => row(key).locator('label').first().click()
+    if (target.global !== undefined && target.global !== (await isOn('workspaceSearch'))) await flip('workspaceSearch')
+    if (target.panes !== undefined && target.panes !== (await isOn('paneSearch'))) await flip('paneSearch')
+    const want = { global: await isOn('workspaceSearch'), panes: await isOn('paneSearch') }
     await this.closeCustomize()
-    const want = { global: target.global ?? current.global, panes: target.panes ?? current.panes }
     await expect.poll(() => this.searchSwitches(), { timeout: 10_000 }).toEqual(want)
   }
 
