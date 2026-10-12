@@ -130,7 +130,7 @@ export function GridEditor<T extends W>({ sections: given, onChange, name, optio
       <div
         key={widget.id}
         className={cn(
-          'relative flex min-h-[72px] min-w-0 flex-col gap-1 rounded-[12px] border border-m3ft-outline-variant bg-m3ft-surface px-2 pb-2 pt-1',
+          'relative flex min-h-[72px] min-w-0 flex-col rounded-[12px] border border-m3ft-outline bg-m3ft-surface',
           dragging === widget.id && 'opacity-50',
           over === dropKey && 'border-m3ft-primary',
         )}
@@ -138,7 +138,8 @@ export function GridEditor<T extends W>({ sections: given, onChange, name, optio
         data-testid={`grid-tile-${widget.id}`}
         {...drop(dropKey, dropTo)}
       >
-        <span className="flex items-center gap-1">
+        {/* The same header as a free-grid tile (the contractor page): grip, name, ×. */}
+        <span className="flex h-9 shrink-0 items-center gap-1 rounded-t-[11px] border-b border-m3ft-outline-variant bg-m3ft-surface-container-low px-1">
           <button
             type="button"
             draggable
@@ -158,14 +159,16 @@ export function GridEditor<T extends W>({ sections: given, onChange, name, optio
           >
             <GripVertical className="size-4" aria-hidden />
           </button>
-          <span className="flex-1" />
+          <span className="min-w-0 flex-1 truncate text-body-medium-sm text-m3ft-on-surface" title={label}>
+            {label}
+          </span>
           {isLocked(widget) ? null : (
             <button type="button" className={cn(iconBtn, 'size-7')} aria-label={t('split_views.grid.removeNamed', 'Usuń z widoku: {name}', { name: label })} onClick={() => set(removeWidget(sections, widget.id))} data-testid={`grid-tile-remove-${widget.id}`}>
               <X className="size-4" aria-hidden />
             </button>
           )}
         </span>
-        {body ?? <span className="truncate px-1 text-body-regular-sm text-m3ft-on-surface" title={label}>{label}</span>}
+        {body ? <div className="min-h-0 flex-1 px-2 py-1.5">{body}</div> : null}
       </div>
     )
   }

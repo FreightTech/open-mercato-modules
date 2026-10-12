@@ -196,7 +196,9 @@ export function SplitViewCustomizeSheet({ open, onOpenChange, layout, setLayout,
                 label={t('splitView.customize.sharedSearch', 'One search above all panes')}
                 hint={t('splitView.customize.sharedSearchHint', 'Adds a row above the panes; typing there searches every table at once.')}
                 checked={search.workspaceSearch}
-                onChange={(next) => setSearch((current) => ({ ...current, workspaceSearch: next }))}
+                // The shared row REPLACES the tables' own boxes (one row instead of N);
+                // each can still be switched back on below.
+                onChange={(next) => setSearch({ workspaceSearch: next, paneSearch: !next })}
               />
               <SwitchRow
                 testId="paneSearch"
