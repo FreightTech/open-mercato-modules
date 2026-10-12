@@ -425,7 +425,8 @@ export class SplitViewHarness {
     if (target.panes !== undefined && target.panes !== current.panes) flips.push('paneSearch')
     if (flips.length === 0) return
     const sheet = await this.openCustomize()
-    for (const key of flips) await sheet.locator(`[data-split-search-switch="${key}"] input`).click()
+    // The row's label, not the input: the toggle's input is visually hidden under its track.
+    for (const key of flips) await sheet.locator(`[data-split-search-switch="${key}"] label`).first().click()
     await this.closeCustomize()
     const want = { global: target.global ?? current.global, panes: target.panes ?? current.panes }
     await expect.poll(() => this.searchSwitches(), { timeout: 10_000 }).toEqual(want)
