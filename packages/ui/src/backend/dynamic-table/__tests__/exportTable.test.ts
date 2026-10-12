@@ -5,6 +5,7 @@ import {
   extractExportRows,
   extractExportRowsFromData,
   toCsv,
+  neutralizeFormula,
   toXlsxBlob,
   slugifyFileName,
 } from '../utils/exportTable'
@@ -110,6 +111,37 @@ describe('toCsv', () => {
     expect(csv).toContain('A,B\r\n1,2')
   })
 })
+
+describe('toCsv — formula injection', () => {
+  const lines = (csv: string) => csv.slice(1).split('\r\n');
+
+  it('a cell starting with = + - @ tab or CR is written as text', () => {
+    const csv = toCsv({
+      headers: ['a', 'b', 'c'],
+      rows: [
+        ['=HYPERLINK("http://x","y")', '+1+1', '@SUM(A1)'],
+        ['\tcmd', '-2+3', '\r=1'],
+      ],
+    });
+    expect(lines(csv)).toEqual([
+      'a,b,c',
+      `"'=HYPERLINK(""http://x"",""y"")",'+1+1,'@SUM(A1)`,
+      `'\tcmd,'-2+3,"'\r=1"`,
+    ]);
+  });
+
+  it('plain numbers and ordinary text are left alone', () => {
+    const csv = toCsv({ headers: ['n'], rows: [['-12.5'], ['+3'], ['-0,75'], ['1e5'], ['a=b'], ['']] });
+    expect(lines(csv)).toEqual(['n', '-12.5', '+3', '"-0,75"', '1e5', 'a=b', '']);
+  });
+
+  it('neutralizeFormula is the rule on its own', () => {
+    expect(neutralizeFormula('=1')).toBe("'=1");
+    expect(neutralizeFormula('-')).toBe("'-");
+    expect(neutralizeFormula('-7')).toBe('-7');
+    expect(neutralizeFormula('DHL')).toBe('DHL');
+  });
+});
 
 describe('toXlsxBlob', () => {
   it('produces a workbook that round-trips back to the same cells', async () => {
