@@ -79,7 +79,20 @@ export function extractExportRowsFromData(
   return { headers, rows };
 }
 
-function escapeCsvField(field: string): string {
+// A cell a spreadsheet would run as a formula on open: =, +, -, @, tab or CR
+// first (CSV injection, OWASP). Row values come from users, imports and
+// workflows, so a leading apostrophe makes such a cell text. A plain number
+// (-12.5, +3) is left alone so numbers stay numbers. The xlsx export writes
+// strings as strings and needs nothing.
+const FORMULA_START = /^[=+\-@\t\r]/;
+const PLAIN_NUMBER = /^[+-]?(\d+([.,]\d+)?|[.,]\d+)([eE][+-]?\d+)?$/;
+
+export function neutralizeFormula(field: string): string {
+  return FORMULA_START.test(field) && !PLAIN_NUMBER.test(field) ? `'${field}` : field;
+}
+
+function escapeCsvField(raw: string): string {
+  const field = neutralizeFormula(raw);
   // RFC 4180: quote fields containing comma, quote, CR or LF; double interior quotes.
   if (/[",\r\n]/.test(field)) {
     return `"${field.replace(/"/g, '""')}"`;
