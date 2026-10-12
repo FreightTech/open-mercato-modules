@@ -558,11 +558,17 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
   // bar opens in shared mode, and a single-pane page never shows the bar.
   // Filters in the bar always drive every pane. Search is two ⚙ switches
   // (owner review 2026-09-28 — the Shared/Per pane toggle is gone): the bar's
-  // global search box, and each table's own box. Old layouts keep what they
-  // had: "Shared" = global on / tables off, "Per pane" = the reverse.
-  const legacyShared = layout.sharedFiltersEnabled ?? true
-  const workspaceSearch = layout.workspaceSearch ?? legacyShared
-  const paneSearch = layout.paneSearch ?? !legacyShared
+  // global search box, and each table's own box.
+  //
+  // The global box is OFF until the user turns it on (owner, 2026-10-09: "by
+  // default the main search in the split view should be disabled, only the
+  // user after some time should be able to turn it on"). Only an explicit
+  // ⚙ choice (`workspaceSearch`) turns it on — the deprecated
+  // `sharedFiltersEnabled` no longer does, since old layouts stored it by
+  // default rather than by choice. Each table keeps its own box meanwhile, so a
+  // split never loses search altogether.
+  const workspaceSearch = layout.workspaceSearch ?? false
+  const paneSearch = layout.paneSearch ?? !workspaceSearch
   const setSearchSwitch = React.useCallback((key: 'workspaceSearch' | 'paneSearch', value: boolean) => {
     setLayout((current) => ({ ...current, [key]: value }))
   }, [])

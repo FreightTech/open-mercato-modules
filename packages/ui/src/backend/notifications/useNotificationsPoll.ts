@@ -139,10 +139,25 @@ export function useNotificationsPoll(): UseNotificationsPollResult {
     }
   }, [])
 
+  // Background tabs do not poll; a tab that comes back fetches at once (see useMessagesPoll).
   React.useEffect(() => {
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, POLL_INTERVAL)
-    return () => clearInterval(interval)
+    let interval: ReturnType<typeof setInterval> | null = setInterval(fetchNotifications, POLL_INTERVAL)
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval !== null) clearInterval(interval)
+        interval = null
+      } else if (interval === null) {
+        fetchNotifications()
+        interval = setInterval(fetchNotifications, POLL_INTERVAL)
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    if (document.hidden) onVisibilityChange()
+    return () => {
+      if (interval !== null) clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [fetchNotifications])
 
   React.useEffect(() => {

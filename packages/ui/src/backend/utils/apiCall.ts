@@ -39,7 +39,60 @@ export async function withScopedApiRequestHeaders<T>(
   return scopedRequestHeaders.withScopedHeaders(headers, run)
 }
 
+/**
+ * A page asks /api/auth/feature-check for the same grants several times (the shell, every table, every
+ * settings section), and every page view asks again — 11 % of the server's time under load (load test
+ * 2026-10-09) for answers that change only when an admin edits a role. Within a tab, identical checks
+ * (same body, same tenant / organization selection) share one request for FEATURE_CHECK_TTL_MS; a failed
+ * answer is never kept. A login or a tenant switch reloads the page, which starts a fresh cache.
+ */
+const FEATURE_CHECK_TTL_MS = 30_000
+const featureCheckCache = new Map<string, { at: number; value: Promise<ApiCallResult<unknown>> }>()
+
+function featureCheckCacheKey(input: RequestInfo | URL, init?: RequestInit): string | null {
+  if (typeof document === 'undefined') return null
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : null
+  if (!url || !/(^|[^/])\/api\/auth\/feature-check(\?|$)/.test(url)) return null
+  if ((init?.method ?? 'GET').toUpperCase() !== 'POST' || typeof init?.body !== 'string') return null
+  const scope = document.cookie
+    .split(/;\s*/)
+    .filter((c) => c.startsWith('om_selected_org=') || c.startsWith('om_selected_tenant='))
+    .sort()
+    .join(';')
+  return `${scope}|${init.body}`
+}
+
+function withOwnResponse<T>(result: ApiCallResult<T>): ApiCallResult<T> {
+  const response = typeof result.response?.clone === 'function' ? result.response.clone() : result.response
+  return { ...result, response }
+}
+
 export async function apiCall<TReturn = Record<string, unknown>>(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  options?: ApiCallOptions<TReturn>,
+): Promise<ApiCallResult<TReturn>> {
+  const key = options?.parse ? null : featureCheckCacheKey(input, init)
+  if (!key) return apiCallUncached(input, init, options)
+  const now = Date.now()
+  const hit = featureCheckCache.get(key)
+  if (hit && now - hit.at < FEATURE_CHECK_TTL_MS) {
+    return withOwnResponse((await hit.value) as ApiCallResult<TReturn>)
+  }
+  const value = apiCallUncached(input, init, options) as Promise<ApiCallResult<unknown>>
+  featureCheckCache.set(key, { at: now, value })
+  let result: ApiCallResult<unknown>
+  try {
+    result = await value
+  } catch (error) {
+    if (featureCheckCache.get(key)?.value === value) featureCheckCache.delete(key)
+    throw error
+  }
+  if (!result.ok && featureCheckCache.get(key)?.value === value) featureCheckCache.delete(key)
+  return withOwnResponse(result as ApiCallResult<TReturn>)
+}
+
+async function apiCallUncached<TReturn = Record<string, unknown>>(
   input: RequestInfo | URL,
   init?: RequestInit,
   options?: ApiCallOptions<TReturn>,

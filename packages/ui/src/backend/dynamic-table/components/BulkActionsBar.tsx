@@ -2,8 +2,26 @@
 
 import React from 'react';
 import { Trash2 } from 'lucide-react';
-import { useT } from '@open-mercato/shared/lib/i18n/context';
+import { useLocale, useT } from '@open-mercato/shared/lib/i18n/context';
 import type { BulkActionConfig } from '../types/index';
+
+/**
+ * "selected" agreeing with the count: Polish says 1 zaznaczony, 2 zaznaczone,
+ * 5 zaznaczonych — one word for every count read "1 zaznaczonych". The plural
+ * category comes from Intl.PluralRules; a locale without a form for it falls
+ * back to the plain `selected` key.
+ */
+function selectedWord(t: (key: string, fallback?: string) => string, locale: string | null | undefined, count: number): string {
+  let category: string = 'other';
+  try {
+    category = new Intl.PluralRules(locale || 'en').select(count);
+  } catch {
+    // An unknown locale tag: keep "other".
+  }
+  const plain = t('dynamicTable.bulk.selected', 'selected');
+  const key = category === 'one' ? 'selectedOne' : category === 'few' ? 'selectedFew' : category === 'many' ? 'selectedMany' : null;
+  return key ? t(`dynamicTable.bulk.${key}`, plain) : plain;
+}
 
 export interface BulkActionsBarProps {
   /** Number of currently selected rows. */
@@ -32,6 +50,7 @@ export interface BulkActionsBarProps {
  */
 const BulkActionsBar: React.FC<BulkActionsBarProps> = ({ count, busy, onDelete, onClear, actions, selectedIds }) => {
   const t = useT();
+  const locale = useLocale();
   const ids = selectedIds ?? [];
   return (
     <div className="hot-bulk-bar" role="toolbar" aria-label={t('dynamicTable.bulk.ariaLabel', 'Bulk actions')}>
@@ -46,7 +65,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({ count, busy, onDelete, 
         title={t('dynamicTable.bulk.clear', 'Deselect all')}
       />
       <span className="hot-bulk-bar-count">
-        {count} {t('dynamicTable.bulk.selected', 'selected')}
+        {count} {selectedWord(t, locale, count)}
       </span>
       {onDelete && (
         <button type="button" className="hot-bulk-bar-action" onClick={onDelete} disabled={busy}>

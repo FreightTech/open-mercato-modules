@@ -49,7 +49,6 @@ function applyTheme(resolvedTheme: 'light' | 'dark') {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = React.useState<Theme>('system')
   const [resolvedTheme, setResolvedTheme] = React.useState<'light' | 'dark'>('light')
-  const [mounted, setMounted] = React.useState(false)
 
   // Initialize theme from localStorage on mount
   React.useEffect(() => {
@@ -58,7 +57,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const resolved = stored === 'system' ? getSystemTheme() : stored
     setResolvedTheme(resolved)
     applyTheme(resolved)
-    setMounted(true)
   }, [])
 
   // Listen for system theme changes
@@ -98,11 +96,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [theme, resolvedTheme, setTheme]
   )
 
-  // Prevent flash of wrong theme during hydration
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Always the Provider, from the first render. Rendering a bare fragment until mount and the Provider
+  // after it changed the element at the root of the tree, so React unmounted and remounted the whole
+  // app once on every page load — every effect and every fetch ran twice. Before the mount effect the
+  // value is the same as useTheme()'s outside-provider default ('system' / 'light'), and the theme class
+  // is set before paint by the root layout's inline script, so nothing flashes.
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 

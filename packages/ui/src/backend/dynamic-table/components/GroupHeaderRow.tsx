@@ -1,8 +1,9 @@
 import React, { memo } from 'react';
 import type { VirtualItem } from '@tanstack/react-virtual';
 import type { GroupHeaderVisualRow } from '../types/grouping';
-import type { ColumnDef } from '../types/index';
+import type { ColumnDef, GroupRowAction } from '../types/index';
 import { ChevronRight, ChevronDown } from 'lucide-react';
+import { useT } from '@open-mercato/shared/lib/i18n/context';
 
 interface GroupHeaderRowProps {
   visualRow: GroupHeaderVisualRow;
@@ -28,6 +29,8 @@ interface GroupHeaderRowProps {
    * able to say so. Return `undefined` to keep the default.
    */
   formatGroupValue?: (ctx: { field: string; value: string; count: number }) => string | undefined;
+  /** Host actions for this group (`uiConfig.groupRowActions`), already resolved. */
+  actions?: GroupRowAction[];
 }
 
 const GroupHeaderRow: React.FC<GroupHeaderRowProps> = memo(({
@@ -41,7 +44,9 @@ const GroupHeaderRow: React.FC<GroupHeaderRowProps> = memo(({
   someSelected,
   onToggleSelect,
   formatGroupValue,
+  actions,
 }) => {
+  const t = useT();
   const fieldLabel = columns.find(c => c.data === visualRow.field)?.title || visualRow.field;
 
   return (
@@ -84,7 +89,7 @@ const GroupHeaderRow: React.FC<GroupHeaderRowProps> = memo(({
             onChange={() => onToggleSelect?.()}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
-            aria-label="Select all rows in group"
+            aria-label={t('dynamicTable.group.selectAll', 'Select all rows in group')}
           />
         </td>
       )}
@@ -116,6 +121,26 @@ const GroupHeaderRow: React.FC<GroupHeaderRowProps> = memo(({
             }) ?? visualRow.value}
           </span>
           <span className="hot-group-header-count">{visualRow.count}</span>
+          {actions && actions.length > 0 && (
+            <span className="hot-group-header-actions" data-group-actions="">
+              {actions.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  className="hot-group-header-action"
+                  data-group-action={action.id}
+                  // The heading toggles the group on click; an action must not.
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick();
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </span>
+          )}
         </div>
       </td>
       {/* Band fill — spans the remaining table width so the group band stays flush

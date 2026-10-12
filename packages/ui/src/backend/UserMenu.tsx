@@ -1,6 +1,6 @@
 "use client"
 import * as React from 'react'
-import Link from 'next/link'
+import Link from './HoverPrefetchLink'
 import { User, LogOut, Key } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { Button } from '../primitives/button'

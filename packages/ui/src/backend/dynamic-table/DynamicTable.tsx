@@ -646,6 +646,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     searchDebounceMs,
     searchPlaceholder,
     formatGroupValue,
+    groupRowActions,
     hideSearch = false,
     hideAddRowButton = false,
     hidePerspectiveTabs: hidePerspectiveTabsExplicit,
@@ -962,6 +963,27 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     () => savedPerspectives.find((p) => p.isBaseView) ?? null,
     [savedPerspectives],
   );
+
+  /**
+   * "Zestawy startowe" of the Dostosuj widok wizard: the table's own default
+   * first (it also backs "Restore default"), then the user's saved views, then
+   * the templates shared with their role. Each is fully resolved here so the
+   * drawer only has to push it through its handlers.
+   */
+  const wizardStarterSets = useMemo(() => {
+    if (!configPanelOpen) return [];
+    const resolve = (perspective: PerspectiveConfig | null) =>
+      resolvePerspectiveState({ baseColumns, perspective, defaultHiddenColumns: initialHiddenColumns, defaultGrouping });
+    const sets = [{ id: '__default__', name: t('dynamicTable.perspectives.defaultView', 'Default view'), state: resolve(null) }];
+    for (const p of savedPerspectives) {
+      if (p.isBaseView) continue;
+      sets.push({ id: p.id, name: p.name, state: resolve(p) });
+    }
+    for (const tpl of sharedTemplates ?? []) {
+      sets.push({ id: `template:${tpl.id}`, name: tpl.roleName ? `${tpl.name} (${tpl.roleName})` : tpl.name, state: resolve(tpl) });
+    }
+    return sets;
+  }, [configPanelOpen, baseColumns, savedPerspectives, sharedTemplates, initialHiddenColumns, defaultGrouping, t]);
 
   // -------------------- COMMENTS STATE --------------------
   const [commentDialog, setCommentDialog] = useState<{
@@ -1338,6 +1360,29 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // Holds the last visible selection count so the bar can finish its close
   // animation showing the real number instead of flashing "1 selected".
   const bulkBarCountRef = useRef(0);
+  /**
+   * The selection bar's live height (0 closed, ~52 px open, anything between
+   * while it animates). A `'content'` table caps its ROWS region at
+   * `maxHeight`; without taking the bar off that cap, opening it made the
+   * whole table 52 px taller than its slot — on a Pulpit pane the selected
+   * row was painted below the totals footer and outside the pane (WIW A5).
+   */
+  const [bulkBarHeight, setBulkBarHeight] = useState(0);
+  const bulkBarObserver = useRef<ResizeObserver | null>(null);
+  // A callback ref: the observer lives exactly as long as the bar's element, not one per render.
+  const bulkBarRef = useCallback((el: HTMLDivElement | null) => {
+    bulkBarObserver.current?.disconnect();
+    bulkBarObserver.current = null;
+    if (!el) {
+      setBulkBarHeight(0);
+      return;
+    }
+    const measure = () => setBulkBarHeight(Math.round(el.getBoundingClientRect().height));
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    bulkBarObserver.current = new ResizeObserver(measure);
+    bulkBarObserver.current.observe(el);
+  }, []);
   const clearSelection = useCallback(() => {
     setSelectedRowIds(new Set());
     onSelectionChange?.([]);
@@ -4027,6 +4072,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         if (bulkBarOpen) bulkBarCountRef.current = selectedRowIds.size;
         return (
           <div
+            ref={bulkBarRef}
             className={`hot-bulk-bar-wrap${bulkBarOpen ? ' is-open' : ''}`}
             aria-hidden={!bulkBarOpen}
           >
@@ -4135,7 +4181,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         style={{
           // 'content': no height of its own — the header and the rows give it one, up to the cap.
           height: isFullscreen ? 'calc(100% - 90px)' : (shouldFillHeight || isContentHeight ? undefined : (typeof heightMode === 'string' && heightMode !== 'auto' ? heightMode : '600px')),
-          ...(isContentHeight && !isPaneCapped && !isFullscreen && { maxHeight: contentMaxHeight }),
+          // Less the open selection bar, so the TABLE keeps its height when a row is ticked.
+          ...(isContentHeight && !isPaneCapped && !isFullscreen && {
+            maxHeight: bulkBarHeight > 0
+              ? `calc(${typeof contentMaxHeight === 'number' ? `${contentMaxHeight}px` : contentMaxHeight} - ${bulkBarHeight}px)`
+              : contentMaxHeight,
+          }),
+          // The sticky totals footer covers the scroller's last ~33 px: keyboard moves and
+          // scrollIntoView stop a row above it, not under it.
+          ...(aggregations.length > 0 && { scrollPaddingBottom: 40 }),
           // Capped by the pane: the rows region gives way first, so the toolbar and footer stay in view.
           ...(isPaneCapped && !isFullscreen && { flex: '0 1 auto', minHeight: 0 }),
           overflow: 'auto',
@@ -4249,6 +4303,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                           someSelected={groupSomeSelected}
                           onToggleSelect={() => handleToggleGroupSelect(groupRowIds)}
                           formatGroupValue={formatGroupValue}
+                          actions={groupRowActions?.({
+                            field: vr.field,
+                            value: vr.value,
+                            count: vr.count,
+                            rowIds: groupRowIds,
+                            rows: vr.memberDataIndices.map((idx) => data[idx]).filter((r) => r != null),
+                          })}
                         />
                       );
                     }
@@ -4410,6 +4471,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       {/* Configure View Side Panel */}
       {(
         <ConfigureViewPanel
+          starterSets={wizardStarterSets}
+          viewLabel={
+            savedPerspectives.find((p) => p.id === editingPerspectiveId)?.name ??
+            (configureBaseView
+              ? t('dynamicTable.perspectives.defaultView', 'Default view')
+              : t('dynamicTable.configureView.newView', 'New view'))
+          }
           isOpen={configPanelOpen}
           onOpenChange={setConfigPanelOpen}
           columns={baseColumns}

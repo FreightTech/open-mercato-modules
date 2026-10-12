@@ -1,6 +1,6 @@
 'use client'
 import * as React from 'react'
-import Link from 'next/link'
+import Link from './HoverPrefetchLink'
 import { User, LogOut, Bell, Moon, Sun, Globe, Key, Check } from 'lucide-react'
 import { useT, useLocale } from '@open-mercato/shared/lib/i18n/context'
 import { locales, type Locale } from '@open-mercato/shared/lib/i18n/config'

@@ -1,7 +1,7 @@
 "use client"
 import * as React from 'react'
 import { createContext, useContext } from 'react'
-import Link from 'next/link'
+import Link from './HoverPrefetchLink'
 import Image from 'next/image'
 import { ChevronUp, ChevronDown, PanelLeftClose, PanelLeftOpen, House } from 'lucide-react'
 import { Button } from '../primitives/button'

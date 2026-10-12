@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react'
-import Link from 'next/link'
+import Link from '../HoverPrefetchLink'
 import { Mail } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { cn } from '@open-mercato/shared/lib/utils'

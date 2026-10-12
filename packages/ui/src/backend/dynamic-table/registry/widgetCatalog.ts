@@ -202,7 +202,9 @@ export function useWidgetCatalog(options?: { enabled?: boolean }): WidgetCatalog
   const { data, isFetched } = useQuery({
     queryKey: ['dashboard-widget-catalog', scopeVersion],
     queryFn: async () => {
-      const res = await apiCall<LayoutResponse>('/api/dashboards/layout')
+      // A person without `dashboards.view` gets 403 here on every page: that means "no widgets",
+      // never a redirect to the login page (which loops straight back).
+      const res = await apiCall<LayoutResponse>('/api/dashboards/layout', { headers: { 'x-om-forbidden-redirect': '0' } })
       // A failed call offers nothing. Default-deny keeps a transient network
       // error from listing widgets the user cannot actually render.
       if (!res.ok || !res.result) return { widgets: [], context: null }

@@ -1,5 +1,5 @@
 'use client'
-import Link from 'next/link'
+import Link from './HoverPrefetchLink'
 import { Settings } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { IconButton } from '../primitives-v2/IconButton'

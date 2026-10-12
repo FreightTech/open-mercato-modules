@@ -32,6 +32,10 @@ export type UseProgressPollResult = {
 }
 
 const POLL_INTERVAL = 5000
+// Nothing running → check every 30 s. The top bar only shows something while a job runs, a job this tab
+// starts announces itself through progress events (refresh below), and the 5 s poll every open tab ran
+// all day was 10 % of the server's time under load (load test 2026-10-09).
+const IDLE_POLL_INTERVAL = 30000
 
 function isVisibleProgressJob(job: ProgressJobDto): boolean {
   return job.meta?.hiddenFromTopBar !== true
@@ -64,9 +68,11 @@ export function useProgressPoll(): UseProgressPollResult {
     fetchJobs()
   }, [fetchJobs])
 
+  const pollInterval = activeJobs.length > 0 ? POLL_INTERVAL : IDLE_POLL_INTERVAL
+
   React.useEffect(() => {
     fetchJobs()
-    let interval: ReturnType<typeof setInterval> | null = setInterval(fetchJobs, POLL_INTERVAL)
+    let interval: ReturnType<typeof setInterval> | null = setInterval(fetchJobs, pollInterval)
 
     const onVisibilityChange = () => {
       if (document.hidden) {
@@ -76,7 +82,7 @@ export function useProgressPoll(): UseProgressPollResult {
         }
       } else {
         fetchJobs()
-        interval = setInterval(fetchJobs, POLL_INTERVAL)
+        interval = setInterval(fetchJobs, pollInterval)
       }
     }
 
@@ -85,7 +91,7 @@ export function useProgressPoll(): UseProgressPollResult {
       if (interval) clearInterval(interval)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [fetchJobs])
+  }, [fetchJobs, pollInterval])
 
   React.useEffect(() => {
     const unsubUpdate = subscribeProgressUpdate(() => refresh())

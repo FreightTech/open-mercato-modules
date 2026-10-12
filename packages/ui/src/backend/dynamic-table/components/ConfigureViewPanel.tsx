@@ -3,7 +3,7 @@ import {
   Sheet,
   SheetContent,
 } from '@freighttech/ui/primitives/sheet';
-import { ChevronDown, ChevronUp, Eye, Filter, ArrowUpDown, Layers, Link2, CalendarClock, ListTree, Palette, Sigma, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, Filter, ArrowUpDown, Layers, Link2, CalendarClock, ListTree, Palette, RotateCcw, Sigma, X } from 'lucide-react';
 import { ColumnDef, FilterRow, FilterColor, LoadFilterSuggestions, LoadLookupSources } from '../types/index';
 import type { LoadRollupSources, RollupColumnRef } from '../types/rollup';
 import {
@@ -16,7 +16,8 @@ import {
 } from '../types/perspective';
 import type { TableViewMode } from '../types/perspective';
 import type { GroupRule, AggregationRule } from '../types/grouping';
-import ConfigureViewFields from './ConfigureViewFields';
+import { ColumnCatalog, ColumnSlots } from './ConfigureViewColumns';
+import type { PerspectiveState } from '../handlers/perspectiveHandlers';
 import ConfigureViewFilters from './ConfigureViewFilters';
 import ConfigureViewSorting from './ConfigureViewSorting';
 import ConfigureViewGrouping from './ConfigureViewGrouping';
@@ -51,6 +52,15 @@ const COLOR_PALETTE: { color: FilterColor }[] = [
   { color: 'orange' },
   { color: 'yellow' },
 ];
+
+/** Sections shown as always-open wizard steps rather than accordions. */
+const STEP_SECTIONS = new Set(['fields', 'filters', 'sorting', 'grouping']);
+
+function StepLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-label-semibold-xs uppercase tracking-wider text-[var(--m3-on-surface-variant)]">{children}</div>
+  );
+}
 
 interface ConfigureViewPanelProps {
   isOpen: boolean;
@@ -125,6 +135,16 @@ interface ConfigureViewPanelProps {
   loadRollupSources?: LoadRollupSources;
   /** Section to auto-expand when opening (e.g., 'filters' from column menu "Filter by this field") */
   initialExpandedSection?: string | null;
+  /**
+   * "Zestawy startowe" — complete view states the user can start from (the
+   * table's default, their saved views, templates shared with their role).
+   * Picking one loads it into the drawer as a live preview; nothing is saved
+   * until Save. The FIRST entry is the table's default and also backs
+   * "Restore default".
+   */
+  starterSets?: Array<{ id: string; name: string; state: PerspectiveState }>;
+  /** The tab being configured, shown under the title ("Default view", a saved view's name). */
+  viewLabel?: string;
 }
 
 const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
@@ -165,6 +185,8 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
   loadLookupSources,
   loadRollupSources,
   initialExpandedSection,
+  starterSets = [],
+  viewLabel,
 }) => {
   const t = useT();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
@@ -172,9 +194,18 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
   const [saveColor, setSaveColor] = useState<FilterColor | null>(null);
 
   useEffect(() => {
-    if (isOpen && initialExpandedSection) {
-      setOpenSections(new Set([initialExpandedSection]));
+    if (!isOpen || !initialExpandedSection) return;
+    // The wizard's steps (columns, filters, sorting, grouping) are always open:
+    // bring the asked-for one into view. The rest are "More" accordions.
+    if (STEP_SECTIONS.has(initialExpandedSection)) {
+      const id = window.setTimeout(() => {
+        document
+          .querySelector(`[data-wizard-step="${initialExpandedSection}"]`)
+          ?.scrollIntoView({ block: 'start' });
+      }, 50);
+      return () => window.clearTimeout(id);
     }
+    setOpenSections(new Set([initialExpandedSection]));
   }, [isOpen, initialExpandedSection]);
 
   // Pre-populate the save form when opening to edit an existing perspective;
@@ -299,6 +330,24 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
     },
     [onOpenChange, revertToSnapshot],
   );
+
+  /**
+   * Load a starter set into the drawer. Same handlers as every control here, so
+   * it is a live preview and Cancel rolls it back from the snapshot.
+   */
+  const applyStarterSet = (state: PerspectiveState) => {
+    onColumnVisibilityChange(state.visibleColumns, state.hiddenColumns);
+    onFiltersChange(state.filters);
+    onSortRulesChange(state.sortRules);
+    onGroupRulesChange?.(state.groupRules);
+    onAggregationsChange?.(state.aggregations);
+    onLookupColumnsChange?.(state.lookupColumns);
+    onRollupColumnsChange?.(state.rollupColumns);
+    onFormulasChange?.(state.formulas);
+    onConditionalFormatsChange?.(state.conditionalFormats);
+    onDateFormatChange?.(state.dateFormat);
+  };
+  const defaultSet = starterSets[0];
 
   const toggleSection = (section: string) => {
     setOpenSections(prev => {
@@ -430,293 +479,118 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
   };
 
   const v2cls = 'hot-appearance-v2';
+  const hasAdvanced =
+    (loadLookupSources && onLookupColumnsChange) ||
+    (loadRollupSources && onRollupColumnsChange) ||
+    onFormulasChange ||
+    onConditionalFormatsChange ||
+    (onDateFormatChange && dateFormatOptions.length > 0);
 
+  /*
+   * "Dostosuj widok" — a wide, two-column wizard, the DynamicTable's sibling of
+   * the kartoteka / teczka "Dostosuj widok" (contractors `CustomizeSheet`,
+   * owner 2026-10-09: "the dynamic table should have a very similar wizard to
+   * set the view"):
+   *
+   *   left   1 · Kolumny        the columns on the view, in order (drag, ×)
+   *          2 · Filtry          3 · Sortowanie       4 · Grupowanie
+   *   right  5 · Zestawy startowe   the default, saved views, role templates
+   *          6 · Katalog kolumn     every hidden column, + to add
+   *          Więcej                 linked / summarised / calculated columns,
+   *                                 highlighting, date format (accordions)
+   *
+   * Everything edits the grid live behind the drawer; Cancel rolls back to the
+   * snapshot taken on open; Save writes the view.
+   */
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        ariaTitle={t('dynamicTable.configureView.title', 'Configure View')}
+        ariaTitle={t('dynamicTable.configureView.title', 'Customize view')}
         hideCloseButton={true}
-        className={`hot-config-panel ${v2cls}`.trim()}
+        className={`hot-config-panel hot-config-panel--wizard ${v2cls}`.trim()}
+        style={{ maxWidth: 1080, width: '100%' }}
         overlayClassName="hot-config-overlay !backdrop-blur-none"
-        /**
-         * The grid itself is deliberately NOT "outside" this drawer: the drawer
-         * is a live editor for the table behind it, so clicking a cell must not
-         * tear it down.
-         *
-         * The drawer's OWN dropdowns need no exemption here. They portal into
-         * this content (see `utils/portalContainer` — outside it, Radix's
-         * scroll lock cancels the mouse wheel), and Radix decides
-         * "outside" from the REACT tree, not the DOM tree, and a portal's
-         * content still belongs to the React subtree that rendered it — so a
-         * click on a dropdown option is already inside. Verified in a browser
-         * after the pointer-events fix below made those options clickable at
-         * all: committing a group/filter/sort option leaves the drawer open,
-         * while a click on the page outside it still dismisses it.
-         */
+        data-testid="dynamic-table-customize-view"
+        // The grid behind is a live preview, not "outside" — see the note this
+        // replaced in git history: clicking a cell must not close the drawer.
         onPointerDownOutside={(e) => {
           const target = e.target as HTMLElement;
           if (target.closest('.hot-container')) {
             e.preventDefault();
           }
         }}
+        onKeyDown={(e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canSave) {
+            e.preventDefault();
+            handleSave();
+          }
+        }}
       >
         <div className="hot-config-panel-inner">
-          {/* Header */}
           <div className="hot-config-panel-header">
             <div className="hot-config-panel-header-row">
-              <h3 className="hot-config-panel-title">{t('dynamicTable.configureView.title', 'Configure View')}</h3>
+              <div className="min-w-0">
+                <h3 className="hot-config-panel-title">{t('dynamicTable.configureView.title', 'Customize view')}</h3>
+                <p className="hot-config-panel-subtitle">
+                  {viewLabel ? `${viewLabel} · ` : ''}
+                  {t('dynamicTable.configureView.subtitle', 'Customize the fields, filters and sorting of this view.')}
+                </p>
+              </div>
               <IconButton
                 size="sm"
-                aria-label="Close"
+                aria-label={t('dynamicTable.configureView.cancel', 'Cancel')}
                 icon={<X className="w-4 h-4" />}
                 onClick={() => handleOpenChange(false)}
               />
             </div>
-            <p className="hot-config-panel-subtitle">
-              {t('dynamicTable.configureView.subtitle', 'Customize the fields, filters and sorting of this view.')}
-            </p>
           </div>
 
-          {/* Sections */}
-          <div className="hot-config-panel-body">
-            {/* Fields Section */}
-            <div className={`hot-config-section ${openSections.has('fields') ? 'is-open' : ''}`}>
-              <button
-                className="hot-config-section-header"
-                onClick={() => toggleSection('fields')}
-              >
-                {sectionIcon('fields')}
-                <span className="hot-config-section-title">{t('dynamicTable.configureView.hideFields', 'Hide fields')}</span>
-                <span className="hot-config-section-badge">
-                  {t('dynamicTable.configureView.fieldsVisible', '{visible} of {total} visible', {
-                    visible: visibleCount,
-                    total: visibleCount + hiddenCount,
-                  })}
-                </span>
-                {openSections.has('fields') ? (
-                  <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                )}
-              </button>
-              {openSections.has('fields') && (
-                <ConfigureViewFields
-                  columns={columns}
-                  visibleColumns={visibleColumns}
-                  hiddenColumns={hiddenColumns}
-                  onColumnVisibilityChange={onColumnVisibilityChange}
-                />
-              )}
-            </div>
-
-            {/* Filter Section */}
-            <div className={`hot-config-section ${openSections.has('filters') ? 'is-open' : ''}`}>
-              <button
-                className="hot-config-section-header"
-                onClick={() => toggleSection('filters')}
-              >
-                {sectionIcon('filters')}
-                <span className="hot-config-section-title">{t('dynamicTable.configureView.filter', 'Filter')}</span>
-                {filterCount > 0 && (
-                  <span className="hot-config-section-badge">
-                    {rulesLabel(filterCount)}
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-x-8 gap-y-6 overflow-y-auto px-5 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-start">
+            {/* ── Left: the view itself ── */}
+            <div className="flex min-w-0 flex-col gap-6">
+              <section className="flex flex-col gap-2" data-wizard-step="fields">
+                <div className="flex items-center gap-2">
+                  <StepLabel>{t('dynamicTable.configureView.step.columns', '1 · Columns')}</StepLabel>
+                  <span className="ml-auto text-body-regular-xs text-[var(--m3-on-surface-variant)]">
+                    {t('dynamicTable.configureView.fieldsVisible', '{visible} of {total} visible', {
+                      visible: visibleCount,
+                      total: visibleCount + hiddenCount,
+                    })}
                   </span>
-                )}
-                {openSections.has('filters') ? (
-                  <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                )}
-              </button>
-              {openSections.has('filters') && (
+                </div>
+                <div className="rounded-[10px] bg-[var(--m3-surface-container-low)] p-2">
+                  <ColumnSlots
+                    columns={columns}
+                    visibleColumns={visibleColumns}
+                    hiddenColumns={hiddenColumns}
+                    onColumnVisibilityChange={onColumnVisibilityChange}
+                  />
+                </div>
+              </section>
+
+              <section className="flex flex-col gap-2" data-wizard-step="filters">
+                <StepLabel>{t('dynamicTable.configureView.step.filters', '2 · Filters')}</StepLabel>
                 <ConfigureViewFilters
                   columns={filterableColumns}
                   filters={filters}
                   onFiltersChange={onFiltersChange}
                   loadFilterSuggestions={loadFilterSuggestions}
                 />
-              )}
-            </div>
+              </section>
 
-            {/* Sort Section */}
-            <div className={`hot-config-section ${openSections.has('sorting') ? 'is-open' : ''}`}>
-              <button
-                className="hot-config-section-header"
-                onClick={() => toggleSection('sorting')}
-              >
-                {sectionIcon('sorting')}
-                <span className="hot-config-section-title">{t('dynamicTable.configureView.sort', 'Sort')}</span>
-                {sortCount > 0 && (
-                  <span className="hot-config-section-badge">
-                    {rulesLabel(sortCount)}
-                  </span>
-                )}
-                {openSections.has('sorting') ? (
-                  <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                )}
-              </button>
-              {openSections.has('sorting') && (
+              <section className="flex flex-col gap-2" data-wizard-step="sorting">
+                <StepLabel>{t('dynamicTable.configureView.step.sorting', '3 · Sorting')}</StepLabel>
                 <ConfigureViewSorting
                   columns={columns}
                   sortRules={sortRules}
                   onSortRulesChange={onSortRulesChange}
                 />
-              )}
-            </div>
+              </section>
 
-            {/* Linked Columns Section — only when the host provides FK sources. */}
-            {loadLookupSources && onLookupColumnsChange && (
-              <div className={`hot-config-section ${openSections.has('linked') ? 'is-open' : ''}`}>
-                <button
-                  className="hot-config-section-header"
-                  onClick={() => toggleSection('linked')}
-                >
-                  {sectionIcon('linked')}
-                  <span className="hot-config-section-title">{t('dynamicTable.configureView.linkedSources', 'Linked sources')}</span>
-                  {linkedCount > 0 && (
-                    <span className="hot-config-section-badge">
-                      {linkedCount}
-                    </span>
-                  )}
-                  {openSections.has('linked') ? (
-                    <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                  )}
-                </button>
-                {openSections.has('linked') && (
-                  <ConfigureViewLinkedColumns
-                    lookupColumns={lookupColumns}
-                    onLookupColumnsChange={onLookupColumnsChange}
-                    loadLookupSources={loadLookupSources}
-                    visibleColumns={visibleColumns}
-                    hiddenColumns={hiddenColumns}
-                    onColumnVisibilityChange={onColumnVisibilityChange}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Summarised columns Section — the one-to-many sibling of
-                "Linked sources": aggregates over the records that point AT
-                each row. */}
-            {loadRollupSources && onRollupColumnsChange && (
-              <div className={`hot-config-section ${openSections.has('rollups') ? 'is-open' : ''}`}>
-                <button
-                  className="hot-config-section-header"
-                  onClick={() => toggleSection('rollups')}
-                >
-                  {sectionIcon('rollups')}
-                  <span className="hot-config-section-title">{t('dynamicTable.configureView.rollupColumns', 'Summarised columns')}</span>
-                  {rollupCount > 0 && (
-                    <span className="hot-config-section-badge">{rollupCount}</span>
-                  )}
-                  {openSections.has('rollups') ? (
-                    <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                  )}
-                </button>
-                {openSections.has('rollups') && (
-                  <ConfigureViewRollups
-                    rollupColumns={rollupColumns}
-                    onRollupColumnsChange={onRollupColumnsChange}
-                    loadRollupSources={loadRollupSources}
-                    visibleColumns={visibleColumns}
-                    hiddenColumns={hiddenColumns}
-                    onColumnVisibilityChange={onColumnVisibilityChange}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Calculated columns Section — follows the "linked" pattern:
-                another kind of view-scoped virtual column. */}
-            {onFormulasChange && (
-              <div className={`hot-config-section ${openSections.has('formulas') ? 'is-open' : ''}`}>
-                <button
-                  className="hot-config-section-header"
-                  onClick={() => toggleSection('formulas')}
-                >
-                  {sectionIcon('formulas')}
-                  <span className="hot-config-section-title">{t('dynamicTable.configureView.formulas', 'Calculated columns')}</span>
-                  {formulaCount > 0 && (
-                    <span className="hot-config-section-badge">{formulaCount}</span>
-                  )}
-                  {openSections.has('formulas') ? (
-                    <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                  )}
-                </button>
-                {openSections.has('formulas') && (
-                  <ConfigureViewFormulas
-                    formulas={formulas}
-                    onFormulasChange={onFormulasChange}
-                    columns={formulaSourceColumns}
-                    visibleColumns={visibleColumns}
-                    hiddenColumns={hiddenColumns}
-                    onColumnVisibilityChange={onColumnVisibilityChange}
-                    sampleRow={sampleRow}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Highlighting (conditional formatting) Section */}
-            {onConditionalFormatsChange && (
-              <div className={`hot-config-section ${openSections.has('formatting') ? 'is-open' : ''}`}>
-                <button
-                  className="hot-config-section-header"
-                  onClick={() => toggleSection('formatting')}
-                >
-                  {sectionIcon('formatting')}
-                  <span className="hot-config-section-title">{t('dynamicTable.conditionalFormat.title', 'Highlighting')}</span>
-                  {formattingCount > 0 && (
-                    <span className="hot-config-section-badge">{rulesLabel(formattingCount)}</span>
-                  )}
-                  {openSections.has('formatting') ? (
-                    <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                  )}
-                </button>
-                {openSections.has('formatting') && (
-                  <ConfigureViewFormatting
-                    columns={filterableColumns}
-                    rules={conditionalFormats}
-                    onRulesChange={onConditionalFormatsChange}
-                    loadFilterSuggestions={loadFilterSuggestions}
-                    loadedRows={loadedRows}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Grouping Section */}
-            {onGroupRulesChange && (
-              <div className={`hot-config-section ${openSections.has('grouping') ? 'is-open' : ''}`}>
-                <button
-                  className="hot-config-section-header"
-                  onClick={() => toggleSection('grouping')}
-                >
-                  {sectionIcon('grouping')}
-                  <span className="hot-config-section-title">{t('dynamicTable.configureView.group', 'Group')}</span>
-                  {groupCount > 0 && (
-                    <span className="hot-config-section-badge">
-                      {rulesLabel(groupCount)}
-                    </span>
-                  )}
-                  {openSections.has('grouping') ? (
-                    <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                  )}
-                </button>
-                {openSections.has('grouping') && (
+              {onGroupRulesChange && (
+                <section className="flex flex-col gap-2" data-wizard-step="grouping">
+                  <StepLabel>{t('dynamicTable.configureView.step.grouping', '4 · Grouping')}</StepLabel>
                   <ConfigureViewGrouping
                     columns={columns}
                     groupRules={groupRules}
@@ -724,47 +598,219 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                     aggregations={aggregations}
                     onAggregationsChange={onAggregationsChange}
                   />
-                )}
-              </div>
-            )}
+                </section>
+              )}
+            </div>
 
-            {/* Date-format Section — only when the host supplies presets. */}
-            {onDateFormatChange && dateFormatOptions.length > 0 && (
-              <div className={`hot-config-section ${openSections.has('dateFormat') ? 'is-open' : ''}`}>
-                <button
-                  className="hot-config-section-header"
-                  onClick={() => toggleSection('dateFormat')}
-                >
-                  {sectionIcon('dateFormat')}
-                  <span className="hot-config-section-title">{t('dynamicTable.configureView.dateFormat', 'Date format')}</span>
-                  {activeDateFormatLabel && (
-                    <span className="hot-config-section-badge">{activeDateFormatLabel}</span>
-                  )}
-                  {openSections.has('dateFormat') ? (
-                    <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
-                  )}
-                </button>
-                {openSections.has('dateFormat') && (
-                  <div className="hot-config-section-body">
-                    <SelectMenu
-                      className="hot-config-filter-select w-full"
-                      value={dateFormat ?? ''}
-                      onChange={(next) => onDateFormatChange(next || undefined)}
-                      options={dateFormatOptions}
-                      emptyOptionLabel={t('dynamicTable.configureView.dateFormatDefault', 'Default')}
-                      ariaLabel={t('dynamicTable.configureView.dateFormat', 'Date format')}
-                    />
+            {/* ── Right: where to start from, and what to add ── */}
+            <div className="flex min-w-0 flex-col gap-6">
+              {starterSets.length > 0 && (
+                <section className="flex flex-col gap-2" data-wizard-step="starter-sets">
+                  <StepLabel>{t('dynamicTable.configureView.step.starterSets', '5 · Starter sets')}</StepLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {starterSets.map((set) => (
+                      <Button
+                        key={set.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applyStarterSet(set.state)}
+                        title={set.state.visibleColumns
+                          .map((key) => columns.find((c) => c.data === key)?.title || key)
+                          .join(' · ')}
+                        data-wizard-starter-set={set.id}
+                      >
+                        {set.name}
+                      </Button>
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
+                </section>
+              )}
+
+              <section className="flex flex-col gap-2 border-t border-[var(--m3-outline-variant)] pt-4" data-wizard-step="catalog">
+                <StepLabel>
+                  {starterSets.length > 0
+                    ? t('dynamicTable.configureView.step.catalog', '6 · Column catalogue')
+                    : t('dynamicTable.configureView.step.catalogNoSets', '5 · Column catalogue')}
+                </StepLabel>
+                <ColumnCatalog
+                  columns={columns}
+                  visibleColumns={visibleColumns}
+                  hiddenColumns={hiddenColumns}
+                  onColumnVisibilityChange={onColumnVisibilityChange}
+                />
+              </section>
+
+              {hasAdvanced && (
+                <section className="flex flex-col gap-2 border-t border-[var(--m3-outline-variant)] pt-4" data-wizard-step="more">
+                  <StepLabel>{t('dynamicTable.configureView.step.more', 'More')}</StepLabel>
+                  {/* Linked Columns Section — only when the host provides FK sources. */}
+                  {loadLookupSources && onLookupColumnsChange && (
+                    <div className={`hot-config-section ${openSections.has('linked') ? 'is-open' : ''}`}>
+                      <button
+                        className="hot-config-section-header"
+                        onClick={() => toggleSection('linked')}
+                      >
+                        {sectionIcon('linked')}
+                        <span className="hot-config-section-title">{t('dynamicTable.configureView.linkedSources', 'Linked sources')}</span>
+                        {linkedCount > 0 && (
+                          <span className="hot-config-section-badge">
+                            {linkedCount}
+                          </span>
+                        )}
+                        {openSections.has('linked') ? (
+                          <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
+                        )}
+                      </button>
+                      {openSections.has('linked') && (
+                        <ConfigureViewLinkedColumns
+                          lookupColumns={lookupColumns}
+                          onLookupColumnsChange={onLookupColumnsChange}
+                          loadLookupSources={loadLookupSources}
+                          visibleColumns={visibleColumns}
+                          hiddenColumns={hiddenColumns}
+                          onColumnVisibilityChange={onColumnVisibilityChange}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Summarised columns Section — the one-to-many sibling of
+                      "Linked sources": aggregates over the records that point AT
+                      each row. */}
+                  {loadRollupSources && onRollupColumnsChange && (
+                    <div className={`hot-config-section ${openSections.has('rollups') ? 'is-open' : ''}`}>
+                      <button
+                        className="hot-config-section-header"
+                        onClick={() => toggleSection('rollups')}
+                      >
+                        {sectionIcon('rollups')}
+                        <span className="hot-config-section-title">{t('dynamicTable.configureView.rollupColumns', 'Summarised columns')}</span>
+                        {rollupCount > 0 && (
+                          <span className="hot-config-section-badge">{rollupCount}</span>
+                        )}
+                        {openSections.has('rollups') ? (
+                          <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
+                        )}
+                      </button>
+                      {openSections.has('rollups') && (
+                        <ConfigureViewRollups
+                          rollupColumns={rollupColumns}
+                          onRollupColumnsChange={onRollupColumnsChange}
+                          loadRollupSources={loadRollupSources}
+                          visibleColumns={visibleColumns}
+                          hiddenColumns={hiddenColumns}
+                          onColumnVisibilityChange={onColumnVisibilityChange}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Calculated columns Section — follows the "linked" pattern:
+                      another kind of view-scoped virtual column. */}
+                  {onFormulasChange && (
+                    <div className={`hot-config-section ${openSections.has('formulas') ? 'is-open' : ''}`}>
+                      <button
+                        className="hot-config-section-header"
+                        onClick={() => toggleSection('formulas')}
+                      >
+                        {sectionIcon('formulas')}
+                        <span className="hot-config-section-title">{t('dynamicTable.configureView.formulas', 'Calculated columns')}</span>
+                        {formulaCount > 0 && (
+                          <span className="hot-config-section-badge">{formulaCount}</span>
+                        )}
+                        {openSections.has('formulas') ? (
+                          <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
+                        )}
+                      </button>
+                      {openSections.has('formulas') && (
+                        <ConfigureViewFormulas
+                          formulas={formulas}
+                          onFormulasChange={onFormulasChange}
+                          columns={formulaSourceColumns}
+                          visibleColumns={visibleColumns}
+                          hiddenColumns={hiddenColumns}
+                          onColumnVisibilityChange={onColumnVisibilityChange}
+                          sampleRow={sampleRow}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Highlighting (conditional formatting) Section */}
+                  {onConditionalFormatsChange && (
+                    <div className={`hot-config-section ${openSections.has('formatting') ? 'is-open' : ''}`}>
+                      <button
+                        className="hot-config-section-header"
+                        onClick={() => toggleSection('formatting')}
+                      >
+                        {sectionIcon('formatting')}
+                        <span className="hot-config-section-title">{t('dynamicTable.conditionalFormat.title', 'Highlighting')}</span>
+                        {formattingCount > 0 && (
+                          <span className="hot-config-section-badge">{rulesLabel(formattingCount)}</span>
+                        )}
+                        {openSections.has('formatting') ? (
+                          <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
+                        )}
+                      </button>
+                      {openSections.has('formatting') && (
+                        <ConfigureViewFormatting
+                          columns={filterableColumns}
+                          rules={conditionalFormats}
+                          onRulesChange={onConditionalFormatsChange}
+                          loadFilterSuggestions={loadFilterSuggestions}
+                          loadedRows={loadedRows}
+                        />
+                      )}
+                    </div>
+                  )}
+                  {/* Date-format Section — only when the host supplies presets. */}
+                  {onDateFormatChange && dateFormatOptions.length > 0 && (
+                    <div className={`hot-config-section ${openSections.has('dateFormat') ? 'is-open' : ''}`}>
+                      <button
+                        className="hot-config-section-header"
+                        onClick={() => toggleSection('dateFormat')}
+                      >
+                        {sectionIcon('dateFormat')}
+                        <span className="hot-config-section-title">{t('dynamicTable.configureView.dateFormat', 'Date format')}</span>
+                        {activeDateFormatLabel && (
+                          <span className="hot-config-section-badge">{activeDateFormatLabel}</span>
+                        )}
+                        {openSections.has('dateFormat') ? (
+                          <ChevronUp className="w-4 h-4 hot-config-section-chevron" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 hot-config-section-chevron" />
+                        )}
+                      </button>
+                      {openSections.has('dateFormat') && (
+                        <div className="hot-config-section-body">
+                          <SelectMenu
+                            className="hot-config-filter-select w-full"
+                            value={dateFormat ?? ''}
+                            onChange={(next) => onDateFormatChange(next || undefined)}
+                            options={dateFormatOptions}
+                            emptyOptionLabel={t('dynamicTable.configureView.dateFormatDefault', 'Default')}
+                            ariaLabel={t('dynamicTable.configureView.dateFormat', 'Date format')}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+            </div>
           </div>
 
-          {/* Save form: always visible (matches Figma). */}
-          {(
-            <div className="hot-config-panel-save">
+          {/* Save form — the view's name and colour, as before. */}
+          <div className="hot-config-panel-save">
+            <div className="flex w-full max-w-[420px] flex-col gap-1">
               <label className="hot-config-save-label">{t('dynamicTable.configureView.viewName', 'View name')}</label>
               <Input
                 inputSize="md"
@@ -809,11 +855,12 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                   )}
                 </p>
               )}
+            </div>
               {/* A base-view save has no colour — the tab it personalizes is a
                   fixed part of the strip. The row is removed rather than
                   disabled: a dead control is a question the user has to answer. */}
               {!savesBaseView && (
-                <>
+                <div className="flex flex-col gap-1">
                   <label className="hot-config-save-label">{t('dynamicTable.configureView.color', 'Color')}</label>
                   <div className="hot-config-save-colors">
                     {COLOR_PALETTE.map((item) => (
@@ -825,16 +872,24 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                       />
                     ))}
                   </div>
-                </>
+                </div>
               )}
-            </div>
-          )}
+          </div>
 
-          {/* Footer buttons */}
           <div className="hot-config-panel-footer">
+            {defaultSet && (
+              <Button
+                variant="ghost"
+                onClick={() => applyStarterSet(defaultSet.state)}
+                data-testid="dynamic-table-customize-reset"
+                icon={<RotateCcw className="w-4 h-4" />}
+              >
+                {t('dynamicTable.configureView.restoreDefault', 'Restore default')}
+              </Button>
+            )}
+            <span className="flex-1" />
             <Button
               variant="outline"
-              className="flex-1"
               onClick={() => handleOpenChange(false)}
             >
               {t('dynamicTable.configureView.cancel', 'Cancel')}
@@ -843,7 +898,6 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                 base view, an update in place, or a brand-new view. */}
             <Button
               variant="primary"
-              className="flex-1"
               disabled={!canSave}
               onClick={handleSave}
             >

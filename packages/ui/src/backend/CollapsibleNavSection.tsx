@@ -1,6 +1,6 @@
 'use client'
 import * as React from 'react'
-import Link from 'next/link'
+import Link from './HoverPrefetchLink'
 import { usePathname } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '../primitives/button'

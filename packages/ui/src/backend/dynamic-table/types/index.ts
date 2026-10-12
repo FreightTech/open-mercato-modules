@@ -733,6 +733,13 @@ export interface TableUIConfig {
    * Return `undefined` to keep the default.
    */
   formatGroupValue?: (ctx: { field: string; value: string; count: number }) => string | undefined;
+  /**
+   * Actions on a GROUP header row — small text buttons at the end of the
+   * group's heading (e.g. "Otwórz sprawę" on a client group in Monitoring).
+   * Clicking one never toggles the group. `rowIds` / `rows` are every row in
+   * the group, nested sub-groups included. Return `[]` for none.
+   */
+  groupRowActions?: (ctx: GroupRowActionContext) => GroupRowAction[];
   /** Enable fullscreen toggle button. Default: false */
   enableFullscreen?: boolean;
   /** Callback when fullscreen state changes */
@@ -1226,4 +1233,20 @@ export interface ExportAllResult {
   complete: boolean;
   /** Why completeness could not be proven. Present only when `complete` is false. */
   reason?: string;
+}
+
+/** What `groupRowActions` is told about a group. */
+export interface GroupRowActionContext {
+  field: string;
+  value: string;
+  count: number;
+  rowIds: string[];
+  rows: Record<string, unknown>[];
+}
+
+/** One action on a group header row. */
+export interface GroupRowAction {
+  id: string;
+  label: string;
+  onClick: () => void;
 }

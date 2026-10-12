@@ -1924,6 +1924,21 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* "Dostosuj widok" wizard (ConfigureViewPanel): wide and two-column, like the
+   kartoteka's — the 480px cap above is for the old single-column drawer. */
+.hot-config-panel.hot-config-panel--wizard,
+.hot-config-panel.hot-config-panel--wizard.hot-appearance-v2 {
+    max-width: min(1080px, 100vw) !important;
+    width: 100% !important;
+}
+
+.hot-config-panel--wizard .hot-config-panel-save {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px 32px;
+}
+
 .hot-config-panel-inner {
     display: flex;
     flex-direction: column;

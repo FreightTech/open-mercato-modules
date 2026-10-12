@@ -51,16 +51,24 @@ export function useMessagesPoll(): UseMessagesPollResult {
   const [error, setError] = React.useState<string | null>(null)
 
   const lastMessageIdRef = React.useRef<string | null>(null)
+  const lastCountRef = React.useRef<number | null>(null)
   const pulseTimeoutRef = React.useRef<number | null>(null)
 
-  const fetchMessages = React.useCallback(async () => {
+  // Each tick asks only for the unread count; the inbox list is fetched on the first tick, when the count
+  // changes, or on refresh(). Fetching both every 5 s in every tab was 19 % of the server's time under
+  // load, almost all of it re-reading a list that had not changed (load test 2026-10-09).
+  const fetchMessages = React.useCallback(async (force = false) => {
     try {
-      const [listResult, countResult] = await Promise.all([
-        apiCall<{ items?: MessagePollItem[] }>('/api/messages?folder=inbox&page=1&pageSize=20', requestInit),
-        apiCall<{ unreadCount?: number }>('/api/messages/unread-count', requestInit),
-      ])
+      const countResult = await apiCall<{ unreadCount?: number }>('/api/messages/unread-count', requestInit)
+      const rawCount = countResult.ok ? Number(countResult.result?.unreadCount ?? 0) : null
+      const nextCount = rawCount !== null && Number.isFinite(rawCount) ? Math.max(0, rawCount) : null
+      const needsList = force || lastCountRef.current === null || (nextCount !== null && nextCount !== lastCountRef.current)
+      if (nextCount !== null) lastCountRef.current = nextCount
+      const listResult = needsList
+        ? await apiCall<{ items?: MessagePollItem[] }>('/api/messages?folder=inbox&page=1&pageSize=20', requestInit)
+        : null
 
-      if (listResult.ok) {
+      if (listResult?.ok) {
         const nextMessages = Array.isArray(listResult.result?.items) ? listResult.result?.items ?? [] : []
         const firstId = nextMessages[0]?.id ?? null
 
@@ -80,8 +88,7 @@ export function useMessagesPoll(): UseMessagesPollResult {
       }
 
       if (countResult.ok) {
-        const nextCount = Number(countResult.result?.unreadCount ?? 0)
-        setUnreadCount(Number.isFinite(nextCount) ? Math.max(0, nextCount) : 0)
+        setUnreadCount(nextCount ?? 0)
       }
 
       setError(null)
@@ -93,14 +100,31 @@ export function useMessagesPoll(): UseMessagesPollResult {
     }
   }, [requestInit])
 
+  // Polls only while the tab is visible, and catches up the moment it is shown again. Every open tab
+  // used to poll (two requests every 5 s) even in the background, so a person with three tabs open
+  // cost the server three times the polling of a person with one.
   React.useEffect(() => {
     void fetchMessages()
-    const interval = window.setInterval(() => {
+    let interval: number | null = window.setInterval(() => {
       void fetchMessages()
     }, POLL_INTERVAL)
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval !== null) window.clearInterval(interval)
+        interval = null
+      } else if (interval === null) {
+        void fetchMessages()
+        interval = window.setInterval(() => {
+          void fetchMessages()
+        }, POLL_INTERVAL)
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    if (document.hidden) onVisibilityChange()
 
     return () => {
-      window.clearInterval(interval)
+      if (interval !== null) window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       if (pulseTimeoutRef.current) {
         window.clearTimeout(pulseTimeoutRef.current)
       }
@@ -113,6 +137,6 @@ export function useMessagesPoll(): UseMessagesPollResult {
     hasNew,
     isLoading,
     error,
-    refresh: fetchMessages,
+    refresh: () => fetchMessages(true),
   }
 }

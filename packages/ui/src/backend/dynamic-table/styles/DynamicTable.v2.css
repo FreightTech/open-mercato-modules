@@ -471,6 +471,16 @@
   background: var(--m3-surface-container-lowest);
 }
 
+/* With a totals footer, the "Σ" line IS the bottom edge (WIW A5). The 16px
+   of scrollbar room is bottom padding of the scroller, and a sticky
+   `bottom: 0` stops at the padding edge — the footer ended 16px above the
+   grid and rows scrolled through the strip below it. A footer table drops
+   that padding: the totals line is the last visible line, and the overlay
+   scrollbar crosses it only while a horizontal scroll is in progress. */
+.hot-appearance-v2 .hot-virtual-container:has(> .hot-footer-totals) {
+  padding-bottom: 0;
+}
+
 /* Grid type ramp — body cells use the named typography token (12/16),
    matching Figma `body/regular/xs`. The legacy default is Arial 13px. */
 .hot-appearance-v2 .hot-table {
@@ -2802,4 +2812,24 @@
 }
 .hot-appearance-v2 .hot-headers-sticky {
   padding-bottom: 0;
+}
+
+/* Host actions on a group header (uiConfig.groupRowActions) — text buttons after the count. */
+.hot-group-header-actions {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 12px;
+}
+.hot-group-header-action {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--m3-primary);
+  background: transparent;
+  cursor: pointer;
+}
+.hot-group-header-action:hover {
+  background: var(--m3-surface-container-high);
 }

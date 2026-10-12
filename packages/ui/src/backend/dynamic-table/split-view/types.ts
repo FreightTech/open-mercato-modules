@@ -150,7 +150,7 @@ export type SplitLayout = {
    * them, which is exactly what an opaque field guarantees.
    */
   sharedCriteria?: unknown
-  /** @deprecated Shared/Per pane toggle is gone (0.14.3); read only as the default for the two switches below. */
+  /** @deprecated Shared/Per pane toggle is gone (0.14.3); no longer read — the global search is off until `workspaceSearch` turns it on. */
   sharedFiltersEnabled?: boolean
   /** ⚙ "Global search": the workspace bar's search box is shown and drives every pane. */
   workspaceSearch?: boolean

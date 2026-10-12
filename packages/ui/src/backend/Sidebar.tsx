@@ -1,6 +1,6 @@
 "use client"
 import * as React from 'react'
-import Link from 'next/link'
+import Link from './HoverPrefetchLink'
 import { ChevronLeft, PanelLeftOpen, Settings as SettingsIcon, Sparkles, Square } from 'lucide-react'
 import { NavGroup } from '../primitives-v2/NavGroup'
 import { NavItem } from '../primitives-v2/NavItem'
