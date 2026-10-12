@@ -264,7 +264,7 @@ function describe(t: ReturnType<typeof useT>, layout: SplitLayout): string {
   })
 }
 
-function SavedLayoutRow({
+export function SavedLayoutRow({
   saved,
   active,
   onApply,

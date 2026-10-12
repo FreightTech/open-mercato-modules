@@ -124,7 +124,7 @@ import {
 } from './utils/exportTable';
 import Debugger from './components/Debugger';
 import FullscreenOverlay from './components/FullscreenOverlay';
-import { Maximize2, FunnelX, Replace } from 'lucide-react';
+import { Maximize2, FunnelX, LayoutGrid, Replace } from 'lucide-react';
 import { generateSortRuleId, generatePerspectiveId, BASE_VIEW_PERSPECTIVE_NAME } from './types/perspective';
 import { useAnnotations, annotationKey } from './hooks/useAnnotations';
 import type { AnnotationComment } from './hooks/useAnnotations';
@@ -729,6 +729,22 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       ) ?? [],
     [displayHost, effectiveStriped],
   );
+  // The host's "Dostosuj widok" (split view): an icon beside the ⚙, in the
+  // header the table already has — never a row of its own.
+  const customizeView = displayHost?.customize;
+  const customizeViewButton = customizeView ? (
+    <button
+      type="button"
+      onClick={customizeView.onOpen}
+      title={customizeView.label}
+      aria-label={customizeView.label}
+      aria-haspopup="dialog"
+      className="hot-toolbar-overflow-btn"
+      data-split-customize-open=""
+    >
+      <LayoutGrid className="h-4 w-4" />
+    </button>
+  ) : null;
   // The card wrapper renders unless this is an embedded sub-table with no
   // tabs. A host that hides the tabs row still wants the card.
   const hasCard = !(hidePerspectiveTabs && !displayHost);
@@ -3872,6 +3888,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           hover, or hiding the toolbar would hide the way to bring it back. */}
       {hideToolbar && displayHost && (
         <div className="hot-pane-float-actions" data-pane-float-actions="">
+          {customizeViewButton}
           <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
           <ToolbarOverflow showDensity={false} extras={toolbarOverflowExtras} />
         </div>
@@ -3966,6 +3983,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
             )}
             {expandToolbarActions ? (
               <>
+                {customizeViewButton}
                 {!hideExportButton && (
                   <ExportMenu variant="toolbar" onExport={handleExportAll} disabled={isExportingAll} />
                 )}
@@ -3978,6 +3996,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
               </>
             ) : (
               <>
+              {customizeViewButton}
               {displayHost && (
                 <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
               )}

@@ -16,12 +16,11 @@
  *   [data-pane-widget]          widget id held by a pane
  *   [data-pane-status]          "unknown" | "denied" on a degraded pane
  *   [data-split-divider]        one per boundary between siblings
- *   [data-split-customize-tab]  the "Dostosuj" tab that opens the drawer
- *   [data-split-customize]      the "Dostosowanie widoku" drawer
- *   [data-split-template]       a grid tile in the drawer (step 1)
+ *   [data-split-customize-open] the grid icon in the page table's header
+ *   [data-testid=grid-customize-sheet]  "Dostosuj widok" — the shared view-grid editor
  *   [data-split-main]           the main grid, as opposed to the sections
  *   [data-workspace-box]        a section below the main grid
- *   [data-workspace-filter-bar] the workspace bar (split only)
+ *   [data-workspace-filter-bar] the shared search row (only when switched on)
  *   [data-table-settings]       a table's ⚙
  *   [data-table-setting=key]    one switch in it: toolbar | tabs | pagination | striped
  *   [data-pane-menu-rows]       a pane's own rows inside its ⋯ / ⋮
@@ -228,39 +227,39 @@ export class SplitViewHarness {
   }
 
   /**
-   * Open the workspace ⚙ menu (split views only — the bar exists only then).
-   * Every layout control lives in it: Dostosuj, Dodaj widget, saved layouts,
-   * Pełny ekran.
+   * The layout controls that are not in "Dostosuj widok" (full screen) live in
+   * a pane's ⋯ — there is no workspace ⚙ any more (owner 12.10). Opens pane 0's.
    */
   async openSettings(): Promise<Locator> {
-    await this.dismissOverlays()
-    await this.page.locator('[data-workspace-settings]').first().click()
-    const menu = this.page.locator('[data-workspace-settings-menu]').first()
-    await expect(menu).toBeVisible({ timeout: 10_000 })
-    return menu
+    await this.openMenu(0)
+    return this.page.locator('[data-pane-menu-rows]').first()
+  }
+
+  sheet(): Locator {
+    return this.page.locator('[data-testid="grid-customize-sheet"]').first()
   }
 
   /**
-   * Open the "Dostosowanie widoku" drawer: from the workspace ⚙ when the page
-   * is split, else from the page table's own ⋯ menu (unsplit has no bar).
+   * Open "Dostosuj widok" — the same editor as the contractor page and the
+   * Pulpit — from the grid icon in the page table's header (its ⋯ as fallback).
    */
   async openCustomize(): Promise<Locator> {
     await this.dismissOverlays()
-    if (await this.isSplit()) {
-      const menu = await this.openSettings()
-      await menu.locator('[data-workspace-customize]').first().click()
+    const icon = this.page.locator('[data-split-customize-open]').first()
+    if (await icon.isVisible().catch(() => false)) {
+      await icon.click()
     } else {
       await this.openMenu(0)
       await this.page.locator('[data-pane-menu-rows] [data-workspace-customize]').first().click()
     }
-    const drawer = this.page.locator('[data-split-customize]').first()
-    await expect(drawer).toBeVisible({ timeout: 10_000 })
-    return drawer
+    await expect(this.sheet()).toBeVisible({ timeout: 10_000 })
+    return this.sheet()
   }
 
+  /** "Zastosuj" — the editor changes nothing before it. */
   async closeCustomize(): Promise<void> {
-    await this.page.locator('[data-customize-done]').first().click()
-    await expect(this.page.locator('[data-split-customize]')).toHaveCount(0, { timeout: 10_000 })
+    await this.sheet().locator('[data-testid="grid-customize-apply"]').click()
+    await expect(this.page.locator('[data-testid="grid-customize-sheet"]')).toHaveCount(0, { timeout: 10_000 })
   }
 
   /** Slots of the MAIN grid only — sections below it are counted separately. */
@@ -276,14 +275,29 @@ export class SplitViewHarness {
   }
 
   /**
-   * Apply a grid from the drawer, then wait for the main grid's contracted slot
-   * count. Panes that do not fit move to sections — nothing is dropped.
+   * Build a grid in "Dostosuj widok": the first section's slot count, its
+   * vertical splits, and a section below for the "… below" shapes. Waits for
+   * the contracted number of slots (main grid and sections together).
    */
   async applyTemplate(id: TemplateId): Promise<void> {
-    const drawer = await this.openCustomize()
-    await drawer.locator(`[data-split-template="${id}"]`).first().click()
+    const sheet = await this.openCustomize()
+    const shape: Record<TemplateId, { columns: number; split: number[]; below?: number }> = {
+      '2x1': { columns: 2, split: [] },
+      '1x2': { columns: 1, split: [0] },
+      '2x2': { columns: 2, split: [0, 1] },
+      '3-up': { columns: 3, split: [] },
+      'one-top-two-below': { columns: 1, split: [], below: 2 },
+      'two-top-one-below': { columns: 2, split: [], below: 1 },
+    }
+    const { columns, split, below } = shape[id]
+    await sheet.locator(`[data-testid="grid-editor-columns-0-${columns}"]`).click()
+    for (const column of split) await sheet.locator(`[data-testid="grid-editor-split-0-${column}"]`).click()
+    if (below) {
+      await sheet.locator('[data-testid="grid-editor-add-section"] button').first().click()
+      await sheet.locator(`[data-testid="grid-columns-${below}"]`).click()
+    }
     await this.closeCustomize()
-    await expect.poll(() => this.mainSlotCount(), { timeout: 15_000 }).toBe(TEMPLATE_SLOTS[id])
+    await expect.poll(() => this.slotCount(), { timeout: 15_000 }).toBe(TEMPLATE_SLOTS[id])
   }
 
   /**
@@ -402,17 +416,17 @@ export class SplitViewHarness {
     return { global: global === 'on', panes: (await host.getAttribute('data-workspace-search-panes')) === 'on' }
   }
 
-  /** Set the ⚙ "Global search" / "Search in tables" switches. */
+  /** Set the "Search" switches in "Dostosuj widok" (the shared row, each table's box). */
   async setSearchSwitches(target: { global?: boolean; panes?: boolean }): Promise<void> {
     const current = await this.searchSwitches()
-    if (!current) throw new Error('setSearchSwitches: the page is not split — there is no workspace ⚙')
+    if (!current) throw new Error('setSearchSwitches: the page is not split — there is no shared search')
     const flips: Array<'workspaceSearch' | 'paneSearch'> = []
     if (target.global !== undefined && target.global !== current.global) flips.push('workspaceSearch')
     if (target.panes !== undefined && target.panes !== current.panes) flips.push('paneSearch')
     if (flips.length === 0) return
-    const menu = await this.openSettings()
-    for (const key of flips) await menu.locator(`[data-workspace-search-switch="${key}"]`).click()
-    await this.page.keyboard.press('Escape')
+    const sheet = await this.openCustomize()
+    for (const key of flips) await sheet.locator(`[data-split-search-switch="${key}"] input`).click()
+    await this.closeCustomize()
     const want = { global: target.global ?? current.global, panes: target.panes ?? current.panes }
     await expect.poll(() => this.searchSwitches(), { timeout: 10_000 }).toEqual(want)
   }
@@ -459,33 +473,36 @@ export class SplitViewHarness {
 
   // ── Named (server-persisted) layouts ───────────────────────────────────────
 
-  /** Save what is on screen under a name, from the drawer's step 3. */
+  /** Save what is on screen under a name, from "Dostosuj widok" → Saved layouts. */
   async saveLayout(name: string): Promise<void> {
-    const drawer = await this.openCustomize()
-    await drawer.locator('[data-split-layout-name]').fill(name)
-    await drawer.locator('[data-split-layout-save]').click()
-    await expect(drawer.locator(`[data-split-layout-row="${name}"]`)).toBeVisible({ timeout: 15_000 })
+    const sheet = await this.openCustomize()
+    await sheet.locator('[data-split-layout-name]').fill(name)
+    await sheet.locator('[data-split-layout-save]').click()
+    await expect(sheet.locator(`[data-split-layout-row="${name}"]`)).toBeVisible({ timeout: 15_000 })
     await this.closeCustomize()
   }
 
-  /** Apply a saved layout from the drawer's step 3. */
+  /** Apply a saved layout — picking one applies it and closes the editor. */
   async openLayout(name: string): Promise<void> {
-    const drawer = await this.openCustomize()
-    await drawer.locator(`[data-split-layout-open="${name}"]`).click()
-    await this.closeCustomize()
+    const sheet = await this.openCustomize()
+    await sheet.locator(`[data-split-layout-open="${name}"]`).click()
+    await expect(this.page.locator('[data-testid="grid-customize-sheet"]')).toHaveCount(0, { timeout: 10_000 })
   }
 
   /** Back to the page's own table — "Widok domyślny". */
   async openDefaultView(): Promise<void> {
-    const drawer = await this.openCustomize()
-    await drawer.locator('[data-split-layout-default]').click()
-    await this.closeCustomize()
+    const sheet = await this.openCustomize()
+    await sheet.locator('[data-split-layout-default]').click()
+    await expect(this.page.locator('[data-testid="grid-customize-sheet"]')).toHaveCount(0, { timeout: 10_000 })
   }
 
-  /** "Dodaj widget" in the workspace ⚙: first free slot, else a new section. */
+  /** Add named content in a new one-slot section, from "Dostosuj widok". */
   async addFromBar(name: string): Promise<void> {
-    const menu = await this.openSettings()
-    await menu.locator('[data-workspace-add-widget]').first().click()
-    await this.pickContent(name)
+    const sheet = await this.openCustomize()
+    await sheet.locator('[data-testid="grid-editor-add-section"] button').first().click()
+    await sheet.locator('[data-testid="grid-columns-1"]').click()
+    await sheet.locator('[data-testid^="grid-editor-free-"]').last().click()
+    await this.page.getByRole('option', { name }).first().click()
+    await this.closeCustomize()
   }
 }

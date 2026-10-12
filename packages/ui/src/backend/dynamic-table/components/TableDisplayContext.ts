@@ -37,6 +37,11 @@ export type TableDisplayHost = {
   striped?: boolean
   /** The switches the ⚙ panel lists under the density control. */
   toggles: TableDisplayToggle[]
+  /**
+   * The host's layout editor ("Dostosuj widok"): the table draws a grid icon
+   * beside its ⚙, so the way in costs no row of its own. Absent = no icon.
+   */
+  customize?: { label: string; onOpen: () => void }
 }
 
 export const TableDisplayContext = React.createContext<TableDisplayHost | null>(null)

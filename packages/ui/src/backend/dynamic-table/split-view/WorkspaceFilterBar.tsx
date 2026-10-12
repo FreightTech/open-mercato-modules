@@ -113,6 +113,11 @@ export type WorkspaceFilterBarProps = {
   onSharedChange?: (shared: boolean) => void
   /** Show the global search box (⚙ "Global search"). Default `true`. */
   showSearch?: boolean
+  /**
+   * Show the shared filter chips and "Filtr". Default `true`. The split view
+   * passes `false` (owner 12.10: no workspace filters — the bar is search only).
+   */
+  showFilters?: boolean
   /** Back to per-pane control. Kept for callers that only know "off". */
   onToggleOff?: () => void
   /** Host controls on the right end of the bar — add widget, layouts, full screen. */
@@ -451,6 +456,7 @@ export function WorkspaceFilterBar({
   unmappedByPane,
   shared = true,
   showSearch = true,
+  showFilters = true,
   trailing,
   className,
 }: WorkspaceFilterBarProps) {
@@ -602,7 +608,7 @@ export function WorkspaceFilterBar({
           outer element: `addCriterion` anchors the editor popover to it. The
           outer element is a `role="button"` span, not a `<button>` — a button
           cannot legally contain another button. */}
-      {shared && rules.map((rule) => {
+      {shared && showFilters && rules.map((rule) => {
         // "Active" = the rule actually narrows something. A criterion added
         // but never filled in is deliberately NOT tinted: the blue container
         // is the app's one selection signal, and an empty rule has selected
@@ -649,7 +655,7 @@ export function WorkspaceFilterBar({
         )
       })}
 
-      {shared && available.length > 0 && (
+      {shared && showFilters && available.length > 0 && (
         <SelectMenu
           /* A portal-rendered custom menu, never a native <select>. */
           value=""
@@ -664,6 +670,8 @@ export function WorkspaceFilterBar({
 
       {/* Degradation as a TONAL chip rather than loose coloured text: it reads
           as a thing in the bar, at the same height as every other control. */}
+      {/* Shown with or without the filter controls: a shared SEARCH that a pane
+          cannot honour is the same silent gap. */}
       {shared && unmappedSummary.map(([key, panes]) => (
         <span
           key={key}

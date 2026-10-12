@@ -7,15 +7,17 @@
  *
  * A table page renders this instead of its table component, naming itself as
  * the only pane. With one pane it looks exactly like the page did before this
- * feature existed, plus one small "Dostosuj" tab in the page's top padding.
- * The workspace bar and the pane cards appear only once there is more than one
- * slot. That is what makes it ambient — you compose from where you already are.
+ * feature existed. The pane cards appear only once there is more than one slot.
+ * That is what makes it ambient — you compose from where you already are.
  *
- * Where each control lives (the designer's prototype, gt-demo 03.09–14.09):
- *   - "Dostosuj" tab → the "Dostosowanie widoku" drawer: grid, slots, layouts.
- *   - Workspace bar (split only): shared search + filters, "Wspólne / Per
- *     tabela", "Dodaj widget", "Wygląd", "Pełny ekran".
- *   - A pane's ⋮: open its section, swap it, add beside it, remove it.
+ * Where each control lives (owner 12.10: "saving space is the key"):
+ *   - The page table's header: a grid icon beside its ⚙ → "Dostosuj widok",
+ *     the SAME editor as the contractor page and the Pulpit (`view-grid`):
+ *     sections, slots, the search switches and the saved layouts.
+ *   - No workspace row, no workspace ⚙, no shared filters. The one shared
+ *     search row exists only when it is switched on in "Dostosuj widok".
+ *   - A pane's ⋮: open its section, swap it, add beside it, "Dostosuj widok",
+ *     full screen, remove it.
  *   - A table's ⚙: density and which of its bars are shown.
  *
  * The grid needs no changes to work here: its event bus is per-element, copy
@@ -38,47 +40,36 @@ import { TableDisplayContext, type TableDisplayHost } from '../components/TableD
 import { widgetPresentation } from '../registry/widgetPresentation'
 import { AnchoredMenu } from './AnchoredMenu'
 import { ContentPicker } from './ContentPicker'
-import { CustomizeDrawer } from './CustomizeDrawer'
+import { SplitViewCustomizeSheet, searchSwitchesOf } from './SplitViewCustomizeSheet'
 import { EmptySlot } from './EmptySlot'
 import { PaneMenuRows } from './PaneMenu'
 import { WidgetPane } from './WidgetPane'
-import { BoxHeader, FullscreenToggle, WorkspaceSettingsMenu } from './WorkspaceActions'
+import { FullscreenToggle } from './WorkspaceActions'
 import { WorkspaceFilterBar, type UnmappedPaneReport } from './WorkspaceFilterBar'
 import { PANE_CARD } from './chrome'
 import { mapCriteriaForTable, mapCriteriaForWidget, resolveSharedSearch, type SharedCriteria } from './sharedCriteria'
 import type { FilterRow } from '../types/index'
-import { useSplitViewLayouts } from './useSplitViewLayouts'
 import { readStoredLayout, writeStoredLayout } from './layoutPersistence'
 import { DynamicTableSizingProvider, PANE_CONTENT_SIZING } from '../sizing'
 import {
-  BOX_MAX_SLOTS,
   PANE_MIN_HEIGHT_PX,
   PANE_MIN_WIDTH_PX,
   SPLIT_LAYOUT_VERSION,
-  addContent,
-  applyBoxTemplate,
-  applyGridTemplate,
-  countPanes,
   countSlots,
   emptySlotAt,
   evenAll,
   fillSlot,
-  isDefaultLayout,
-  layoutSignature,
   listAllPanes,
   listAllSlots,
   listSlots,
-  removeBox,
   removePane,
   replaceContent,
-  resetLayout,
   resizeAt,
   rowsOf,
   setPaneChrome,
   setPaneContentSettings,
   splitPane,
   tableContent,
-  templateOf,
   type LayoutNode,
   type NodePath,
   type PaneChrome,
@@ -112,10 +103,14 @@ function PaneMessage({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>
 function useTableDisplay(
   chrome: PaneChrome | undefined,
   onToggle: (patch: Partial<PaneChrome>) => void,
+  onCustomize?: () => void,
 ): TableDisplayHost {
   const t = useT()
   const toggleRef = React.useRef(onToggle)
   toggleRef.current = onToggle
+  const customizeRef = React.useRef(onCustomize)
+  customizeRef.current = onCustomize
+  const canCustomize = !!onCustomize
   const toolbar = chrome?.toolbar !== false
   const tabs = chrome?.viewsBar !== false && chrome?.tabs !== false
   const pagination = chrome?.viewsBar !== false && chrome?.pagination !== false
@@ -133,8 +128,12 @@ function useTableDisplay(
         { key: 'pagination', label: t('splitView.tableSettings.pagination', 'Pagination'), checked: pagination, onChange: (next) => toggleRef.current({ pagination: next, ...(next ? { viewsBar: true } : {}) }) },
         { key: 'striped', label: t('splitView.tableSettings.striped', 'Zebra rows'), checked: striped === true, onChange: (next) => toggleRef.current({ striped: next }) },
       ],
+      // The way into "Dostosuj widok": an icon in the header the table already has, not a row of its own.
+      ...(canCustomize
+        ? { customize: { label: t('splitView.customize.open', 'Customize view'), onOpen: () => customizeRef.current?.() } }
+        : {}),
     }),
-    [t, toolbar, tabs, pagination, striped],
+    [t, toolbar, tabs, pagination, striped, canCustomize],
   )
 }
 
@@ -149,6 +148,7 @@ function TablePaneBody({
   sharedFilters,
   sharedSearch,
   hideOwnSearch,
+  onCustomize,
 }: {
   tableId: string
   paneId: string
@@ -161,10 +161,12 @@ function TablePaneBody({
   sharedSearch?: string
   /** ⚙ "Search in tables" is off: the pane's own search box is hidden. */
   hideOwnSearch?: boolean
+  /** The page's own table: its header carries the "Dostosuj widok" icon. */
+  onCustomize?: () => void
 }) {
   const t = useT()
   const { definition, status } = useTableById(tableId)
-  const display = useTableDisplay(chrome, onToggleChrome)
+  const display = useTableDisplay(chrome, onToggleChrome, onCustomize)
 
   if (status === 'unknown') {
     return (
@@ -397,28 +399,10 @@ function defaultPaneId(tableId: string): string {
   return `p0${(hash >>> 0).toString(36)}`
 }
 
-/**
- * Scroll the workspace — and ONLY the workspace — until a pane is in view.
- * Not `scrollIntoView`: that scrolls every scrollable ancestor too, and moved
- * the whole page up under the navbar, taking the "Dostosuj" tab with it.
- */
-function revealPane(paneId: string) {
-  const pane = document.querySelector<HTMLElement>(`[data-pane-id="${paneId}"], [data-pane-empty="${paneId}"]`)
-  const root = pane?.closest<HTMLElement>('[data-split-root]')
-  if (!pane || !root) return
-  const paneRect = pane.getBoundingClientRect()
-  const rootRect = root.getBoundingClientRect()
-  if (paneRect.top >= rootRect.top && paneRect.bottom <= rootRect.bottom) return
-  const top = root.scrollTop + (paneRect.top - rootRect.top) - SECTION_GAP_PX - BOX_HEADER_PX
-  root.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
-}
-
 /** Vertical gap between the main grid and the sections, and between sections. */
 const SECTION_GAP_PX = 16
 /** Room kept clear at the workspace's right edge for an overlay scrollbar. */
 const OVERLAY_SCROLLBAR_CLEARANCE_PX = 8
-/** A section's header strip. */
-const BOX_HEADER_PX = 32
 
 export function SplitViewHost({ tableId }: SplitViewHostProps) {
   const t = useT()
@@ -530,7 +514,6 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
     for (const child of Array.from(areaElement.children)) observer.observe(child)
     return () => observer.disconnect()
   }, [areaElement, layout, fullscreen])
-  const { layouts, save } = useSplitViewLayouts(tableId)
 
   // Escape leaves full screen — unless a menu or the drawer is what Escape is for.
   React.useEffect(() => {
@@ -550,28 +533,15 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
   const boxes = layout.boxes ?? []
   const isSplit = slotCount > 1
 
-  // ── Workspace-shared search and filtering ──
+  // ── Workspace-shared search ──
   //
-  // Held on the LAYOUT (not in component state beside it), so it rides the
-  // same persistence funnel as everything else and a saved layout brings its
-  // criteria with it. "Wspólne" is the default for a workspace: the designer's
-  // bar opens in shared mode, and a single-pane page never shows the bar.
-  // Filters in the bar always drive every pane. Search is two ⚙ switches
-  // (owner review 2026-09-28 — the Shared/Per pane toggle is gone): the bar's
-  // global search box, and each table's own box.
-  //
-  // The global box is OFF until the user turns it on (owner, 2026-10-09: "by
-  // default the main search in the split view should be disabled, only the
-  // user after some time should be able to turn it on"). Only an explicit
-  // ⚙ choice (`workspaceSearch`) turns it on — the deprecated
-  // `sharedFiltersEnabled` no longer does, since old layouts stored it by
-  // default rather than by choice. Each table keeps its own box meanwhile, so a
-  // split never loses search altogether.
-  const workspaceSearch = layout.workspaceSearch ?? false
-  const paneSearch = layout.paneSearch ?? !workspaceSearch
-  const setSearchSwitch = React.useCallback((key: 'workspaceSearch' | 'paneSearch', value: boolean) => {
-    setLayout((current) => ({ ...current, [key]: value }))
-  }, [])
+  // Held on the LAYOUT, so it rides the same persistence funnel as everything
+  // else. The shared search row is OPT-IN (owner 12.10: "by default it should
+  // be disabled, and the top bar that is currently taking space should be
+  // freed"): it is two switches in "Dostosuj widok" — the shared box, and each
+  // table's own box. Shared FILTERS are gone with the bar: a stored rule is
+  // never applied, because nothing on screen would show it narrowing the panes.
+  const { workspaceSearch, paneSearch } = searchSwitchesOf(layout)
   const criteria = React.useMemo<SharedCriteria>(() => {
     const stored = layout.sharedCriteria
     if (!stored || typeof stored !== 'object') return EMPTY_CRITERIA
@@ -582,7 +552,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
     setLayout((current) => (current.sharedCriteria === next ? current : { ...current, sharedCriteria: next }))
   }, [])
   const liveCriteria = React.useMemo<SharedCriteria | null>(
-    () => (isSplit ? (workspaceSearch ? criteria : { ...criteria, search: undefined }) : null),
+    () => (isSplit && workspaceSearch && criteria.search ? { rules: EMPTY_CRITERIA.rules, search: criteria.search } : null),
     [isSplit, workspaceSearch, criteria],
   )
   const hrefFor = React.useCallback(
@@ -651,30 +621,6 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
     [pending],
   )
 
-  /** "Dodaj widget": first free slot, else a new or growing section — then show it. */
-  const handleAdd = React.useCallback((content: PaneContentRef) => {
-    let landed: string | null = null
-    setLayout((current) => {
-      const result = addContent(current, content)
-      landed = result.slotId
-      return result.layout
-    })
-    // Bring the new pane into view — a full grid puts it in a section below
-    // the fold. After a beat, not on the next frame: the menu that asked for
-    // it closes and hands focus back to its trigger, and that focus move
-    // cancels a smooth scroll started in the same frame.
-    window.setTimeout(() => {
-      if (landed) revealPane(landed)
-    }, 120)
-  }, [])
-
-  const signature = React.useMemo(() => layoutSignature(layout), [layout])
-  const activeLayoutId = React.useMemo(
-    () => layouts.find((saved) => layoutSignature(saved.layout) === signature)?.id ?? null,
-    [layouts, signature],
-  )
-  const isDefault = isDefaultLayout(layout, tableId)
-
   /**
    * Divider drag. The delta is converted to a fraction of the SPLIT NODE's own
    * extent along its own axis, so a drag means the same proportion wherever
@@ -731,9 +677,9 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
         current={node.content}
         canSwap={!isPrimary}
         canRemove={isSplit && !isPrimary}
-        // Unsplit there is no workspace bar, so its ⚙ is not there: the way into
-        // "Dostosuj widok" is the page table's own ⋯ menu.
-        onCustomize={!isSplit && isPrimary ? () => setCustomizeOpen(true) : undefined}
+        // Every pane leads to "Dostosuj widok" — there is no workspace ⚙ any more.
+        onCustomize={() => setCustomizeOpen(true)}
+        onFullscreen={isSplit ? { active: fullscreen, onToggle: () => setFullscreen((value) => !value) } : undefined}
         widget={isWidget ? { chrome: node.chrome, hasCta: !!href, onToggleChrome: toggleChrome } : undefined}
         onSplit={(direction, before, anchor) => setPending({ mode: 'split', slotId: node.id, direction, before, anchor })}
         onSwap={(content) => setLayout((current) => replaceContent(current, node.id, content))}
@@ -785,6 +731,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
               sharedFilters={perPane.filters.get(node.id)}
               sharedSearch={sharedSearch}
               hideOwnSearch={isSplit && !paneSearch}
+              onCustomize={isPrimary ? () => setCustomizeOpen(true) : undefined}
             />
           )}
           </DynamicTableSizingProvider>
@@ -893,38 +840,17 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
       }
     >
 
-      {isSplit && (
+      {/* The shared search row exists only when switched on in "Dostosuj widok"
+          (or in full screen, where it carries the way out). No filters, no ⚙. */}
+      {isSplit && (workspaceSearch || fullscreen) && (
         <WorkspaceFilterBar
           className="pl-2 pr-[calc(0.5rem+var(--ws-scrollbar,0px))]"
           criteria={criteria}
           onChange={setCriteria}
           unmappedByPane={perPane.unmapped}
           showSearch={workspaceSearch}
-          trailing={
-            <>
-              {/* Full screen stays a visible pill while it is ON — the way out
-                  must not hide in a menu. Otherwise every layout control is
-                  behind the one ⚙. */}
-              {fullscreen && <FullscreenToggle active onToggle={() => setFullscreen(false)} />}
-              <WorkspaceSettingsMenu
-                layouts={layouts}
-                activeId={activeLayoutId}
-                isDefault={isDefault}
-                fullscreen={fullscreen}
-                onApply={(saved) => setLayout(() => saved.layout)}
-                onDefault={() => setLayout((current) => resetLayout(current, tableId))}
-                onSaveCurrent={() =>
-                  void save(t('splitView.layouts.defaultName', 'Layout {n}', { n: String(layouts.length + 1) }), layout)
-                }
-                onCustomize={() => setCustomizeOpen(true)}
-                onAdd={handleAdd}
-                onToggleFullscreen={() => setFullscreen((value) => !value)}
-                workspaceSearch={workspaceSearch}
-                paneSearch={paneSearch}
-                onSearchSwitch={setSearchSwitch}
-              />
-            </>
-          }
+          showFilters={false}
+          trailing={fullscreen ? <FullscreenToggle active onToggle={() => setFullscreen(false)} /> : undefined}
         />
       )}
 
@@ -950,18 +876,12 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
             <section
               key={box.id}
               className="flex shrink-0 flex-col"
-              style={{ marginTop: SECTION_GAP_PX, height: BOX_HEADER_PX + rows * rowHeight }}
+              // No header strip: a section is arranged in "Dostosuj widok", so the
+              // page spends its height on the panes (owner 12.10).
+              style={{ marginTop: SECTION_GAP_PX, height: rows * rowHeight }}
               data-workspace-box={box.id}
               aria-label={t('splitView.box.label', 'Section {n}', { n: String(index + 2) })}
             >
-              <BoxHeader
-                index={index + 2}
-                count={countPanes(box.root)}
-                max={BOX_MAX_SLOTS}
-                currentTemplate={templateOf(box.root)}
-                onPickTemplate={(id) => setLayout((current) => applyBoxTemplate(current, box.id, id))}
-                onRemove={() => setLayout((current) => removeBox(current, box.id))}
-              />
               <div className="flex min-h-0 flex-1">{renderNode(box.root, [], box.id, countSlots(box.root))}</div>
             </section>
           )
@@ -977,7 +897,7 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
         />
       )}
 
-      <CustomizeDrawer
+      <SplitViewCustomizeSheet
         open={customizeOpen}
         onOpenChange={setCustomizeOpen}
         layout={layout}

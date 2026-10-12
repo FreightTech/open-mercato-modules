@@ -65,3 +65,5 @@ export type {
 } from './types'
 export { useSplitViewLayouts } from './useSplitViewLayouts'
 export type { SavedSplitLayout } from './useSplitViewLayouts'
+export { SplitViewCustomizeSheet, searchSwitchesOf } from './SplitViewCustomizeSheet'
+export type { SplitViewCustomizeSheetProps } from './SplitViewCustomizeSheet'

@@ -21,7 +21,7 @@
  */
 
 import * as React from 'react'
-import { Check, ChevronRight, ExternalLink, LayoutGrid, PanelBottom, PanelLeft, PanelRight, PanelTop, X } from 'lucide-react'
+import { Check, ChevronRight, ExternalLink, LayoutGrid, Maximize, Minimize, PanelBottom, PanelLeft, PanelRight, PanelTop, X } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useToolbarOverflowClose } from '../components/ToolbarOverflow'
 import { AnchoredPanel } from './AnchoredMenu'
@@ -51,8 +51,10 @@ export type PaneMenuRowsProps = {
   onSplit: (direction: SplitDirection, before: boolean, anchor: DOMRect) => void
   onSwap: (content: PaneContentRef) => void
   onRemove: () => void
-  /** Unsplit page table only: opens the layout drawer (there is no workspace bar ⚙ then). */
+  /** Opens "Dostosuj widok" — every pane offers it; there is no workspace ⚙. */
   onCustomize?: () => void
+  /** Split only: full screen for the whole workspace (it had lived under the workspace ⚙). */
+  onFullscreen?: { active: boolean; onToggle: () => void }
 }
 
 /** "Podmień na ▸" — a row that opens the catalogue beside the menu. */
@@ -108,6 +110,7 @@ export function PaneMenuRows({
   onSwap,
   onRemove,
   onCustomize,
+  onFullscreen,
 }: PaneMenuRowsProps) {
   const t = useT()
   const closeMenu = useToolbarOverflowClose()
@@ -211,6 +214,23 @@ export function PaneMenuRows({
             <span className={TRAIL}><LayoutGrid /></span>
           </button>
         </>
+      )}
+
+      {onFullscreen && (
+        <button
+          type="button"
+          onClick={() => {
+            onFullscreen.onToggle()
+            closeMenu()
+          }}
+          className={M3_MENU_ROW}
+          data-workspace-fullscreen-item=""
+        >
+          <span className="flex-1">
+            {onFullscreen.active ? t('splitView.bar.exitFullscreen', 'Exit full screen') : t('splitView.bar.fullscreen', 'Full screen')}
+          </span>
+          <span className={TRAIL}>{onFullscreen.active ? <Minimize /> : <Maximize />}</span>
+        </button>
       )}
 
       {canRemove && (
