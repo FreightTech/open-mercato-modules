@@ -24,6 +24,8 @@ const config: StorybookConfig = {
     // Backend Sidebar — pure composition over primitives-v2 + `next/link`
     // (aliased to a Storybook shim below).
     '../src/backend/Sidebar.stories.@(ts|tsx)',
+    // The bell's panel and the flash toast (FMS ledger D39 / D47).
+    '../src/backend/notifications/**/*.stories.@(ts|tsx)',
   ],
   addons: [],
   framework: {
@@ -53,7 +55,12 @@ const config: StorybookConfig = {
       // Router context, which Storybook doesn't provide — stub it with a
       // plain `<a>` shim that swallows navigation.
       'next/link': resolve(here, './next-link-shim.tsx'),
+      // The notification item calls `useRouter` — no App Router here either.
+      'next/navigation': resolve(here, './next-navigation-shim.ts'),
     }
+    // Shared code reads `process.env.*` (feature flags, NODE_ENV); a browser bundle has no `process` — the
+    // notification panel's stories reach such code through the item renderer.
+    cfg.define = { ...(cfg.define || {}), 'process.env': {} }
     return cfg
   },
 }

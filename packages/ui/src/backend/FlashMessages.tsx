@@ -155,15 +155,18 @@ function FlashMessagesInner() {
   }
   const color = colorMap[kind]
 
+  // Bottom centre, where a snackbar goes (Material 3): headers carry the actions people reach for next — Publish,
+  // close — and a sticky error at the top right sat over them until dismissed (FMS ledger D47). Footers keep their
+  // buttons left and right; the centre is free.
   return (
-    <div className="pointer-events-none fixed left-3 right-3 top-3 z-[1200] sm:left-auto sm:right-4 sm:w-[380px]">
+    <div className="pointer-events-none fixed inset-x-3 bottom-4 z-[1200] flex justify-center" data-testid="flash-messages">
       <div
         role={kind === 'error' ? 'alert' : 'status'}
         aria-live={kind === 'error' ? 'assertive' : 'polite'}
-        className={`pointer-events-auto rounded px-3 py-2 text-white shadow-md ${color}`}
+        className={`pointer-events-auto w-full max-w-[420px] rounded-[12px] px-4 py-2.5 text-white shadow-md ${color}`}
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="text-sm">{msg}</div>
+          <div className="text-body-regular-sm">{msg}</div>
           <IconButton
             type="button"
             variant="ghost"
