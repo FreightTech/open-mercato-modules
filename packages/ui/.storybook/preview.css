@@ -14,6 +14,8 @@
 /* Material 3 system tokens — same position as in apps/web/globals.css
    (immediately after tokens.v2.css, whose `-v2` tokens it resolves into). */
 @import "../src/theme/m3.css";
+/* The FreightTech M3 tokens (`m3ft-*`) the backend panels use — the notification panel's stories (D39). */
+@import "../src/theme/m3-freighttech.css";
 @import "../src/theme/typography.css";
 
 /*
@@ -73,4 +75,15 @@ body {
   font-family: var(--font-sans);
   background: var(--background-v2);
   color: var(--foreground-v2);
+}
+
+/*
+  The app's status colours the flash toast uses (apps/web globals.css, legacy tokens) — so its story shows the
+  toast as the app does.
+*/
+@theme {
+  --color-status-error-icon: oklch(0.577 0.245 27.325);
+  --color-status-success-icon: oklch(0.596 0.145 163.225);
+  --color-status-warning-icon: oklch(0.700 0.160 70);
+  --color-status-info-icon: oklch(0.546 0.245 262.881);
 }

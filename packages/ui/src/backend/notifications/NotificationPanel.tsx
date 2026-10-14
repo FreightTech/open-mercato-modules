@@ -1,8 +1,6 @@
 "use client"
 import * as React from 'react'
 import { X, Bell, CheckCheck, Loader2, RotateCcw } from 'lucide-react'
-import { Button } from '../../primitives/button'
-import { IconButton } from '../../primitives/icon-button'
 import { Tabs, TabsList, TabsTrigger } from '../../primitives/tabs'
 import { NotificationItem } from './NotificationItem'
 import type { NotificationDto, NotificationRendererProps } from '@open-mercato/shared/modules/notifications/types'
@@ -117,6 +115,8 @@ export function NotificationPanel({
 
   if (!open) return null
 
+  // The app's look (FMS visual language: one frame, no card shadow, the M3 tokens and the named type scale) — the
+  // panel's chrome only; each item is the renderer's (a host may draw its own per type).
   return (
     <>
       <div
@@ -126,84 +126,86 @@ export function NotificationPanel({
       />
 
       <div
-        className="fixed right-0 top-0 z-50 h-full w-full max-w-md border-l bg-background shadow-lg"
+        className="theme-m3-freighttech fixed right-0 top-0 z-50 h-full w-full max-w-md border-l border-m3ft-outline-variant bg-m3ft-surface text-m3ft-on-surface"
         role="dialog"
         aria-modal="true"
         aria-label={t('notifications.title', 'Notifications')}
+        data-testid="notification-panel"
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              <h2 className="font-semibold">{t('notifications.title', 'Notifications')}</h2>
+          <div className="flex min-h-14 items-center justify-between gap-2 px-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2 className="truncate text-heading-semibold-md">{t('notifications.title', 'Notifications')}</h2>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-destructive px-2 py-0.5 text-xs text-destructive-foreground">
+                <span className="rounded-full bg-m3ft-primary px-2 py-0.5 text-label-semibold-2xs tabular-nums text-m3ft-on-primary" data-testid="notification-panel-unread">
                   {unreadCount}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1">
               {unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={handleMarkAllRead}
                   disabled={markingAllRead}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-body-medium-xs text-m3ft-on-surface hover:bg-m3ft-surface-container-low disabled:opacity-50"
+                  data-testid="notification-panel-mark-all"
                 >
-                  {markingAllRead ? (
-                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCheck className="mr-1 h-4 w-4" />
-                  )}
+                  {markingAllRead ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <CheckCheck className="size-4" aria-hidden />}
                   {t('notifications.markAllRead', 'Mark all read')}
-                </Button>
+                </button>
               )}
-              <IconButton variant="ghost" size="lg" onClick={() => onOpenChange(false)}>
-                <X className="h-5 w-5" />
-              </IconButton>
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                aria-label={t('notifications.actions.close', 'Close')}
+                className="inline-flex size-9 items-center justify-center rounded-full text-m3ft-on-surface-variant hover:bg-m3ft-surface-container-low hover:text-m3ft-on-surface"
+              >
+                <X className="size-5" aria-hidden />
+              </button>
             </div>
           </div>
 
-          <Tabs
-            value={filter}
-            onValueChange={(v) => setFilter(v as typeof filter)}
-            className="border-b"
-          >
-            <TabsList className="w-full justify-start rounded-none border-0 bg-transparent px-4">
-              <TabsTrigger value="all">
-                {t('notifications.filters.all', 'All')}
-              </TabsTrigger>
-              <TabsTrigger value="unread">
-                {t('notifications.filters.unread', 'Unread')}
-              </TabsTrigger>
-              <TabsTrigger value="action">
-                {t('notifications.filters.actionRequired', 'Action Required')}
-              </TabsTrigger>
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+            <TabsList className="h-10 w-full justify-start gap-5 rounded-none border-b border-m3ft-outline-variant bg-transparent p-0 px-4 text-m3ft-on-surface-variant">
+              {(
+                [
+                  ['all', t('notifications.filters.all', 'All')],
+                  ['unread', t('notifications.filters.unread', 'Unread')],
+                  ['action', t('notifications.filters.actionRequired', 'Action Required')],
+                ] as const
+              ).map(([value, label]) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="h-10 rounded-none border-b-2 border-transparent bg-transparent px-0 text-body-medium-sm text-m3ft-on-surface-variant shadow-none hover:bg-transparent hover:text-m3ft-on-surface aria-selected:border-m3ft-on-surface aria-selected:bg-transparent aria-selected:text-m3ft-on-surface aria-selected:shadow-none"
+                >
+                  {label}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </Tabs>
 
           {dismissUndo && onUndoDismiss && (
-            <div className="border-b bg-muted/40 px-4 py-2 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <span>
-                  {t('notifications.toast.dismissed', 'Notification dismissed')}
-                </span>
-                <Button variant="ghost" size="sm" onClick={() => onUndoDismiss()}>
-                  <RotateCcw className="mr-1 h-3 w-3" />
-                  {t('notifications.actions.undo', 'Undo')}
-                </Button>
-              </div>
+            <div className="flex items-center justify-between gap-3 border-b border-m3ft-outline-variant bg-m3ft-surface-container-low px-4 py-2 text-body-regular-sm">
+              <span>{t('notifications.toast.dismissed', 'Notification dismissed')}</span>
+              <button type="button" onClick={() => onUndoDismiss()} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-body-medium-xs text-m3ft-on-surface hover:bg-m3ft-surface-container">
+                <RotateCcw className="size-3.5" aria-hidden />
+                {t('notifications.actions.undo', 'Undo')}
+              </button>
             </div>
           )}
 
           <div className="flex-1 overflow-y-auto overscroll-contain">
             {filteredNotifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <Bell className="mb-2 h-8 w-8 opacity-50" />
-                <p>{t('notifications.empty', 'No notifications')}</p>
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-m3ft-on-surface-variant" data-testid="notification-panel-empty">
+                <span className="inline-flex size-12 items-center justify-center rounded-full bg-m3ft-surface-container-high">
+                  <Bell className="size-5" aria-hidden />
+                </span>
+                <p className="text-body-regular-sm">{t('notifications.empty', 'No notifications')}</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y divide-m3ft-outline-variant">
                 {filteredNotifications.map((notification) => (
                   <NotificationItem
                     key={notification.id}
