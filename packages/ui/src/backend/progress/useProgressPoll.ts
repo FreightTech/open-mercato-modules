@@ -29,6 +29,8 @@ export type UseProgressPollResult = {
   isLoading: boolean
   error: string | null
   refresh: () => void
+  /** The user lacks `progress.view` (403): the lists stay empty and no further poll is made. */
+  forbidden?: boolean
 }
 
 const POLL_INTERVAL = 5000
@@ -36,6 +38,11 @@ const POLL_INTERVAL = 5000
 // starts announces itself through progress events (refresh below), and the 5 s poll every open tab ran
 // all day was 10 % of the server's time under load (load test 2026-10-09).
 const IDLE_POLL_INTERVAL = 30000
+
+// GET /api/progress/active requires the `progress.view` feature. The top bar is mounted for every
+// backend user, so without this header apiFetch would answer the 403 with a redirect to /login for
+// everyone who simply cannot see progress. With it the 403 comes back as a result and we stop asking.
+export const PROGRESS_REQUEST_INIT: RequestInit = { headers: { 'x-om-forbidden-redirect': '0' } }
 
 function isVisibleProgressJob(job: ProgressJobDto): boolean {
   return job.meta?.hiddenFromTopBar !== true
@@ -46,12 +53,24 @@ export function useProgressPoll(): UseProgressPollResult {
   const [recentlyCompleted, setRecentlyCompleted] = React.useState<ProgressJobDto[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [forbidden, setForbidden] = React.useState(false)
+  const forbiddenRef = React.useRef(false)
 
   const fetchJobs = React.useCallback(async () => {
+    if (forbiddenRef.current) return
     try {
       const result = await apiCall<{ active: ProgressJobDto[]; recentlyCompleted: ProgressJobDto[] }>(
-        '/api/progress/active'
+        '/api/progress/active',
+        PROGRESS_REQUEST_INIT,
       )
+      if (result.status === 403) {
+        forbiddenRef.current = true
+        setForbidden(true)
+        setActiveJobs([])
+        setRecentlyCompleted([])
+        setError(null)
+        return
+      }
       if (result.ok && result.result) {
         setActiveJobs(result.result.active.filter(isVisibleProgressJob))
         setRecentlyCompleted(result.result.recentlyCompleted.filter(isVisibleProgressJob))
@@ -71,6 +90,7 @@ export function useProgressPoll(): UseProgressPollResult {
   const pollInterval = activeJobs.length > 0 ? POLL_INTERVAL : IDLE_POLL_INTERVAL
 
   React.useEffect(() => {
+    if (forbidden) return
     fetchJobs()
     let interval: ReturnType<typeof setInterval> | null = setInterval(fetchJobs, pollInterval)
 
@@ -91,7 +111,7 @@ export function useProgressPoll(): UseProgressPollResult {
       if (interval) clearInterval(interval)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [fetchJobs, pollInterval])
+  }, [fetchJobs, pollInterval, forbidden])
 
   React.useEffect(() => {
     const unsubUpdate = subscribeProgressUpdate(() => refresh())
@@ -102,5 +122,5 @@ export function useProgressPoll(): UseProgressPollResult {
     }
   }, [refresh])
 
-  return { activeJobs, recentlyCompleted, isLoading, error, refresh }
+  return { activeJobs, recentlyCompleted, isLoading, error, refresh, forbidden }
 }

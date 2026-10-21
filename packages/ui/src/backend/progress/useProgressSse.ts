@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { apiCall } from '../utils/apiCall'
 import { useAppEvent } from '../injection/useAppEvent'
-import type { ProgressJobDto, UseProgressPollResult } from './useProgressPoll'
+import { PROGRESS_REQUEST_INIT, type ProgressJobDto, type UseProgressPollResult } from './useProgressPoll'
 
 function isVisibleProgressJob(job: ProgressJobDto): boolean {
   return job.meta?.hiddenFromTopBar !== true
@@ -25,12 +25,26 @@ export function useProgressSse(): UseProgressPollResult {
   const [recentlyCompleted, setRecentlyCompleted] = React.useState<ProgressJobDto[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [forbidden, setForbidden] = React.useState(false)
+  // Once the server says 403 (no `progress.view`), every later trigger — focus, bridge events,
+  // refresh — is a no-op; the user cannot see progress until a reload with new grants.
+  const forbiddenRef = React.useRef(false)
 
   const fetchJobs = React.useCallback(async () => {
+    if (forbiddenRef.current) return
     try {
       const result = await apiCall<{ active: ProgressJobDto[]; recentlyCompleted: ProgressJobDto[] }>(
         '/api/progress/active',
+        PROGRESS_REQUEST_INIT,
       )
+      if (result.status === 403) {
+        forbiddenRef.current = true
+        setForbidden(true)
+        setActiveJobs([])
+        setRecentlyCompleted([])
+        setError(null)
+        return
+      }
       if (result.ok && result.result) {
         setActiveJobs(result.result.active.filter(isVisibleProgressJob))
         setRecentlyCompleted(result.result.recentlyCompleted.filter(isVisibleProgressJob))
@@ -54,6 +68,7 @@ export function useProgressSse(): UseProgressPollResult {
   useAppEvent(
     'progress.job.updated',
     (event) => {
+      if (forbiddenRef.current) return
       const payload = event.payload as Partial<ProgressJobDto> & { jobId?: string }
       const jobId = payload?.jobId
       if (!jobId) {
@@ -114,5 +129,5 @@ export function useProgressSse(): UseProgressPollResult {
     return () => window.removeEventListener('focus', onFocus)
   }, [fetchJobs])
 
-  return { activeJobs, recentlyCompleted, isLoading, error, refresh }
+  return { activeJobs, recentlyCompleted, isLoading, error, refresh, forbidden }
 }
