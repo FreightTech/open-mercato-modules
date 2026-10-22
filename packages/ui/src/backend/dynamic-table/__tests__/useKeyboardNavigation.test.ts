@@ -12,7 +12,7 @@ import type { ColumnDef } from '../types/index'
  * grid and had no test. These assertions ARE the specification of the Excel-like
  * behaviour the product owner asked for:
  *
- *   Enter   — open editor / commit and move DOWN
+ *   Enter   — open editor / commit and STAY on the cell (GT walk 22.10, F3.20)
  *   Tab     — commit and move RIGHT, skipping read-only columns, wrapping rows
  *   Escape  — two steps: leave the editor, then drop the selection
  *   Arrows  — move one cell, clamped at the edges, INCLUDING read-only cells
@@ -98,15 +98,19 @@ describe('keyboard — Enter', () => {
     expect(store.getEditingCell()).toEqual({ row: 1, col: 1 })
   })
 
-  it('commits and moves DOWN one row, reopening the editor', () => {
-    const { store, nav } = setup()
+  // F3.20 (GT walk 22.10): "Enter saves the cell and stays on the row" — it used to open the next row's editor, so a
+  // typed amount on one invoice left an open editor on the next one.
+  it('commits and stays on the cell, with no editor open on the next row', () => {
+    const { store, nav, table } = setup()
+    const focus = jest.spyOn(table, 'focus')
     selectCell(store, 0, 1)
     store.setEditingCell(0, 1)
 
-    press(nav, 'Enter')
+    expect(press(nav, 'Enter').prevented).toBe(true)
 
-    expect(store.getEditingCell()).toEqual({ row: 1, col: 1 })
-    expect(store.getSelectionBounds()).toEqual({ startRow: 1, endRow: 1, startCol: 1, endCol: 1 })
+    expect(store.getEditingCell()).toBeNull()
+    expect(store.getSelectionBounds()).toEqual({ startRow: 0, endRow: 0, startCol: 1, endCol: 1 })
+    expect(focus).toHaveBeenCalled()
   })
 
   it('closes the editor and refocuses the table on the last row', () => {

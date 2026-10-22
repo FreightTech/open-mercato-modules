@@ -324,31 +324,18 @@ export function useKeyboardNavigation(
       const editing = store.getEditingCell();
       const bounds = store.getSelectionBounds();
 
-      // Enter navigation - when editing, move down (Excel-like behavior)
+      // Enter while editing - commit and stay on the cell (GT walk 22.10, F3.20: opening the next row's editor left an
+      // open editor on a row nobody meant to touch). Focus goes back to the table so Tab/Arrow keys still reach this handler.
       // Note: Editors save the value before the event bubbles here
       if (e.key === 'Enter' && !e.shiftKey && editing) {
         e.preventDefault();
-
-        const currentRow = editing.row;
-        const currentCol = editing.col;
-
-        // Move to next row (down), same column
-        const nextRow = currentRow + 1;
-
-        if (nextRow < store.getRowCount()) {
-          store.clearEditing();
-          store.setSelection({
-            type: 'range',
-            anchor: { row: nextRow, col: currentCol },
-            focus: { row: nextRow, col: currentCol },
-          });
-          store.setEditingCell(nextRow, currentCol);
-        } else {
-          // At the last row, clear editing and restore focus to the table
-          // container so subsequent Tab/Arrow keys still reach this handler.
-          store.clearEditing();
-          store.focusTable();
-        }
+        store.clearEditing();
+        store.setSelection({
+          type: 'range',
+          anchor: { row: editing.row, col: editing.col },
+          focus: { row: editing.row, col: editing.col },
+        });
+        store.focusTable();
         return;
       }
 
