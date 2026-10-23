@@ -31,6 +31,7 @@ import type { FormulaColumnRef } from '../formula/types';
 import { isFormulaColumnKey } from '../utils/formulaColumns';
 import { Button, IconButton, Input } from '../../../primitives-v2';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
+import { useConfirmDialog } from '../../confirm-dialog';
 
 /**
  * Saved-view colour swatches — the ORDER only. The colour itself comes from
@@ -315,12 +316,55 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
     onConditionalFormatsChange, onDateFormatChange,
   ]);
 
+  /** Whether anything in the drawer moved since it opened (the rollback's own comparison). */
+  const isDirty = useCallback(() => {
+    const snap = snapshotRef.current;
+    if (!snap) return false;
+    const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+    return !(
+      same(snap.visibleColumns, visibleColumns) && same(snap.hiddenColumns, hiddenColumns) && same(snap.filters, filters) &&
+      same(snap.sortRules, sortRules) && same(snap.groupRules, groupRules) && same(snap.aggregations, aggregations) &&
+      same(snap.lookupColumns, lookupColumns) && same(snap.rollupColumns, rollupColumns) && same(snap.formulas, formulas) &&
+      same(snap.conditionalFormats, conditionalFormats) && snap.dateFormat === dateFormat
+    );
+  }, [visibleColumns, hiddenColumns, filters, sortRules, groupRules, aggregations, lookupColumns, rollupColumns, formulas, conditionalFormats, dateFormat]);
+
+  // F8.03 (FMS walk 23.10): Escape, the X or an outside click dropped the edits without a word. With edits not saved,
+  // a dismissal asks first; nothing edited, it closes as before.
+  const { confirm, ConfirmDialogElement } = useConfirmDialog();
+  const askingRef = useRef(false);
+
+  /** "Anuluj" and the X: an explicit cancel — rolled back and closed, nothing asked. */
+  const cancel = useCallback(() => {
+    revertToSnapshot();
+    snapshotRef.current = null;
+    onOpenChange(false);
+  }, [revertToSnapshot, onOpenChange]);
+
   /** Single close path, so no dismissal can skip the rollback by accident. */
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
         if (savingRef.current) {
           savingRef.current = false;
+        } else if (isDirty()) {
+          // One question at a time: Escape on the question itself must not ask again.
+          if (askingRef.current) return;
+          askingRef.current = true;
+          void confirm({
+            title: t('dynamicTable.configureView.discardTitle', 'Discard the changes?'),
+            text: t('dynamicTable.configureView.discardText', 'The changes to this view are not saved.'),
+            confirmText: t('dynamicTable.configureView.discard', 'Discard'),
+            cancelText: t('dynamicTable.configureView.keepEditing', 'Keep editing'),
+            variant: 'destructive',
+          }).then((ok) => {
+            askingRef.current = false;
+            if (!ok) return;
+            revertToSnapshot();
+            snapshotRef.current = null;
+            onOpenChange(false);
+          });
+          return;
         } else {
           revertToSnapshot();
         }
@@ -328,7 +372,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
       }
       onOpenChange(open);
     },
-    [onOpenChange, revertToSnapshot],
+    [onOpenChange, revertToSnapshot, isDirty, confirm, t],
   );
 
   /**
@@ -541,7 +585,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                 size="sm"
                 aria-label={t('dynamicTable.configureView.cancel', 'Cancel')}
                 icon={<X className="w-4 h-4" />}
-                onClick={() => handleOpenChange(false)}
+                onClick={cancel}
               />
             </div>
           </div>
@@ -890,7 +934,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
             <span className="flex-1" />
             <Button
               variant="outline"
-              onClick={() => handleOpenChange(false)}
+              onClick={cancel}
             >
               {t('dynamicTable.configureView.cancel', 'Cancel')}
             </Button>
@@ -909,6 +953,8 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
             </Button>
           </div>
         </div>
+        {/* Inside the drawer, so its focus trap and outside-click rule treat the question as part of it. */}
+        {ConfirmDialogElement}
       </SheetContent>
     </Sheet>
   );
