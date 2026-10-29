@@ -108,6 +108,12 @@ const CARRIER_SPECS: CarrierSpec[] = [
     endpointRequired: true,
     credentials: [CLIENT_ID, CLIENT_SECRET, { key: 'token_url', label: 'Token URL' }],
   },
+  {
+    value: 'dockflow',
+    label: 'Dockflow',
+    defaultEndpoint: 'https://api.dockflow.com/v3',
+    credentials: [{ key: 'api_key', label: 'API key (upstream + downstream)', secret: true }],
+  },
 ]
 
 function specFor(carrierCode: string): CarrierSpec | undefined {
