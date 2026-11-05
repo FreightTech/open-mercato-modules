@@ -272,6 +272,15 @@ export class Shipment {
   @Property({ type: 'jsonb', nullable: true })
   seals?: SealInfo[] | null
 
+  // ─── Cargo Weight (kg) ─────────────────────────────────────────
+  // Latest weights reported by the carrier for this container. Most carriers send neither;
+  // MSC/Hapag report them on the weighing / VGM-declaration event (see dcsa-event-parser).
+  @Property({ name: 'gross_weight_kg', type: 'float', nullable: true })
+  grossWeightKg?: number | null
+
+  @Property({ name: 'vgm_kg', type: 'float', nullable: true })
+  vgmKg?: number | null
+
   @Property({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean = true
 
@@ -466,6 +475,14 @@ export class TrackingEvent {
 
   @Property({ type: 'jsonb', nullable: true })
   seals?: SealInfo[] | null
+
+  // ─── Cargo Weight (kg) ─────────────────────────────────────────
+  // Per-event weights the carrier reported (gross / VGM); null on events that carry neither.
+  @Property({ name: 'gross_weight_kg', type: 'float', nullable: true })
+  grossWeightKg?: number | null
+
+  @Property({ name: 'vgm_kg', type: 'float', nullable: true })
+  vgmKg?: number | null
 
   // ─── Timestamps ────────────────────────────────────────────────
 

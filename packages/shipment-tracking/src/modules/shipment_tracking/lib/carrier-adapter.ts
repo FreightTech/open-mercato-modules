@@ -134,6 +134,13 @@ export type CarrierFetchedEvent = {
   delayReasonCode?: string | null // SMDG delay reason code
   changeRemark?: string | null
   seals?: SealInfo[] | null
+
+  // ─── Cargo Weight (kg) ─────────────────────────────────────────
+  // Carriers that enrich DCSA events report the container's weights. MSC uses snake_case
+  // (gross_weight / vgm_weight), Hapag-Lloyd PascalCase (GrossWeight / VGMWeight). Most events
+  // carry neither — populated only on the weighing / VGM-declaration event.
+  grossWeightKg?: number | null
+  vgmKg?: number | null
 }
 
 export type CarrierAdapterTestResult = {

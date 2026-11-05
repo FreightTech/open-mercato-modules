@@ -20,6 +20,16 @@ function parseCoordinate(value: unknown): number | null {
   return null
 }
 
+/**
+ * Parse a cargo weight into kilograms. Carriers send it as a number or a numeric string
+ * ("27490", "27490.0"); 0 and blanks mean "not declared" and become null.
+ */
+function parseWeightKg(value: unknown): number | null {
+  if (value == null) return null
+  const n = typeof value === 'number' ? value : typeof value === 'string' ? parseFloat(value.trim()) : NaN
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
 type DcsaResponseShape =
   | { events: RawDcsaEvent[] }
   | RawDcsaEvent[]
@@ -79,6 +89,15 @@ export function parseDcsaEvents(data: DcsaResponseShape, _carrierName: string): 
       source: (seal.sealSource ?? seal.source) as string | null ?? null,
       type: (seal.sealType ?? seal.type) as string | null ?? null,
     })) ?? null
+
+    // ─── Cargo weight (kg) ─────────────────────────────────────────
+    // Carrier enrichments outside the DCSA schema: MSC snake_case, Hapag-Lloyd PascalCase.
+    const grossWeightKg = parseWeightKg(
+      effectiveEvent.gross_weight ?? effectiveEvent.GrossWeight ?? effectiveEvent.grossWeight,
+    )
+    const vgmKg = parseWeightKg(
+      effectiveEvent.vgm_weight ?? effectiveEvent.VGMWeight ?? effectiveEvent.vgmWeight,
+    )
 
     // ─── Event Created DateTime ────────────────────────────────────
     const eventCreatedDateTimeRaw = metadata?.eventCreatedDateTime ?? event.eventCreatedDateTime
@@ -158,6 +177,8 @@ export function parseDcsaEvents(data: DcsaResponseShape, _carrierName: string): 
       delayReasonCode: (effectiveEvent.delayReasonCode as string) ?? null,
       changeRemark: (effectiveEvent.changeRemark as string) ?? null,
       seals,
+      grossWeightKg,
+      vgmKg,
     }
   })
 }

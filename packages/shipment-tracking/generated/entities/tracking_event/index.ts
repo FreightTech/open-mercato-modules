@@ -57,4 +57,6 @@ export const publisher_role = "publisher_role";
 export const delay_reason_code = "delay_reason_code";
 export const change_remark = "change_remark";
 export const seals = "seals";
+export const gross_weight_kg = "gross_weight_kg";
+export const vgm_kg = "vgm_kg";
 export const created_at = "created_at";
