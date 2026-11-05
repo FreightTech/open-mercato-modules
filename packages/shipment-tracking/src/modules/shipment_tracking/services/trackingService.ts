@@ -14,7 +14,7 @@ import { deriveShipmentStatus, deriveAirShipmentStatus } from '../lib/status-mac
 import { extractShipmentTimes } from '../lib/time-extraction'
 import { generatePollSchedule, getNextPollDate } from '../lib/schedule-generator'
 import type { CarrierFetchedEvent } from '../lib/carrier-adapter'
-import { CarrierReferenceNotFoundError } from '../lib/carrier-adapter'
+import { CarrierReferenceNotFoundError, CarrierPermissionDeniedError } from '../lib/carrier-adapter'
 import { mapDcsaEventToWebhookType, isSignificantMilestone } from '../lib/dcsa-event-mapping'
 import { inferRouteFromEvents } from '../lib/route-inference'
 import { allContainersComplete, destinationArrivedBefore, staleArrivalCutoff } from '../lib/empty-return'
@@ -377,6 +377,11 @@ export class TrackingService {
           await this.recordReferenceNotFound(em, job, error.message)
           return { newEvents: 0, shipmentsCreated: 0, shipmentsUpdated: 0 }
         }
+        // Permission/entitlement denial → pause (resumable), don't retry.
+        if (error instanceof CarrierPermissionDeniedError) {
+          await this.recordPermissionDenied(em, job, error.message)
+          return { newEvents: 0, shipmentsCreated: 0, shipmentsUpdated: 0 }
+        }
         const message = error instanceof Error ? error.message : 'Unknown ShipsGo fetch error'
         await this.recordJobError(em, job, message)
         return { newEvents: 0, shipmentsCreated: 0, shipmentsUpdated: 0 }
@@ -443,6 +448,14 @@ export class TrackingService {
         // retry→'failed' after ~10 polls and hide the real cause from operators.
         if (error instanceof CarrierReferenceNotFoundError) {
           await this.recordReferenceNotFound(em, job, error.message)
+          return { newEvents: 0, shipmentsCreated: 0, shipmentsUpdated: 0 }
+        }
+        // Carrier POSITIVELY denies access to this reference (valid creds, booking
+        // not under this account/profile — e.g. CargoSmart EWS404). Retrying can
+        // never return data, so pause the job (resumable) instead of burning the
+        // retry budget and request quota. NOT routed through recordJobError.
+        if (error instanceof CarrierPermissionDeniedError) {
+          await this.recordPermissionDenied(em, job, error.message)
           return { newEvents: 0, shipmentsCreated: 0, shipmentsUpdated: 0 }
         }
         const message = error instanceof Error ? error.message : 'Unknown fetch error'
@@ -1796,6 +1809,45 @@ export class TrackingService {
     const crossed = job.notFoundCount === REFERENCE_NOT_FOUND_POLL_THRESHOLD
     await em.flush()
     if (crossed) await this.emitReferenceNotFound(job)
+  }
+
+  /**
+   * The carrier POSITIVELY denies access to this reference's data: valid
+   * credentials, but the account/profile isn't permitted to see this shipment
+   * (e.g. CargoSmart EWS404 "User does not have permission to access", or a
+   * booking owned by a different account). Retrying cannot change the outcome,
+   * so — unlike recordJobError (10-strike → 'failed', re-asking every poll) — we
+   * PAUSE the job on the first occurrence. A paused job leaves the
+   * `status: 'active'` poll filter, so polling (and the request-quota spend)
+   * stops. retryCount is left untouched. The transition emits
+   * `tracking_job.permission_denied` once. Re-enrolling after access is granted
+   * reuses the paused job (createTrackingJob matches active|paused) and a
+   * subsequent successful poll resumes it.
+   */
+  private async recordPermissionDenied(
+    em: EntityManager,
+    job: TrackingJob,
+    message: string,
+  ): Promise<void> {
+    const wasPaused = job.status === 'paused'
+    const history = job.errorHistory ?? []
+    history.push({ date: new Date().toISOString(), message: `permission denied: ${message}` })
+    if (history.length > 20) history.splice(0, history.length - 20)
+    job.errorHistory = history
+    job.lastPollAt = new Date()
+    job.status = 'paused'
+    job.nextPollAt = null
+    await em.flush()
+    if (!wasPaused) {
+      await this.deps.eventBus.emit('shipment_tracking.tracking_job.permission_denied', {
+        id: job.id,
+        carrierCode: job.carrierCode,
+        referenceType: job.referenceType,
+        referenceValue: job.referenceValue,
+        tenantId: job.tenantId,
+        organizationId: job.organizationId,
+      })
+    }
   }
 
   /**

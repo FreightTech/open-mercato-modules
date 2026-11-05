@@ -10,6 +10,9 @@ export type CoscoShipmentData = {
 export type CoscoContainer = {
   containerNumber?: {
     containerNumber: string
+    // CargoSmart returns the ISO check digit as a SEPARATE field; the canonical
+    // 11-char container number is `${containerNumber}${containerCheckDigit}`.
+    containerCheckDigit?: string
   }
   event?: CoscoEvent[]
   externalReference?: CoscoExternalReference[]

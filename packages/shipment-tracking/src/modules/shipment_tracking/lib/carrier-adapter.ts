@@ -31,6 +31,39 @@ export class CarrierReferenceNotFoundError extends Error {
   }
 }
 
+/**
+ * Thrown by an adapter when the carrier POSITIVELY denies access to the
+ * reference's data: the credentials are valid, but the account/profile is not
+ * permitted to see this shipment (e.g. CargoSmart `EWS404` "User does not have
+ * permission to access", `EWS102` "User is not registered with the carrier", or
+ * a booking owned by a different account). Retrying cannot change the outcome,
+ * so the poll loop PAUSES the job (status `paused`) and does NOT burn the per-job
+ * retry budget — which would waste request quota re-asking for data that can
+ * never come back, and flip the job to 'failed' after ~10 polls. A paused job is
+ * excluded by the `status: 'active'` poll filter, so polling stops; re-enrolling
+ * after access is granted reuses the paused job and resumes it.
+ *
+ * NOTE for adapter authors: throw this ONLY for a permission/entitlement denial,
+ * never for a transient/auth/5xx error (those must surface as ordinary errors so
+ * the retry/backoff logic applies), and never for a genuinely unknown reference
+ * (use CarrierReferenceNotFoundError for that).
+ */
+export class CarrierPermissionDeniedError extends Error {
+  readonly carrierCode: string
+  readonly referenceType: string
+  readonly referenceValue: string
+  constructor(args: { carrierCode: string; referenceType: string; referenceValue: string; message?: string }) {
+    super(
+      args.message ??
+        `${args.carrierCode}: permission denied (${args.referenceType} ${args.referenceValue})`,
+    )
+    this.name = 'CarrierPermissionDeniedError'
+    this.carrierCode = args.carrierCode
+    this.referenceType = args.referenceType
+    this.referenceValue = args.referenceValue
+  }
+}
+
 /** Result of a per-carrier reference-format check (soft, non-blocking). */
 export type ReferenceValidationResult = {
   ok: boolean

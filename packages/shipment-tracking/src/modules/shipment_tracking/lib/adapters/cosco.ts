@@ -1,4 +1,5 @@
 import type { CarrierAdapter, CarrierFetchResult, CarrierFetchedEvent, CarrierAdapterTestResult } from '../carrier-adapter'
+import { CarrierPermissionDeniedError } from '../carrier-adapter'
 import type { TrackingReferenceType } from '../../data/entities'
 import type { TrackingEventType, TrackingEventClassifierCode } from '../../data/entities'
 import type {
@@ -174,10 +175,26 @@ function generateEventId(event: CoscoEvent, eventDatetime: string): string {
 }
 
 function processCoscoResponse(
-  data: { shipmentContent?: string | CoscoShipmentData; errors?: { errorDescription: string }[] },
+  data: { shipmentContent?: string | CoscoShipmentData; errors?: { errorCode?: string; errorDescription: string }[] },
+  ref: { carrierCode: string; referenceType: TrackingReferenceType; referenceValue: string },
 ): CarrierFetchedEvent[] {
   if (data.errors?.length) {
-    throw new Error(`Cosco API error: ${data.errors[0].errorDescription}`)
+    const err = data.errors[0]
+    const desc = err.errorDescription ?? ''
+    const code = err.errorCode ?? ''
+    // CargoSmart EWS404 "User does not have permission to access" / EWS102 "User
+    // is not registered with the carrier" = a permanent permission/entitlement
+    // denial (valid key, booking not under this profile). Pause the job instead
+    // of retrying — retrying can never return data and only burns request quota.
+    if (code === 'EWS404' || code === 'EWS102' || /does not have permission|not registered with the carrier/i.test(desc)) {
+      throw new CarrierPermissionDeniedError({
+        carrierCode: ref.carrierCode,
+        referenceType: ref.referenceType,
+        referenceValue: ref.referenceValue,
+        message: `Cosco API error: ${desc || code}`,
+      })
+    }
+    throw new Error(`Cosco API error: ${desc || code}`)
   }
 
   let shipmentData: CoscoShipmentData | null = null
@@ -198,12 +215,15 @@ function processCoscoResponse(
     : [shipmentData.containerDetail]
 
   const allEvents: CoscoEvent[] = containerData
-    .flatMap((container) =>
-      (container.event ?? []).map((event) => ({
-        ...event,
-        containerNumber: container.containerNumber?.containerNumber,
-      })),
-    )
+    .flatMap((container) => {
+      const cn = container.containerNumber?.containerNumber
+      // CargoSmart splits the ISO check digit into its own field; recombine so the
+      // equipmentReference is the canonical 11-char number that matches folder units.
+      const containerNumber = cn
+        ? `${cn}${container.containerNumber?.containerCheckDigit ?? ''}`
+        : undefined
+      return (container.event ?? []).map((event) => ({ ...event, containerNumber }))
+    })
     .filter(Boolean)
 
   if (allEvents.length === 0) return []
@@ -228,6 +248,7 @@ function processCoscoResponse(
       eventClassifierCode: (dcsaMapping.eventClassification as TrackingEventClassifierCode) ?? null,
       eventDateTime: new Date(gmtDatetime),
       eventDateTimeOffset: offset !== '+00:00' ? offset : null,
+      equipmentReference: event.containerNumber ?? null,
       description: event.eventDescription ?? event.carrEventCode ?? null,
       locationName: locationData.locationName,
       locationUnlocode: locationData.locationUnlocode,
@@ -282,7 +303,11 @@ export class CoscoAdapter implements CarrierAdapter {
         }
 
         const data = await response.json()
-        const events = processCoscoResponse(data)
+        const events = processCoscoResponse(data, {
+          carrierCode: this.carrierCode,
+          referenceType: input.referenceType,
+          referenceValue: input.referenceValue,
+        })
 
         // Extract booking/BOL from COSCO response structure
         const shipmentData = data as CoscoShipmentData | undefined
