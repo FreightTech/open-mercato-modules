@@ -1,5 +1,6 @@
 import { registerCommand } from '@open-mercato/shared/lib/commands'
 import type { CommandHandler, CommandRuntimeContext } from '@open-mercato/shared/lib/commands'
+import { registerSchedulerSafeCommands } from '@open-mercato/scheduler/modules/scheduler/lib/scheduler-safe-commands'
 import type { EntityManager } from '@mikro-orm/postgresql'
 import type { EventBus } from '@open-mercato/events'
 import type { TrackingService } from '../services/trackingService'
@@ -228,3 +229,13 @@ const evaluatePreArrival: CommandHandler<EvaluatePreArrivalInput, EvaluatePreArr
 registerCommand(pollAllActiveJobs)
 registerCommand(pollSingleJob)
 registerCommand(evaluatePreArrival)
+
+// These two commands are the targets of the module's seeded schedules
+// (setup.ts: "Daily Shipment Tracking Poll" and "Pre-Arrival Status Evaluation").
+// The scheduler's UI update route rejects any command target that is not on the
+// scheduler-safe allowlist, so without this the seeded schedules can run but can
+// never be re-enabled from the scheduler screen once disabled (HTTP 400).
+registerSchedulerSafeCommands([
+  { commandId: 'shipment_tracking.tracking.poll_all', requiredFeatures: ['shipment_tracking.tracking_jobs.manage'] },
+  { commandId: 'shipment_tracking.tracking.evaluate_pre_arrival', requiredFeatures: ['shipment_tracking.tracking_jobs.manage'] },
+])
