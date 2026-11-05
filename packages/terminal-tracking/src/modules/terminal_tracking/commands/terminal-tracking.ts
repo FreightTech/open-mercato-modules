@@ -1,5 +1,6 @@
 import { registerCommand } from '@open-mercato/shared/lib/commands'
 import type { CommandHandler, CommandRuntimeContext } from '@open-mercato/shared/lib/commands'
+import { registerSchedulerSafeCommands } from '@open-mercato/scheduler/modules/scheduler/lib/scheduler-safe-commands'
 import type { TerminalTrackingService } from '../services/terminalTrackingService'
 
 function ensureScope(ctx: CommandRuntimeContext, tenantId: string, organizationId?: string) {
@@ -32,3 +33,11 @@ const pollAllActiveJobs: CommandHandler<PollAllInput, PollAllResult> = {
 }
 
 registerCommand(pollAllActiveJobs)
+
+// Target of the module's seeded "Terminal Tracking Poll" schedule
+// (lib/ensure-schedule.ts). Without this allowlist entry the scheduler's UI
+// update route rejects the command target with HTTP 400, so the schedule can
+// run but can never be re-enabled from the scheduler screen once disabled.
+registerSchedulerSafeCommands([
+  { commandId: 'terminal_tracking.tracking.poll_all', requiredFeatures: ['terminal_tracking.tracking_jobs.manage'] },
+])
