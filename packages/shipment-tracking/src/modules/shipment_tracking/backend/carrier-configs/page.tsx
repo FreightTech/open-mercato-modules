@@ -88,7 +88,7 @@ const CARRIER_SPECS: CarrierSpec[] = [
   {
     value: 'zim',
     label: 'ZIM',
-    defaultEndpoint: 'https://apigw.zim.com/trackAndTrace/v1',
+    defaultEndpoint: 'https://apigw.zim.com/trackAndTrace/v2',
     credentials: [CLIENT_ID, CLIENT_SECRET, { key: 'subscription_key', label: 'Subscription key', secret: true }],
   },
   {

@@ -7,7 +7,7 @@ import { parseDcsaEvents } from '../dcsa-event-parser'
 import { withCarrierApiSpan } from '../logger'
 
 const TOKEN_URL = 'https://apigw.zim.com/authorize/v1'
-const EVENTS_URL = 'https://apigw.zim.com/trackAndTrace/v1'
+const EVENTS_URL = 'https://apigw.zim.com/trackAndTrace/v2'
 
 type ZimAuthConfig = {
   client_id: string
