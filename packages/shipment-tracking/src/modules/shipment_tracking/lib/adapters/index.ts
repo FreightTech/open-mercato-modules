@@ -6,6 +6,7 @@ import { HapagLloydAdapter } from './hapag-lloyd'
 import { CmaCgmAdapter } from './cma-cgm'
 import { CoscoAdapter } from './cosco'
 import { EvergreenAdapter } from './evergreen'
+import { DockflowAdapter } from './dockflow'
 
 export function registerAllAdapters(registry: CarrierRegistryService): void {
   registry.register(new MaerskAdapter())
@@ -15,4 +16,5 @@ export function registerAllAdapters(registry: CarrierRegistryService): void {
   registry.register(new CmaCgmAdapter())
   registry.register(new CoscoAdapter())
   registry.register(new EvergreenAdapter())
+  registry.register(new DockflowAdapter())
 }

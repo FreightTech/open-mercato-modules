@@ -1,8 +1,9 @@
 # @freighttech/shipment-tracking
 
 Carrier shipment tracking for the Open Mercato platform — DCSA carrier adapters
-(Maersk, MSC, CMA CGM, Hapag-Lloyd, ZIM, COSCO, Evergreen), a ShipsGo
-aggregator fallback, a Journey Timeline, and an optional live vessel/POI map.
+(Maersk, MSC, CMA CGM, Hapag-Lloyd, ZIM, COSCO, Evergreen), a
+[Dockflow](#dockflow) adapter, a ShipsGo aggregator fallback, a Journey
+Timeline, and an optional live vessel/POI map.
 
 Most integration credentials are configured **in the UI** (Backend → Śledzenie
 przesyłek → Autoryzacja śledzenia): per-carrier auth, the ShipsGo token, and the
@@ -44,6 +45,41 @@ The ShipsGo token and base URL are normally configured **in the UI**. As a
 fallback, `SHIPSGO_API_TOKEN` and `SHIPSGO_BASE_URL` (default
 `https://api.shipsgo.com/v2`) are read from the environment when no UI config
 is present.
+
+## Dockflow
+
+[Dockflow](https://dockflow.com) is a container visibility platform: it tracks
+ocean containers across carriers, terminals and inland legs and combines those
+sources into one timeline of milestones per shipment. The `dockflow` adapter
+pulls that timeline as DCSA Track & Trace 2.2 events from Dockflow's
+[Trident Upstream API](https://docs.dockflow.com/trident-api/upstream), so one
+Dockflow key covers every carrier Dockflow supports.
+
+### Getting an API key
+
+The adapter needs **one Dockflow API key with both the `downstream` and the
+`upstream` scope**:
+
+- `downstream` registers a container, booking or bill of lading with Dockflow
+  for tracking ([Downstream API](https://docs.dockflow.com/trident-api/downstream)).
+- `upstream` reads its events back.
+
+A key with only one of the two scopes cannot track new references. To obtain a
+key with both scopes, get in touch with
+[support@dockflow.com](mailto:support@dockflow.com).
+
+### Configuration
+
+Configure it in the UI like any other carrier (Backend → Śledzenie przesyłek →
+Autoryzacja śledzenia), choosing **Dockflow** and entering the API key. The
+endpoint defaults to production, `https://api.dockflow.com/v3`. For Dockflow's
+sandbox use `https://uat.dockflow.com/v3` together with a UAT key.
+
+Then create tracking jobs with carrier code `dockflow` for `container`,
+`booking` or `bol` references. On its first poll the adapter registers the
+reference with Dockflow as tradeflow `om-<type>-<reference>`, so it never
+changes tradeflows you manage in Dockflow yourself. Events appear once Dockflow
+has picked the reference up. Until then the job reports no events.
 
 ## License
 
