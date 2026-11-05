@@ -586,6 +586,8 @@ export class TrackingService {
         delayReasonCode: fetched.delayReasonCode,
         changeRemark: fetched.changeRemark,
         seals: fetched.seals,
+        grossWeightKg: fetched.grossWeightKg ?? null,
+        vgmKg: fetched.vgmKg ?? null,
       })
       newEvents.push(trackingEvent)
       existingByKey.set(dedupeKey, trackingEvent) // Prevent duplicates within same batch
@@ -1294,6 +1296,18 @@ export class TrackingService {
     } else {
       shipment.seals = null
     }
+
+    // ─── Latest reported cargo weight (kg) ───────────────────────────
+    // Carriers report gross / VGM weight only on the weighing / VGM-declaration event.
+    // containerEvents is chronological, so the last non-null value is the most recent.
+    let grossWeightKg: number | null = null
+    let vgmKg: number | null = null
+    for (const e of containerEvents) {
+      if (e.grossWeightKg != null) grossWeightKg = e.grossWeightKg
+      if (e.vgmKg != null) vgmKg = e.vgmKg
+    }
+    shipment.grossWeightKg = grossWeightKg
+    shipment.vgmKg = vgmKg
 
     // ─── Build rich origin/destination locations ────────────────────
     // Find the best event for origin using priority:
