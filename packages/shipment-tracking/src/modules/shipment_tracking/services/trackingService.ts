@@ -221,6 +221,12 @@ export class TrackingService {
   /**
    * Polls all active tracking jobs for a tenant/organization.
    * Called by the scheduler for periodic re-polling.
+   *
+   * Every job is polled on the same EntityManager (`deps.em()` is the command's), so the identity map is cleared after
+   * each one (`pollTrackingJob` has flushed by then). Without that, every job, shipment and event of the whole run —
+   * with their raw carrier payloads and MikroORM's snapshots of them — stayed managed until the end, and each flush
+   * diffed all of them: GT's ~2,800 active jobs took the queue worker to its 2 GB heap limit 29 minutes into the 06:00
+   * run (tms-ft 2026-11-06).
    */
   async pollAllActiveJobs(
     tenantId: string,
@@ -238,7 +244,13 @@ export class TrackingService {
       filter.organizationId = organizationId
     }
 
-    const jobs = await em.find(TrackingJob, filter)
+    const jobs = (await em.find(TrackingJob, filter)).map((job) => ({
+      id: job.id,
+      carrierCode: job.carrierCode,
+      tenantId: job.tenantId,
+      organizationId: job.organizationId,
+    }))
+    em.clear()
 
     let polled = 0
     let totalNewEvents = 0
@@ -264,6 +276,8 @@ export class TrackingService {
           tenantId: job.tenantId,
           organizationId: job.organizationId,
         })
+      } finally {
+        em.clear()
       }
     }
 
