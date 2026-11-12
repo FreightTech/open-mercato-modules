@@ -8,6 +8,7 @@ import { Button } from '../primitives/button'
 import { IconButton } from '../primitives/icon-button'
 import { IconButton as IconButtonV2 } from '../primitives-v2/IconButton'
 import { Separator } from '../primitives/separator'
+import { TitleTooltips } from '../primitives/TitleTooltips'
 import { FlashMessages } from './FlashMessages'
 import { QueryProvider } from '../theme/QueryProvider'
 import { usePathname, useSearchParams } from 'next/navigation'
@@ -899,8 +900,11 @@ export function AppShell({ productName, email, brandId, brandLogo, groups, right
       '/backend/directory',
       '/backend/feature-toggles',
     ]
+    // A page the main sidebar lists (Zadania, Reguły biznesowe, Logi …) is not a settings page, even under a prefix
+    // a settings section shares — its own nav item is the active one (FMS UX 03.11).
+    if (navTrail(navGroups, pathname).length) return false
     return SETTINGS_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-  }, [pathname])
+  }, [pathname, navGroups])
 
   // The v2 Sidebar takes a fully-resolved brand (logo + title as ReactNodes).
   // AppShell handles theme-aware logo selection and Next/Image rendering; the
@@ -1318,6 +1322,8 @@ export function AppShell({ productName, email, brandId, brandLogo, groups, right
 
   return (
     <QueryProvider>
+    {/* Every `title` hint in the app shown as the app's tooltip, not the browser's grey box (FMS UX 03.11). */}
+    <TitleTooltips />
     <HeaderContext.Provider value={headerCtxValue}>
     <div className={`min-h-svh lg:h-svh lg:overflow-hidden lg:grid lg:grid-rows-1 ${gridColsClass}`}>
       {/* Desktop sidebar — the Sidebar component renders its own <aside> with the v2 chrome.
@@ -1362,7 +1368,15 @@ export function AppShell({ productName, email, brandId, brandLogo, groups, right
               } else if (headerTitle) {
                 rest = [{ label: headerTitle }]
               }
-              const items = [...root, ...rest]
+              // The trail's parents come from the sidebar (FMS UX 03.11, owner: a page three levels deep shows all three —
+              // Pulpit / CRM / Kokpit sprzedaży): the nav items the path sits under go ahead of what the page declares,
+              // each once.
+              const navChain = navTrail(navGroups, pathname)
+              const declaredHrefs = new Set(rest.map((b) => b.href).filter(Boolean))
+              const declaredLabels = new Set(rest.map((b) => b.label))
+              const parents = navChain.filter((b) => b.href !== pathname && !declaredHrefs.has(b.href) && !declaredLabels.has(b.label))
+              const trail = [...parents, ...(rest.length ? rest : navChain.filter((b) => b.href === pathname))]
+              const items = [...root, ...trail]
               const lastIndex = items.length - 1
               // aria-label is the standard ARIA breadcrumb pattern: it names this
               // nav for assistive tech and is the stable handle tests select on.
@@ -1616,4 +1630,31 @@ function filterMainSidebarGroups(groups: SidebarGroup[]): SidebarGroup[] {
       })),
     }))
     .filter((group) => group.items.length > 0)
+}
+
+/**
+ * The sidebar items a path sits under, outermost first (FMS UX 03.11): the deepest item whose href is the path or a
+ * parent of it, with the items above it — the breadcrumb's parents. Home ('/backend') is the trail's own root.
+ */
+function navTrail(
+  groups: ReadonlyArray<{ items: ReadonlyArray<{ href: string; title: string; hidden?: boolean; children?: ReadonlyArray<{ href: string; title: string; hidden?: boolean }> }> }>,
+  pathname: string | null,
+): Breadcrumb {
+  if (!pathname) return []
+  const covers = (href: string) => href !== '/backend' && (pathname === href || pathname.startsWith(`${href}/`))
+  let best: Breadcrumb = []
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (!covers(item.href)) continue
+      const chain: Breadcrumb = [{ label: item.title, href: item.href }]
+      const child = (item.children ?? [])
+        .filter((c) => covers(c.href))
+        .sort((a, b) => b.href.length - a.href.length)[0]
+      if (child) chain.push({ label: child.title, href: child.href })
+      const depth = (chain[chain.length - 1].href ?? '').length
+      const bestDepth = (best[best.length - 1]?.href ?? '').length
+      if (depth > bestDepth) best = chain
+    }
+  }
+  return best
 }

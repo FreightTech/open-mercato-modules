@@ -459,8 +459,10 @@
      the search pill's left edge lines up with the table's first column. It was
      8px, which put the toolbar 9px from the card and the grid 17px — close
      enough to look like a mistake rather than a decision, and the same
-     mismatch that was fixed inside split panes. Vertical is unchanged. */
-  margin: 4px 16px;
+     mismatch that was fixed inside split panes. Top 8px (FMS UX 03.11, owner: "one padding with everything"):
+     the title's line sits 28px from the card's top edge, where the widgets' titles sit (16px padding + a 24px
+     line) — a table and a widget side by side read on one line. */
+  margin: 8px 16px 4px;
   padding: 4px 0;
   /* The design's table header (gt-demo, 15.09) is a WHITE row inside the card:
      the title and actions sit on the card, no tinted pill strip. With no pill
@@ -550,12 +552,13 @@
   line-height: var(--text-body-regular-xs--line-height, 1rem);
 }
 
-/* Toolbar title → Figma 220:2935 `heading/bold/md` (16/24, ls -2.5%). */
+/* Toolbar title = a card title, the same everywhere (page card, split pane,
+   dashboard widget): 14/20 semibold (FMS UX 03.11). */
 .hot-appearance-v2 .hot-toolbar-title {
-  font-size: var(--text-heading-bold-md, 1rem);
-  line-height: var(--text-heading-bold-md--line-height, 1.5rem);
-  letter-spacing: var(--text-heading-bold-md--letter-spacing, -0.025em);
-  font-weight: var(--text-heading-bold-md--font-weight, 700);
+  font-size: var(--text-body-medium-sm, 0.875rem);
+  line-height: var(--text-body-medium-sm--line-height, 1.25rem);
+  letter-spacing: normal;
+  font-weight: 600;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1112,30 +1115,32 @@
   min-width: 96px;
 }
 
-/* Checked boxes + "Add condition/sort" links use teal accent (Figma),
-   not the indigo the base CSS hardcodes / derives from selection color. */
+/* Checked boxes use teal accent (Figma), not the indigo the base CSS
+   hardcodes / derives from selection color. FMS UX 03.11 — the "Add
+   condition/sort" buttons are neutral ghost buttons now: no accent here. */
 .hot-appearance-v2 .hot-config-fields-checkbox { accent-color: var(--m3-focus-ring-color); }
-.hot-appearance-v2 .hot-config-add-btn { color: var(--accent-v2); }
 
-/* ── ConfigureView v2 skin — Figma "Configure View" drawer ────────── */
-/* Section cards: spaced, rounded, bordered. `flex-shrink: 0` so an expanded
-   section's content doesn't squish the sibling cards into slivers — the body
-   (a flex column) scrolls instead. */
+/* ── ConfigureView v2 skin ─────────────────────────────────────────── */
+/* FMS UX 03.11 — sections are quiet rows inside `.hot-config-more-list` (one
+   filled surface, dividers between), not bordered cards. `flex-shrink: 0` so an
+   expanded section's content doesn't squish its siblings into slivers. */
 .hot-config-panel.hot-appearance-v2 .hot-config-section {
   flex-shrink: 0;
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: var(--m3-shape-lg);
-  background: var(--background-v2);
-  margin-bottom: 4px;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: 0;
   overflow: hidden;
 }
 .hot-config-panel.hot-appearance-v2 .hot-config-section-header {
   padding: 12px 14px;
   gap: 10px;
   color: var(--m3-on-surface);
-  font-size: var(--text-label-semibold-md, 0.875rem);
-  line-height: var(--text-label-semibold-md--line-height, 1.25rem);
-  font-weight: var(--text-label-semibold-md--font-weight, 600);
+  font-size: var(--text-body-medium-sm, 0.875rem);
+  line-height: var(--text-body-medium-sm--line-height, 1.25rem);
+  font-weight: var(--text-body-medium-sm--font-weight, 500);
 }
 .hot-config-panel.hot-appearance-v2 .hot-config-section-badge {
   color: var(--m3-on-surface-variant);
@@ -1143,7 +1148,7 @@
 }
 .hot-config-panel.hot-appearance-v2 .hot-config-section-chevron { color: var(--m3-on-surface-variant); }
 .hot-config-panel.hot-appearance-v2 .hot-config-fields-grip { color: var(--m3-on-surface-variant); }
-.hot-config-panel.hot-appearance-v2 .hot-config-fields-bulk-btn { color: var(--accent-v2); }
+.hot-config-panel.hot-appearance-v2 .hot-config-fields-bulk-btn { color: var(--m3-on-surface); }
 /* Drop the nested 400px scroll box on the field list — the drawer body is the
    single scroll container in v2, so the section grows to fit its fields. */
 .hot-config-panel.hot-appearance-v2 .hot-config-fields-list {
@@ -1159,8 +1164,9 @@
   width: 24px;
   height: 24px;
   border-radius: var(--m3-shape-full);
-  background-color: var(--m3-surface-container);
-  border: 1px solid var(--m3-outline-variant);
+  /* FMS UX 03.11 — badges carry no border; the fill does. */
+  background-color: var(--m3-surface-container-high);
+  border: none;
   color: var(--m3-on-surface-variant);
   font-size: var(--text-label-semibold-xs, 0.75rem);
   line-height: var(--text-label-semibold-xs--line-height, 1rem);
@@ -1168,9 +1174,10 @@
 }
 .hot-config-panel.hot-appearance-v2 .hot-config-sort-select,
 .hot-config-panel.hot-appearance-v2 .hot-config-sort-direction-select {
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: var(--m3-shape-md);
-  background: var(--background-v2);
+  /* FMS UX 03.11 — filled like the filter selects beside them, no outline. */
+  border: none;
+  border-radius: var(--m3-shape-sm);
+  background: var(--m3-surface-container);
   color: var(--m3-on-surface);
   transition: var(--m3-transition-state);
 }
@@ -1231,9 +1238,10 @@
   align-items: center;
   gap: 4px;
   padding: 3px 4px 3px 10px;
-  border: 1px solid var(--m3-outline-variant);
+  /* FMS UX 03.11 — chips carry no border; the fill carries the tone. */
+  border: none;
   border-radius: var(--m3-shape-full);
-  background-color: var(--m3-surface-container);
+  background-color: var(--m3-surface-container-high);
   color: var(--m3-on-surface);
   font-size: var(--text-label-semibold-xs, 0.75rem);
   line-height: var(--text-label-semibold-xs--line-height, 1rem);
@@ -1256,11 +1264,12 @@
 }
 
 /* View-name + colour form. */
+/* FMS UX 03.11 — a static field label (visual-language §1), not a bold heading. */
 .hot-config-panel.hot-appearance-v2 .hot-config-save-label {
-  color: var(--m3-on-surface);
-  font-size: var(--text-label-semibold-md, 0.875rem);
-  line-height: var(--text-label-semibold-md--line-height, 1.25rem);
-  font-weight: var(--text-label-semibold-md--font-weight, 600);
+  color: var(--m3-on-surface-variant);
+  font-size: var(--text-body-regular-sm, 0.875rem);
+  line-height: var(--text-body-regular-sm--line-height, 1.25rem);
+  font-weight: var(--text-body-regular-sm--font-weight, 400);
 }
 .hot-config-panel.hot-appearance-v2 .hot-config-save-colors { gap: 10px; }
 /* Explains what an empty name does on the base tab — the answer to "where did
@@ -1318,20 +1327,7 @@
   background: var(--surface-v2);
   border-top-color: var(--m3-outline-variant);
 }
-.hot-config-panel.hot-appearance-v2 .hot-config-save-input {
-  background: var(--background-v2);
-  border-color: var(--m3-outline-variant);
-  border-radius: var(--m3-shape-md);
-  color: var(--m3-on-surface);
-  transition: var(--m3-transition-state), box-shadow var(--m3-duration-short2) var(--m3-ease-standard);
-}
-/* This field HAS clearance, so it gets the outward teal halo the grid cells
-   cannot have. */
-.hot-config-panel.hot-appearance-v2 .hot-config-save-input:focus {
-  border-color: var(--m3-focus-ring-color);
-  box-shadow: var(--m3-focus-halo);
-  outline: none;
-}
+/* The view-name input takes the app's FIELDS look from the theme (owner 04.11) — no own skin here. */
 
 /* ══════════════════════════════════════════════════════════════════
    Rows (v2) — borderless. The base `.hot-container .hot-table td` paints a
@@ -1878,12 +1874,6 @@
 .hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] .hot-top-tab-default-v2 {
   color: currentColor;
 }
-/* In a pane the row is shorter, so the pill's padding is paid for out of the
-   pane's own 2px/4px tab padding — the row height does not move. */
-[data-split-view='true'] .hot-appearance-v2.hot-container .hot-tabs-row .hot-top-tabs-v2 [role="tab"] {
-  padding-top: 3px;
-  padding-bottom: 3px;
-}
 
 /* A4 — the user's own default view carries a small star. It is never
    hover-revealed: which view opens tomorrow morning is a fact about the tab,
@@ -2007,8 +1997,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  /* FMS UX 03.11: the arrows, the pages and the rows-per-page select are one compact row — 28px targets beside a
+     32px select (owner: "paginacje w tabelach trzeba trochę zmniejszyć"). */
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: none;
   border-radius: var(--m3-shape-full);
@@ -2033,17 +2025,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
   border: none;
   border-radius: var(--m3-shape-full);
   background-color: transparent;
   color: var(--m3-on-surface-variant);
   font-family: inherit;
-  font-size: var(--text-label-semibold-xs, 0.75rem);
-  line-height: var(--text-label-semibold-xs--line-height, 1rem);
-  font-weight: var(--text-label-semibold-xs--font-weight, 600);
+  /* The type of the view chips on the same row (FMS UX 03.11: the pagination reads as those chips). */
+  font-size: var(--text-body-medium-sm, 0.875rem);
+  line-height: 20px;
+  font-weight: 500;
   cursor: pointer;
   transition: var(--m3-transition-state);
 }
@@ -2074,29 +2067,49 @@
   align-items: center;
 }
 .hot-appearance-v2 .hot-table-pagination-select {
+  /* FMS UX 03.11: the rows-per-page select as a chip of the view row — 28px, a filled pill with no line (badges and
+     chips carry no border), 14/20 medium, the 16px chevron at its right edge that turns up while the list is open. The trigger lays its
+     label and chevron out as a row, so the chevron is in the flow, not pinned. */
   appearance: none;
   -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 64px;
   font-family: inherit;
-  font-size: var(--text-body-regular-xs, 0.75rem);
-  color: var(--m3-on-surface-variant);
-  background: var(--background-v2);
-  border: 1px solid var(--m3-outline);
-  /* Pill-able and outside the grid, so it takes the full corner. Height is
-     unchanged — this is the whole reason the tab pills above cost nothing. */
+  font-size: var(--text-body-medium-sm, 0.875rem);
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--m3-on-surface);
+  background: var(--m3-surface-container-high);
+  border: 0;
   border-radius: var(--m3-shape-full);
-  height: 32px;
-  padding: 0 28px 0 12px;
+  height: 28px;
+  padding: 0 8px 0 12px;
   cursor: pointer;
   transition: var(--m3-transition-state);
 }
-.hot-appearance-v2 .hot-table-pagination-select:hover {
-  border-color: var(--m3-on-surface-variant);
+.hot-appearance-v2 .hot-table-pagination-select:is(:hover, [aria-expanded="true"]) {
+  background: color-mix(in srgb, var(--m3-on-surface) 6%, var(--m3-surface-container-high));
 }
+.hot-appearance-v2 .hot-table-pagination-select:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+.hot-appearance-v2 .hot-table-pagination-select > svg,
 .hot-appearance-v2 .hot-table-pagination-select-chevron {
-  position: absolute;
-  right: 8px;
+  position: static;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
   color: var(--m3-on-surface-variant);
   pointer-events: none;
+  transition: rotate var(--m3-duration-medium1) var(--m3-ease-emphasized);
+}
+.hot-appearance-v2 .hot-table-pagination-select[aria-expanded="true"] > svg,
+.hot-appearance-v2 .hot-table-pagination-select[aria-expanded="true"] .hot-table-pagination-select-chevron {
+  rotate: 180deg;
 }
 
 /* ============================================================
@@ -2530,18 +2543,6 @@
   margin-right: 0;
 }
 
-/* Toolbar title: keep it (nothing else names the table in a pane) but stop it
-   reserving a full-size heading's leading. */
-/* A pane's title is a card title, the same as a widget pane's (Figma widget
-   card; WidgetPane `text-body-medium-sm`): 14/20 medium. The page-heading
-   size it kept before made a table pane shout next to a widget pane. */
-[data-split-view='true'] .hot-appearance-v2 .hot-toolbar-title {
-  margin: 0;
-  font-size: var(--text-body-medium-sm, 0.875rem);
-  line-height: var(--text-body-medium-sm--line-height, 1.25rem);
-  font-weight: var(--text-body-medium-sm--font-weight, 500);
-  letter-spacing: normal;
-}
 
 /* The page-level bleed margins do not apply inside a host. */
 [data-split-view='true'] .hot-appearance-v2.hot-container {
@@ -2562,51 +2563,8 @@
   min-height: 0;
 }
 
-/* Page-size select: the padding was sized for a wide label, not a 2-digit
-   number, so most of its width was empty. */
-[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-select {
-  height: 22px;
-  padding: 0 18px 0 6px;
-  background-position: right 4px center;
-  font-size: var(--text-body-regular-2xs, 0.6875rem);
-  line-height: var(--text-body-regular-2xs--line-height, 0.875rem);
-}
 
-[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-page,
-[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-ellipsis {
-  height: 18px;
-  min-width: 18px;
-  padding: 0 3px;
-  font-size: var(--text-body-regular-2xs, 0.6875rem);
-  line-height: var(--text-body-regular-2xs--line-height, 0.875rem);
-}
 
-[data-split-view='true'] .hot-appearance-v2 .hot-table-pagination-btn {
-  height: 16px;
-  width: 16px;
-}
-
-/* Icon actions: keep the 16px icon, drop the 8px of dead ring around it. */
-[data-split-view='true'] .hot-appearance-v2 .hot-toolbar .hot-add-row-btn,
-[data-split-view='true'] .hot-appearance-v2 .hot-toolbar .fullscreen-toggle-btn {
-  height: 24px;
-  width: 24px;
-}
-
-[data-split-view='true'] .hot-appearance-v2 .hot-toolbar button svg {
-  height: 14px;
-  width: 14px;
-}
-
-/* The saved-view tabs carry a page-sized bottom rail.
-   `:not([class*='pagination'])` matters: the pagination controls live INSIDE
-   this row, so the unqualified selector was giving them an asymmetric
-   2px/4px padding and pushing them 4px below the tab baseline — which is
-   exactly the "pagination looks off" symptom. */
-[data-split-view='true'] .hot-appearance-v2 .hot-tabs-row button:not([class*='pagination']) {
-  padding-top: 2px;
-  padding-bottom: 4px;
-}
 
 /* The row is `align-items: flex-end` for the tab underline rail; the
    pagination is not a tab and should sit on the row's centre line. */
@@ -2649,11 +2607,6 @@
 }
 .hot-appearance-v2 .hot-toolbar-overflow-btn:active {
   background-color: var(--m3-state-layer-pressed);
-}
-[data-split-view='true'] .hot-appearance-v2 .hot-toolbar-overflow-btn {
-  height: 24px;
-  width: 24px;
-  border-radius: var(--m3-shape-full);
 }
 
 /* ── Views bar: one centre line ────────────────────────────────────────────
@@ -2699,12 +2652,6 @@
   margin-bottom: 0;
 }
 
-/* The select's 28px right inset was sized for a wider label than two digits. */
-.hot-appearance-v2 .hot-table-pagination-select {
-  padding-right: 22px;
-  padding-left: 8px;
-  background-position: right 6px center;
-}
 
 /* Stale-data bar (HEDGE-165) — the band shown when the list request FAILED but
    the grid still holds the previous response's rows. Sits between the tabs row
@@ -2811,7 +2758,7 @@
 [data-split-view='true'] .hot-appearance-v2 .hot-toolbar .hot-toolbar-title {
   display: block;
   flex: 0 1 auto;
-  min-width: 0;
+  min-width: min-content;
   max-width: 50%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2887,3 +2834,106 @@
 .hot-group-header-action:hover {
   background: var(--m3-surface-container-high);
 }
+
+/* FMS UX 03.11 — a table without a search box carries its views and pagination on the title row: each sits in a
+   `.hot-tabs-row--inline` so the views keep the chip look of the tabs row, but the wrapper adds no row of its own
+   (no padding, rail, margin or background). */
+.hot-appearance-v2.hot-container .hot-toolbar .hot-tabs-row.hot-tabs-row--inline {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  align-items: center;
+  /* The row takes the toolbar's free width so the pagination ends on the card's
+     right edge, as it does in the stand-alone row. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.hot-appearance-v2.hot-container .hot-toolbar .hot-tabs-row.hot-tabs-row--inline .hot-table-pagination {
+  align-self: center;
+  margin-bottom: 0;
+  margin-left: auto;
+}
+
+
+/* A preset view's count that is an alert (e.g. overdue tasks): the error
+   container instead of the neutral count chip (`presetViews`, FMS UX 03.11). */
+.hot-appearance-v2 .hot-top-tabs-v2 span:has(> .hot-top-tab-badge-error-v2) {
+  background: var(--m3-error-container);
+  color: var(--m3-on-error-container);
+}
+
+/* One-row header (no search): the views take the free width; the pagination and
+   the actions keep their size, so nothing is clipped at the card's edge. */
+.hot-appearance-v2.hot-container .hot-toolbar .hot-tabs-row--inline:not(:has(.hot-top-tabs-v2)) {
+  flex: 0 0 auto;
+}
+.hot-appearance-v2.hot-container .hot-toolbar:has(.hot-tabs-row--inline) .hot-toolbar-actions {
+  flex-shrink: 0;
+}
+/* A narrow card (dashboard widget, split pane): "Add view" and "Templates" keep
+   their icon and lose the label, before any view chip has to scroll. */
+@container dt-grid (max-width: 720px) {
+  .hot-appearance-v2 .hot-top-tabs-v2 .hot-top-tab-add-v2 {
+    font-size: 0;
+    gap: 0;
+    padding-inline: 8px;
+  }
+  .hot-appearance-v2 .hot-top-tabs-v2 .hot-top-tab-add-v2 > span {
+    margin-left: 4px;
+    font-size: var(--text-label-semibold-xs, 0.75rem);
+  }
+}
+
+/* Toolbar icon actions (+, layout, settings, ⋯): one size in every context —
+   a 32 px round target with a 16 px icon, like the page toolbar (FMS UX 03.11).
+   Named by class only: a labelled button ("Nowe zadanie") must never match. */
+.hot-appearance-v2 .hot-toolbar .hot-add-row-btn,
+.hot-appearance-v2 .hot-toolbar .fullscreen-toggle-btn,
+.hot-appearance-v2 .hot-toolbar .hot-toolbar-overflow-btn {
+  height: 32px;
+  width: 32px;
+}
+.hot-appearance-v2 .hot-toolbar .hot-add-row-btn svg,
+.hot-appearance-v2 .hot-toolbar .fullscreen-toggle-btn svg,
+.hot-appearance-v2 .hot-toolbar .hot-toolbar-overflow-btn svg,
+.hot-appearance-v2 .hot-clear-filters-btn svg {
+  height: 16px;
+  width: 16px;
+}
+.hot-appearance-v2 .hot-filter-chip-remove svg {
+  height: 14px;
+  width: 14px;
+}
+.hot-appearance-v2 .hot-toolbar .hot-add-row-btn {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* FMS UX 04.11 — the name & colour block is the FIRST section of the body now, not a grey strip above the footer:
+   no frame, no fill, no padding of its own (the body pays it). The footer keeps one divider and the drawer surface. */
+.hot-config-panel.hot-appearance-v2 .hot-config-panel-save {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-panel-footer {
+  border-top: 1px solid var(--m3-outline-variant);
+  background: var(--m3-surface-container-lowest);
+  padding: 12px 24px;
+}
+
+/* FMS UX 04.11 — name & colour are the LAST, least important part of the drawer: one low row above the footer
+   (name grows, colour dots small on its right), set off by one divider. */
+.hot-config-panel.hot-appearance-v2 .hot-config-panel-save {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 16px;
+  border-top: 1px solid var(--m3-outline-variant);
+  padding-top: 16px;
+}
+.hot-config-panel.hot-appearance-v2 .hot-config-panel-save > div:first-child { flex: 1 1 260px; max-width: none; }
+.hot-config-panel.hot-appearance-v2 .hot-config-save-colors { gap: 6px; min-height: 36px; align-items: center; }
+.hot-config-panel.hot-appearance-v2 .hot-config-save-color-btn { width: 20px !important; height: 20px !important; }

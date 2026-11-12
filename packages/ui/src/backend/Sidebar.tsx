@@ -1,8 +1,9 @@
 "use client"
 import * as React from 'react'
 import Link from './HoverPrefetchLink'
-import { ChevronLeft, PanelLeftOpen, Settings as SettingsIcon, Sparkles, Square } from 'lucide-react'
+import { ChevronDown, ChevronLeft, PanelLeftOpen, Settings as SettingsIcon, Sparkles, Square } from 'lucide-react'
 import { NavGroup } from '../primitives-v2/NavGroup'
+import { Collapse } from '../primitives-v2/Collapse'
 import { NavItem } from '../primitives-v2/NavItem'
 // The low-level shell from `primitives-v2` is imported under an alias so this
 // file's own `Sidebar` export doesn't collide with it. Both names are valid
@@ -24,10 +25,15 @@ import { cn } from '../primitives-v2/utils'
   props / slots.
 
   Three layouts are supported via `compact` / `customizing`:
-    - default (240px): full `SidebarShell` with `NavGroup` + `NavItem` body
-    - compact  (72px): hand-rendered icon-only rail
+    - default (`--sidebar-v2-width`): full `SidebarShell` with `NavGroup` + `NavItem` body
+    - compact (`--sidebar-v2-rail-width`): the same shell narrowed to an icon-only rail — labels, group titles
+      and nested items fold away while the width animates, so collapsing moves instead of swapping layouts
+      (FMS UX 02.11; it used to be a separately rendered rail)
     - customizing (320px): default shell with the `customizationEditor`
       slot rendered in place of the nav
+
+  An item with nested pages carries an expander at its row's end; it opens on its own branch by default and
+  the user's choice is kept per item (localStorage `om:sidebarOpenItems`).
 
   And three navigation modes via `mode`:
     - 'main'     — `groups` + `openGroups` drive a collapsible group list,
@@ -150,10 +156,12 @@ function HeaderBrand({
   brand,
   onCollapseToggle,
   collapseLabel,
+  compact = false,
 }: {
   brand: SidebarBrand
   onCollapseToggle?: () => void
   collapseLabel?: string
+  compact?: boolean
 }) {
   const trailing = onCollapseToggle ? (
     <button
@@ -167,7 +175,13 @@ function HeaderBrand({
   ) : undefined
 
   const titleNode = (
-    <span className="min-w-0 flex-1 truncate text-body-medium-md text-sidebar-v2-foreground">
+    <span
+      className={cn(
+        'min-w-0 flex-1 truncate text-body-medium-md text-sidebar-v2-foreground',
+        'transition-opacity duration-[var(--m3-duration-short4)] ease-[var(--m3-ease-standard)]',
+        compact ? 'opacity-0' : 'opacity-100',
+      )}
+    >
       {brand.title}
     </span>
   )
@@ -217,41 +231,18 @@ function SidebarLinkItem({
   const dataId = resolveItemKey(item)
   const icon = item.icon ?? DefaultItemIcon
 
-  if (compact) {
-    // Icon-only rail cell — bypasses NavItem's full-width row layout.
-    return (
-      <Link
-        href={item.href}
-        title={item.title}
-        aria-label={item.title}
-        aria-current={isActive ? 'page' : undefined}
-        aria-disabled={disabled}
-        data-menu-item-id={dataId}
-        onClick={onItemNavigate}
-        className={cn(
-          'inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent transition-colors',
-          isActive
-            ? 'border-sidebar-v2-accent bg-sidebar-v2-accent-active text-sidebar-v2-accent-foreground'
-            : 'text-sidebar-v2-item-foreground hover:bg-sidebar-v2-accent',
-          disabled ? 'pointer-events-none opacity-50' : null,
-        )}
-      >
-        <span aria-hidden="true" className="h-4 w-4">
-          {icon}
-        </span>
-      </Link>
-    )
-  }
-
   return (
     <NavItem
       icon={icon}
       badge={item.badge}
       isActive={isActive}
       disabled={disabled}
+      compact={compact}
       render={({ className, children }) => (
         <Link
           href={item.href}
+          title={compact ? item.title : undefined}
+          aria-label={compact ? item.title : undefined}
           aria-current={isActive ? 'page' : undefined}
           aria-disabled={disabled}
           data-menu-item-id={dataId}
@@ -265,6 +256,34 @@ function SidebarLinkItem({
       {item.title}
     </NavItem>
   )
+}
+
+const OPEN_ITEMS_KEY = 'om:sidebarOpenItems'
+
+/** The user's open / closed choice per item with nested pages, kept across pages and reloads. */
+function useOpenItems(): [Record<string, boolean>, (key: string, open: boolean) => void] {
+  const [openItems, setOpenItems] = React.useState<Record<string, boolean>>({})
+  React.useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(OPEN_ITEMS_KEY)
+      const parsed = raw ? JSON.parse(raw) : null
+      if (parsed && typeof parsed === 'object') setOpenItems(parsed as Record<string, boolean>)
+    } catch {
+      // storage unavailable: every item opens on its own branch
+    }
+  }, [])
+  const setOpen = React.useCallback((key: string, open: boolean) => {
+    setOpenItems((prev) => {
+      const next = { ...prev, [key]: open }
+      try {
+        window.localStorage.setItem(OPEN_ITEMS_KEY, JSON.stringify(next))
+      } catch {
+        // storage unavailable: the choice lasts for this page
+      }
+      return next
+    })
+  }, [])
+  return [openItems, setOpen]
 }
 
 /** Renders one collapsible group with its items + nested children. */
@@ -283,33 +302,65 @@ function MainNavGroup({
   onItemNavigate?: () => void
   compact?: boolean
 }) {
+  const [openItems, setOpenItem] = useOpenItems()
   const visibleItems = group.items.filter((item) => item.hidden !== true)
   if (visibleItems.length === 0) return null
 
   return (
     <NavGroup
-      title={compact ? undefined : group.name}
+      title={group.name || undefined}
+      compact={compact}
       collapsed={!open}
       onCollapse={() => onToggle?.(group.id)}
     >
       {visibleItems.map((item) => {
         const childItems = (item.children ?? []).filter((c) => c.hidden !== true)
+        const itemKey = resolveItemKey(item)
         const onBranch = isItemOnBranch(pathname, item.href)
-        const showChildren = onBranch && childItems.length > 0
+        const hasChildren = childItems.length > 0
+        const expanded = hasChildren && !compact && (openItems[itemKey] ?? onBranch)
         const hasActiveChild = !!(
           pathname && childItems.some((c) => isItemOnBranch(pathname, c.href))
         )
-        const isParentActive = pathname === item.href || (showChildren && !hasActiveChild)
+        const isParentActive = pathname === item.href || (onBranch && hasChildren && !hasActiveChild)
+        const link = (
+          <SidebarLinkItem
+            item={item}
+            isActive={isParentActive}
+            onItemNavigate={onItemNavigate}
+            compact={compact}
+          />
+        )
+        if (!hasChildren) return <React.Fragment key={itemKey}>{link}</React.Fragment>
 
         return (
-          <React.Fragment key={resolveItemKey(item)}>
-            <SidebarLinkItem
-              item={item}
-              isActive={isParentActive}
-              onItemNavigate={onItemNavigate}
-              compact={compact}
-            />
-            {showChildren && !compact ? (
+          <React.Fragment key={itemKey}>
+            <div className="relative [&>a]:pr-10">
+              {link}
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-label={item.title}
+                tabIndex={compact ? -1 : undefined}
+                onClick={() => setOpenItem(itemKey, !expanded)}
+                className={cn(
+                  'absolute right-1.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full',
+                  'text-sidebar-v2-muted hover:bg-sidebar-v2-accent hover:text-sidebar-v2-foreground',
+                  'transition-[background-color,color,opacity] duration-[var(--m3-duration-short4)] ease-[var(--m3-ease-standard)]',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-v2',
+                  compact ? 'pointer-events-none opacity-0' : 'opacity-100',
+                )}
+              >
+                <ChevronDown
+                  aria-hidden="true"
+                  className={cn(
+                    'h-4 w-4 transition-transform duration-[var(--m3-duration-medium1)] ease-[var(--m3-ease-emphasized)]',
+                    expanded ? 'rotate-0' : '-rotate-90',
+                  )}
+                />
+              </button>
+            </div>
+            <Collapse open={expanded}>
               <div className="flex flex-col gap-0.5 pl-4">
                 {childItems.map((child) => (
                   <SidebarLinkItem
@@ -320,7 +371,7 @@ function MainNavGroup({
                   />
                 ))}
               </div>
-            ) : null}
+            </Collapse>
           </React.Fragment>
         )
       })}
@@ -471,156 +522,40 @@ function MainFooter({
         compact={compact}
       />
       {onCustomize ? (
-        compact ? (
-          // Compact rail: 32×32 square mirroring the full button's height + chrome.
-          <button
-            type="button"
-            onClick={onCustomize}
-            disabled={loadingCustomization}
-            aria-label={customizeAria}
-            className="inline-flex h-8 w-8 items-center justify-center self-center rounded-lg border border-sidebar-v2-accent bg-sidebar-v2-accent-active text-sidebar-v2-item-foreground transition-colors hover:bg-sidebar-v2-accent disabled:opacity-60"
+        // 32px high, white pill, 1px slate/200 border, 6px gap (Figma SidebarFooter); in the rail the label folds
+        // away and the button narrows with the sidebar to a square around its icon.
+        <button
+          type="button"
+          onClick={onCustomize}
+          disabled={loadingCustomization}
+          aria-label={customizeAria}
+          title={compact ? customizeAria : undefined}
+          className={cn(
+            'inline-flex h-8 w-full items-center justify-center overflow-hidden rounded-lg border border-sidebar-v2-accent bg-sidebar-v2-accent-active text-body-medium-sm text-sidebar-v2-item-foreground hover:bg-sidebar-v2-accent disabled:opacity-60',
+            'transition-[background-color,gap,padding] duration-[var(--m3-duration-medium2)] ease-[var(--m3-ease-emphasized)]',
+            compact ? 'gap-0 px-0' : 'gap-1.5 px-3',
+          )}
+        >
+          <Sparkles aria-hidden="true" className="h-4 w-4 shrink-0" />
+          <span
+            className={cn(
+              'truncate transition-[opacity,max-width] duration-[var(--m3-duration-medium2)] ease-[var(--m3-ease-emphasized)]',
+              compact ? 'max-w-0 opacity-0' : 'max-w-full opacity-100',
+            )}
           >
-            <Sparkles aria-hidden="true" className="h-4 w-4" />
-          </button>
-        ) : (
-          // Full row: 32px high, white pill, 1px slate/200 border, 6px gap, 12px side padding (Figma SidebarFooter).
-          <button
-            type="button"
-            onClick={onCustomize}
-            disabled={loadingCustomization}
-            aria-label={customizeAria}
-            className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-sidebar-v2-accent bg-sidebar-v2-accent-active px-3 text-body-medium-sm text-sidebar-v2-item-foreground transition-colors hover:bg-sidebar-v2-accent disabled:opacity-60"
-          >
-            <Sparkles aria-hidden="true" className="h-4 w-4" />
-            <span className="truncate">{customizeLabel ?? 'Customize sidebar'}</span>
-          </button>
-        )
+            {customizeLabel ?? 'Customize sidebar'}
+          </span>
+        </button>
       ) : null}
     </>
   )
 }
 
-/** Compact 72px icon-only rail. Bypasses the v2 SidebarShell (which is fixed 240px). */
-function CompactSidebar(props: SidebarProps) {
-  const {
-    mode,
-    pathname,
-    brand,
-    hideHeader,
-    onCollapseToggle,
-    collapseLabel,
-    onItemNavigate,
-    groups = [],
-    openGroups,
-    sections = [],
-    backHref,
-    backLabel,
-    settingsActive,
-    settingsHref,
-    settingsLabel,
-    customizeLabel,
-    customizeAriaLabel,
-    onCustomize,
-    loadingCustomization,
-    topSlot,
-    navSlot,
-    navFooterSlot,
-    footerSlot,
-    statusBadgesSlot,
-    className,
-  } = props
-
-  return (
-    <aside
-      aria-label="Sidebar"
-      className={cn(
-        'flex h-full w-[72px] shrink-0 flex-col border-r border-sidebar-v2-border bg-sidebar-v2 text-sidebar-v2-foreground',
-        className,
-      )}
-    >
-      {!hideHeader ? (
-        <div
-          className="flex shrink-0 items-center justify-center border-b border-sidebar-v2-border px-2"
-          style={{ height: 52 }}
-        >
-          {onCollapseToggle ? (
-            <button
-              type="button"
-              onClick={onCollapseToggle}
-              aria-label={collapseLabel ?? 'Expand sidebar'}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-black transition-colors hover:bg-sidebar-v2-accent"
-            >
-              {brand.logo ?? <PanelLeftOpen aria-hidden="true" className="h-4 w-4" />}
-            </button>
-          ) : (
-            <span aria-hidden="true" className="inline-flex h-9 w-9 items-center justify-center">
-              {brand.logo}
-            </span>
-          )}
-        </div>
-      ) : null}
-      {topSlot}
-      <div
-        data-testid="sidebar"
-        className="flex flex-1 flex-col items-center gap-3 overflow-y-auto px-2 py-3"
-      >
-        {navSlot}
-        {mode === 'main'
-          ? groups
-              .filter((g) => g.items.some((i) => i.hidden !== true))
-              .map((g) => (
-                <div key={g.id} className="flex w-full flex-col items-center gap-1">
-                  {g.items
-                    .filter((i) => i.hidden !== true)
-                    .map((item) => (
-                      <SidebarLinkItem
-                        key={resolveItemKey(item)}
-                        item={item}
-                        isActive={isItemOnBranch(pathname, item.href)}
-                        onItemNavigate={onItemNavigate}
-                        compact
-                      />
-                    ))}
-                </div>
-              ))
-          : (
-            <SectionNav
-              sections={sections}
-              backHref={backHref ?? '/backend'}
-              backLabel={backLabel ?? 'Back'}
-              pathname={pathname}
-              onItemNavigate={onItemNavigate}
-              openGroups={openGroups}
-              compact
-            />
-          )}
-      </div>
-      {mode === 'main' ? (
-        <div className="flex shrink-0 flex-col items-center gap-2 border-t border-sidebar-v2-border px-2 pb-3 pt-2">
-          <MainFooter
-            pathname={pathname}
-            settingsActive={settingsActive}
-            settingsHref={settingsHref}
-            settingsLabel={settingsLabel}
-            customizeLabel={customizeLabel}
-            customizeAriaLabel={customizeAriaLabel}
-            onCustomize={onCustomize}
-            loadingCustomization={loadingCustomization}
-            onItemNavigate={onItemNavigate}
-            compact
-            statusBadgesSlot={statusBadgesSlot}
-          />
-          {footerSlot}
-        </div>
-      ) : null}
-    </aside>
-  )
-}
-
-/** Default 240px (or 320px while customizing) `SidebarShell`. */
+/** The `SidebarShell` at its width, narrowed to the rail when `compact`, or 320px while customizing. */
 function FullSidebar(props: SidebarProps) {
   const {
     mode,
+    compact,
     pathname,
     brand,
     hideHeader,
@@ -652,10 +587,11 @@ function FullSidebar(props: SidebarProps) {
     className,
   } = props
 
-  const widthClass = customizing ? 'w-[320px]' : undefined
+  const rail = compact && !customizing
+  const shellWidth = customizing ? '320px' : rail ? 'var(--sidebar-v2-rail-width)' : undefined
 
   const header = !hideHeader ? (
-    <HeaderBrand brand={brand} onCollapseToggle={onCollapseToggle} collapseLabel={collapseLabel} />
+    <HeaderBrand brand={brand} onCollapseToggle={onCollapseToggle} collapseLabel={collapseLabel} compact={rail} />
   ) : undefined
 
   const footer = customizing
@@ -675,7 +611,7 @@ function FullSidebar(props: SidebarProps) {
               onItemNavigate={onItemNavigate}
               navFooterSlot={navFooterSlot}
               statusBadgesSlot={statusBadgesSlot}
-              compact={false}
+              compact={rail}
             />
           ) : null}
           {footerSlot}
@@ -688,8 +624,10 @@ function FullSidebar(props: SidebarProps) {
     <SidebarShell
       header={header}
       footer={footer}
-      className={cn(widthClass, className)}
+      className={className}
+      style={shellWidth ? ({ '--sidebar-v2-shell-width': shellWidth } as React.CSSProperties) : undefined}
       aria-label={sectionTitle ?? undefined}
+      data-compact={rail ? 'true' : undefined}
     >
       <div data-testid="sidebar" className="flex flex-col gap-3">
         {topSlot}
@@ -704,6 +642,7 @@ function FullSidebar(props: SidebarProps) {
                 open
                 pathname={pathname}
                 onItemNavigate={onItemNavigate}
+                compact={rail}
               />
             ) : groups
               .filter((g) => g.items.some((i) => i.hidden !== true))
@@ -718,6 +657,7 @@ function FullSidebar(props: SidebarProps) {
                       onToggle={onToggleGroup}
                       pathname={pathname}
                       onItemNavigate={onItemNavigate}
+                      compact={rail}
                     />
                     {!isLast ? (
                       <div className="border-t border-dotted border-sidebar-v2-border" />
@@ -735,6 +675,7 @@ function FullSidebar(props: SidebarProps) {
             onItemNavigate={onItemNavigate}
             openGroups={openGroups}
             onToggleGroup={onToggleGroup}
+            compact={rail}
           />
         )}
       </div>
@@ -743,5 +684,5 @@ function FullSidebar(props: SidebarProps) {
 }
 
 export function Sidebar(props: SidebarProps) {
-  return props.compact ? <CompactSidebar {...props} /> : <FullSidebar {...props} />
+  return <FullSidebar {...props} />
 }

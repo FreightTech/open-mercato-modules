@@ -3,9 +3,13 @@
 /**
  * VIEW MODE SWITCH — the list/grid control in the toolbar's icon cluster.
  *
- * A Material 3 **segmented button**, not a dropdown: two options do not earn a
- * menu, and the reference this feature is modelled on (Google Drive) uses a
- * toggle. The selected segment carries the `secondary-container` /
+ * Chip tabs, not a dropdown: two options do not earn a menu, and the reference
+ * this feature is modelled on (Google Drive) uses a toggle. FMS UX 03.11: chip
+ * tabs, no segmented/underline — borderless icon pills with no outlined
+ * container (styles in `DynamicTable.css`, `.hot-viewmode-*`). It keeps its own
+ * DOM rather than `ChipTabs` because each option is icon-only and needs its own
+ * `aria-label` and `data-view-mode`, which `ChipTabs` options do not carry.
+ * The selected pill carries the `secondary-container` /
  * `on-secondary-container` PAIR — never a background without its matching
  * foreground, which is the mechanism that makes a Material surface legible in
  * both themes without a second set of colours.
@@ -39,8 +43,8 @@ export interface ViewModeSwitchProps {
 }
 
 export const ViewModeSwitch: React.FC<ViewModeSwitchProps> = ({ options, value, onChange }) => {
-  // One option is not a choice. Rendering a segmented control with a single
-  // segment offers the user a decision that does not exist.
+  // One option is not a choice. Rendering a switch with a single option
+  // offers the user a decision that does not exist.
   if (options.length < 2) return null
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

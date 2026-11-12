@@ -3,7 +3,7 @@ import {
   Sheet,
   SheetContent,
 } from '@freighttech/ui/primitives/sheet';
-import { ChevronDown, ChevronUp, Eye, Filter, ArrowUpDown, Layers, Link2, CalendarClock, ListTree, Palette, RotateCcw, Sigma, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, Filter, ArrowUpDown, Layers, Link2, CalendarClock, ListTree, Palette, RotateCcw, Search, Sigma, X } from 'lucide-react';
 import { ColumnDef, FilterRow, FilterColor, LoadFilterSuggestions, LoadLookupSources } from '../types/index';
 import type { LoadRollupSources, RollupColumnRef } from '../types/rollup';
 import {
@@ -29,8 +29,24 @@ import SelectMenu from './SelectMenu';
 import type { ConditionalFormatRule } from '../utils/conditionalFormat';
 import type { FormulaColumnRef } from '../formula/types';
 import { isFormulaColumnKey } from '../utils/formulaColumns';
-import { Button, IconButton, Input } from '../../../primitives-v2';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
+
+/*
+ * FMS UX 03.11 — footer and chip buttons follow the app's look (view-grid's
+ * GridEditor buttons, visual-language §4–§6): one near-black pill CTA, the rest
+ * ghost; named typography tokens, never `text-sm font-semibold`.
+ */
+const btnBase =
+  'inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-body-medium-sm ' +
+  'disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3ft-outline';
+const btnPrimary = `${btnBase} bg-m3ft-primary text-m3ft-on-primary enabled:hover:opacity-90`;
+const btnGhost = `${btnBase} text-m3ft-on-surface enabled:hover:bg-[var(--m3-state-layer-hover)]`;
+const btnTonal = `${btnBase} bg-m3ft-surface-container-high text-m3ft-on-surface enabled:hover:bg-m3ft-surface-container`;
+/** Starter-set chip: borderless, filled, pill (badges/chips carry no border — owner 03.11). */
+const chipCls =
+  'inline-flex h-8 max-w-full items-center rounded-full bg-[var(--m3-surface-container-high)] px-3 text-label-medium-md text-[var(--m3-on-surface)] ' +
+  'hover:[background-image:linear-gradient(var(--m3-state-layer-hover),var(--m3-state-layer-hover))] ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3ft-outline';
 
 /**
  * Saved-view colour swatches — the ORDER only. The colour itself comes from
@@ -56,9 +72,36 @@ const COLOR_PALETTE: { color: FilterColor }[] = [
 /** Sections shown as always-open wizard steps rather than accordions. */
 const STEP_SECTIONS = new Set(['fields', 'filters', 'sorting', 'grouping']);
 
+/**
+ * FMS UX 03.11 — a plain section heading (visual-language §7: `text-body-medium-sm`,
+ * sentence case). The drawer is not a stepper (§6): the labels carry no "1 · " numbering.
+ */
 function StepLabel({ children }: { children: React.ReactNode }) {
+  return <h4 className="m-0 text-body-medium-sm text-[var(--m3-on-surface)]">{children}</h4>;
+}
+
+/**
+ * FMS UX 04.11 — a section that starts folded (Columns, Starter sets): its header carries the title and a one-line
+ * summary, so the drawer opens on what is used most (filters, sorting, grouping) instead of a wall of open lists.
+ */
+function Fold({ id, title, summary, open, onToggle, children }: {
+  id: string; title: React.ReactNode; summary?: React.ReactNode; open: boolean; onToggle: (id: string) => void; children: React.ReactNode
+}) {
   return (
-    <div className="text-label-semibold-xs uppercase tracking-wider text-[var(--m3-on-surface-variant)]">{children}</div>
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={() => onToggle(id)}
+        aria-expanded={open}
+        className="-mx-2 flex h-9 items-center gap-2 rounded-[var(--m3-shape-sm)] px-2 text-left hover:bg-[var(--m3-state-layer-hover)]"
+        data-wizard-fold={id}
+      >
+        <StepLabel>{title}</StepLabel>
+        {summary ? <span className="text-body-regular-xs text-[var(--m3-on-surface-variant)]">{summary}</span> : null}
+        <ChevronDown className={`ml-auto size-4 shrink-0 text-[var(--m3-on-surface-variant)] transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
+      </button>
+      {open ? children : null}
+    </div>
   );
 }
 
@@ -191,6 +234,10 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
   const t = useT();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const [saveName, setSaveName] = useState('');
+  // Folded sections (FMS UX 04.11) and the one column search.
+  const [folds, setFolds] = useState<Set<string>>(new Set());
+  const toggleFold = (id: string) => setFolds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const [columnQuery, setColumnQuery] = useState('');
   const [saveColor, setSaveColor] = useState<FilterColor | null>(null);
 
   useEffect(() => {
@@ -492,10 +539,10 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
    * owner 2026-10-09: "the dynamic table should have a very similar wizard to
    * set the view"):
    *
-   *   left   1 · Kolumny        the columns on the view, in order (drag, ×)
-   *          2 · Filtry          3 · Sortowanie       4 · Grupowanie
-   *   right  5 · Zestawy startowe   the default, saved views, role templates
-   *          6 · Katalog kolumn     every hidden column, + to add
+   *   left   Kolumny            the columns on the view, in order (drag, ×)
+   *          Filtry · Sortowanie · Grupowanie
+   *   right  Zestawy startowe       the default, saved views, role templates
+   *          Katalog kolumn         every hidden column, + to add
    *          Więcej                 linked / summarised / calculated columns,
    *                                 highlighting, date format (accordions)
    *
@@ -509,8 +556,10 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
         ariaTitle={t('dynamicTable.configureView.title', 'Customize view')}
         hideCloseButton={true}
         className={`hot-config-panel hot-config-panel--wizard ${v2cls}`.trim()}
-        style={{ maxWidth: 1080, width: '100%' }}
+        style={{ maxWidth: 980, width: '100%' }}
         overlayClassName="hot-config-overlay !backdrop-blur-none"
+        // Opening must not park focus on ✕ — it drew its focus ring as if the user had tabbed to it (owner 04.11).
+        onOpenAutoFocus={(e) => e.preventDefault()}
         data-testid="dynamic-table-customize-view"
         // The grid behind is a live preview, not "outside" — see the note this
         // replaced in git history: clicking a cell must not close the drawer.
@@ -532,45 +581,104 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
             <div className="hot-config-panel-header-row">
               <div className="min-w-0">
                 <h3 className="hot-config-panel-title">{t('dynamicTable.configureView.title', 'Customize view')}</h3>
-                <p className="hot-config-panel-subtitle">
-                  {viewLabel ? `${viewLabel} · ` : ''}
-                  {t('dynamicTable.configureView.subtitle', 'Customize the fields, filters and sorting of this view.')}
-                </p>
+                {/* FMS UX 03.11 — the header carries context only (which view),
+                    not a second descriptive line (visual-language §3/§6). */}
+                {viewLabel ? <p className="hot-config-panel-subtitle">{viewLabel}</p> : null}
               </div>
-              <IconButton
-                size="sm"
+              {/* FMS UX 03.11 — 36px round ghost icon button; ring on keyboard focus only. */}
+              <button
+                type="button"
+                className="hot-config-panel-close"
                 aria-label={t('dynamicTable.configureView.cancel', 'Cancel')}
-                icon={<X className="w-4 h-4" />}
                 onClick={() => handleOpenChange(false)}
-              />
+              >
+                <X className="w-4 h-4" aria-hidden />
+              </button>
             </div>
           </div>
 
-          <div className="grid min-h-0 flex-1 grid-cols-1 gap-x-8 gap-y-6 overflow-y-auto px-5 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-start">
-            {/* ── Left: the view itself ── */}
-            <div className="flex min-w-0 flex-col gap-6">
-              <section className="flex flex-col gap-2" data-wizard-step="fields">
-                <div className="flex items-center gap-2">
-                  <StepLabel>{t('dynamicTable.configureView.step.columns', '1 · Columns')}</StepLabel>
-                  <span className="ml-auto text-body-regular-xs text-[var(--m3-on-surface-variant)]">
-                    {t('dynamicTable.configureView.fieldsVisible', '{visible} of {total} visible', {
-                      visible: visibleCount,
-                      total: visibleCount + hiddenCount,
-                    })}
-                  </span>
+          {/* FMS UX 04.11 — ONE column in task order (name & colour → starter sets → columns → catalogue → filters → sorting →
+              grouping → more). The two-column grid left half the drawer empty and split one job across two reading
+              paths. The section wrappers are `contents` so `order-*` places each section. */}
+          {/* FMS UX 05.11 — two panes: the view's rules on the left; the COLUMNS as their own pane on the right, always
+              open, with their own search and scroll (owner: folded, 17 of 51 columns "disappeared"). */}
+          <div className="flex min-h-0 flex-1">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
+            {/* Name and colour first — what this view is, before what it shows (FMS UX 04.11). */}
+          <div className="hot-config-panel-save order-7 mt-auto">
+            <div className="flex w-full max-w-[420px] flex-col gap-1">
+              <label className="hot-config-save-label">{t('dynamicTable.configureView.viewName', 'View name')}</label>
+              {/* FMS UX 03.11 — the app's field (filled, radius 10, no outline;
+                  styled by `.hot-config-save-input`), not the bordered primitive. */}
+              <input
+                type="text"
+                aria-label={t('dynamicTable.configureView.viewName', 'View name')}
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                // The API caps the name at 120 characters and answers a longer
+                // one with a bare 400 — so a long name used to close the drawer
+                // as though it had saved and create nothing. Stopping at the
+                // limit here is the honest version of the same rule, and the
+                // hint below only appears once it actually bites.
+                maxLength={PERSPECTIVE_NAME_MAX_LENGTH}
+                placeholder={t('dynamicTable.configureView.viewNamePlaceholder', 'e.g. Active contractors')}
+                // NO autoFocus. It was harmless when this panel was only a save
+                // form; it is a data-corruption bug now that the panel is a
+                // multi-section editor. Opening the drawer put the caret in the
+                // NAME box, so the first thing typed into "Calculated columns"
+                // — or any other section the user had not yet clicked into —
+                // was appended to the view's name instead. Hit live: a saved
+                // view came out named `Koszty teczekDlugosc notatkiLEN(notes)`,
+                // silently, with the formula editor visibly on screen.
+                className="hot-config-save-input w-full"
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canSave) {
+                    handleSave();
+                  }
+                }}
+              />
+              {saveName.length >= PERSPECTIVE_NAME_MAX_LENGTH && (
+                <p className="hot-config-save-hint hot-config-save-hint-limit" role="status">
+                  {t(
+                    'dynamicTable.configureView.viewNameTooLong',
+                    'A view name can be at most {max} characters.',
+                    { max: String(PERSPECTIVE_NAME_MAX_LENGTH) },
+                  )}
+                </p>
+              )}
+              {onBaseView && (
+                <p className="hot-config-save-hint">
+                  {t(
+                    'dynamicTable.configureView.baseViewHint',
+                    'Leave the name empty to keep these settings on your Default view. They are yours alone — nobody else sees the change.',
+                  )}
+                </p>
+              )}
+            </div>
+              {/* A base-view save has no colour — the tab it personalizes is a
+                  fixed part of the strip. The row is removed rather than
+                  disabled: a dead control is a question the user has to answer. */}
+              {!savesBaseView && (
+                <div className="flex flex-col gap-1">
+                  <label className="hot-config-save-label">{t('dynamicTable.configureView.color', 'Color')}</label>
+                  <div className="hot-config-save-colors">
+                    {COLOR_PALETTE.map((item) => (
+                      <button
+                        key={item.color}
+                        onClick={() => setSaveColor(item.color)}
+                        className={`hot-config-save-color-btn hot-config-color-${item.color} ${saveColor === item.color ? 'selected' : ''}`}
+                        title={item.color}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="rounded-[10px] bg-[var(--m3-surface-container-low)] p-2">
-                  <ColumnSlots
-                    columns={columns}
-                    visibleColumns={visibleColumns}
-                    hiddenColumns={hiddenColumns}
-                    onColumnVisibilityChange={onColumnVisibilityChange}
-                  />
-                </div>
-              </section>
+              )}
+          </div>
+            {/* ── The view itself ── */}
+            <div className="contents">
 
-              <section className="flex flex-col gap-2" data-wizard-step="filters">
-                <StepLabel>{t('dynamicTable.configureView.step.filters', '2 · Filters')}</StepLabel>
+              <section className="order-1 flex flex-col gap-2" data-wizard-step="filters">
+                <StepLabel>{t('dynamicTable.configureView.step.filters', 'Filters')}</StepLabel>
                 <ConfigureViewFilters
                   columns={filterableColumns}
                   filters={filters}
@@ -579,8 +687,8 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                 />
               </section>
 
-              <section className="flex flex-col gap-2" data-wizard-step="sorting">
-                <StepLabel>{t('dynamicTable.configureView.step.sorting', '3 · Sorting')}</StepLabel>
+              <section className="order-2 flex flex-col gap-2" data-wizard-step="sorting">
+                <StepLabel>{t('dynamicTable.configureView.step.sorting', 'Sorting')}</StepLabel>
                 <ConfigureViewSorting
                   columns={columns}
                   sortRules={sortRules}
@@ -589,8 +697,8 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
               </section>
 
               {onGroupRulesChange && (
-                <section className="flex flex-col gap-2" data-wizard-step="grouping">
-                  <StepLabel>{t('dynamicTable.configureView.step.grouping', '4 · Grouping')}</StepLabel>
+                <section className="order-3 flex flex-col gap-2" data-wizard-step="grouping">
+                  <StepLabel>{t('dynamicTable.configureView.step.grouping', 'Grouping')}</StepLabel>
                   <ConfigureViewGrouping
                     columns={columns}
                     groupRules={groupRules}
@@ -602,47 +710,45 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
               )}
             </div>
 
-            {/* ── Right: where to start from, and what to add ── */}
-            <div className="flex min-w-0 flex-col gap-6">
+            {/* ── Where to start from, and what to add ── */}
+            <div className="contents">
               {starterSets.length > 0 && (
-                <section className="flex flex-col gap-2" data-wizard-step="starter-sets">
-                  <StepLabel>{t('dynamicTable.configureView.step.starterSets', '5 · Starter sets')}</StepLabel>
+                <section className="order-5 flex flex-col gap-2" data-wizard-step="starter-sets">
+                  <Fold
+                    id="starter"
+                    open={folds.has('starter')}
+                    onToggle={toggleFold}
+                    title={t('dynamicTable.configureView.step.starterSets', 'Starter sets')}
+                    summary={String(starterSets.length)}
+                  >
                   <div className="flex flex-wrap gap-1.5">
                     {starterSets.map((set) => (
-                      <Button
+                      <button
                         key={set.id}
-                        variant="outline"
-                        size="sm"
+                        type="button"
+                        className={chipCls}
                         onClick={() => applyStarterSet(set.state)}
                         title={set.state.visibleColumns
                           .map((key) => columns.find((c) => c.data === key)?.title || key)
                           .join(' · ')}
                         data-wizard-starter-set={set.id}
                       >
-                        {set.name}
-                      </Button>
+                        <span className="truncate">{set.name}</span>
+                      </button>
                     ))}
                   </div>
+                  </Fold>
                 </section>
               )}
 
-              <section className="flex flex-col gap-2 border-t border-[var(--m3-outline-variant)] pt-4" data-wizard-step="catalog">
-                <StepLabel>
-                  {starterSets.length > 0
-                    ? t('dynamicTable.configureView.step.catalog', '6 · Column catalogue')
-                    : t('dynamicTable.configureView.step.catalogNoSets', '5 · Column catalogue')}
-                </StepLabel>
-                <ColumnCatalog
-                  columns={columns}
-                  visibleColumns={visibleColumns}
-                  hiddenColumns={hiddenColumns}
-                  onColumnVisibilityChange={onColumnVisibilityChange}
-                />
-              </section>
+
 
               {hasAdvanced && (
-                <section className="flex flex-col gap-2 border-t border-[var(--m3-outline-variant)] pt-4" data-wizard-step="more">
+                <section className="order-6 flex flex-col gap-2" data-wizard-step="more">
                   <StepLabel>{t('dynamicTable.configureView.step.more', 'More')}</StepLabel>
+                  {/* FMS UX 03.11 — the accordions below are one filled surface
+                      (radius 16) with quiet rows and dividers, not outlined boxes. */}
+                  <div className="hot-config-more-list">
                   {/* Linked Columns Section — only when the host provides FK sources. */}
                   {loadLookupSources && onLookupColumnsChange && (
                     <div className={`hot-config-section ${openSections.has('linked') ? 'is-open' : ''}`}>
@@ -803,101 +909,89 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                       )}
                     </div>
                   )}
+                  </div>
                 </section>
               )}
             </div>
           </div>
 
-          {/* Save form — the view's name and colour, as before. */}
-          <div className="hot-config-panel-save">
-            <div className="flex w-full max-w-[420px] flex-col gap-1">
-              <label className="hot-config-save-label">{t('dynamicTable.configureView.viewName', 'View name')}</label>
-              <Input
-                inputSize="md"
-                value={saveName}
-                onChange={(e) => setSaveName(e.target.value)}
-                // The API caps the name at 120 characters and answers a longer
-                // one with a bare 400 — so a long name used to close the drawer
-                // as though it had saved and create nothing. Stopping at the
-                // limit here is the honest version of the same rule, and the
-                // hint below only appears once it actually bites.
-                maxLength={PERSPECTIVE_NAME_MAX_LENGTH}
-                placeholder={t('dynamicTable.configureView.viewNamePlaceholder', 'e.g. Active contractors')}
-                // NO autoFocus. It was harmless when this panel was only a save
-                // form; it is a data-corruption bug now that the panel is a
-                // multi-section editor. Opening the drawer put the caret in the
-                // NAME box, so the first thing typed into "Calculated columns"
-                // — or any other section the user had not yet clicked into —
-                // was appended to the view's name instead. Hit live: a saved
-                // view came out named `Koszty teczekDlugosc notatkiLEN(notes)`,
-                // silently, with the formula editor visibly on screen.
-                className="w-full"
-                onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canSave) {
-                    handleSave();
-                  }
-                }}
-              />
-              {saveName.length >= PERSPECTIVE_NAME_MAX_LENGTH && (
-                <p className="hot-config-save-hint hot-config-save-hint-limit" role="status">
-                  {t(
-                    'dynamicTable.configureView.viewNameTooLong',
-                    'A view name can be at most {max} characters.',
-                    { max: String(PERSPECTIVE_NAME_MAX_LENGTH) },
-                  )}
-                </p>
-              )}
-              {onBaseView && (
-                <p className="hot-config-save-hint">
-                  {t(
-                    'dynamicTable.configureView.baseViewHint',
-                    'Leave the name empty to keep these settings on your Default view. They are yours alone — nobody else sees the change.',
-                  )}
-                </p>
-              )}
+          <aside className="flex min-h-0 w-[340px] shrink-0 flex-col border-l border-[var(--m3-outline-variant)]" data-wizard-step="fields">
+            <div className="flex flex-col gap-3 px-5 pb-3 pt-5">
+              <div className="flex items-center gap-2">
+                <StepLabel>{t('dynamicTable.configureView.step.columns', 'Columns')}</StepLabel>
+                <span className="ml-auto text-body-regular-xs text-[var(--m3-on-surface-variant)]">
+                  {t('dynamicTable.configureView.fieldsVisible', '{visible} of {total} visible', {
+                    visible: visibleCount,
+                    total: visibleCount + hiddenCount,
+                  })}
+                </span>
+              </div>
+              <label className="relative block">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--m3-on-surface-variant)]" aria-hidden />
+                <input
+                  value={columnQuery}
+                  onChange={(e) => setColumnQuery(e.target.value)}
+                  placeholder={t('dynamicTable.configureView.catalogSearch', 'Search columns')}
+                  className="h-9 w-full pl-9 pr-3 text-body-regular-sm"
+                  data-wizard-column-search=""
+                />
+              </label>
             </div>
-              {/* A base-view save has no colour — the tab it personalizes is a
-                  fixed part of the strip. The row is removed rather than
-                  disabled: a dead control is a question the user has to answer. */}
-              {!savesBaseView && (
-                <div className="flex flex-col gap-1">
-                  <label className="hot-config-save-label">{t('dynamicTable.configureView.color', 'Color')}</label>
-                  <div className="hot-config-save-colors">
-                    {COLOR_PALETTE.map((item) => (
-                      <button
-                        key={item.color}
-                        onClick={() => setSaveColor(item.color)}
-                        className={`hot-config-save-color-btn hot-config-color-${item.color} ${saveColor === item.color ? 'selected' : ''}`}
-                        title={item.color}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+              <div className="-mx-1.5">
+                <ColumnSlots
+                  columns={columns}
+                  visibleColumns={visibleColumns}
+                  hiddenColumns={hiddenColumns}
+                  onColumnVisibilityChange={onColumnVisibilityChange}
+                  query={columnQuery}
+                />
+              </div>
+              {hiddenColumns.length > 0 ? (
+                <>
+                  <p className="m-0 mb-1 mt-3 text-body-regular-xs text-[var(--m3-on-surface-variant)]">
+                    {t('dynamicTable.configureView.hiddenColumns', 'Hidden columns — click to add')}
+                  </p>
+                  <ColumnCatalog
+                    columns={columns}
+                    visibleColumns={visibleColumns}
+                    hiddenColumns={hiddenColumns}
+                    onColumnVisibilityChange={onColumnVisibilityChange}
+                    query={columnQuery}
+                  />
+                </>
+              ) : null}
+            </div>
+          </aside>
           </div>
 
           <div className="hot-config-panel-footer">
+            {/* FMS UX 03.11 — Restore as a ghost text button on the left, Cancel
+                tonal, and ONE near-black primary CTA on the right. */}
             {defaultSet && (
-              <Button
-                variant="ghost"
+              <button
+                type="button"
+                className={btnGhost}
                 onClick={() => applyStarterSet(defaultSet.state)}
                 data-testid="dynamic-table-customize-reset"
-                icon={<RotateCcw className="w-4 h-4" />}
               >
+                <RotateCcw className="w-4 h-4" aria-hidden />
                 {t('dynamicTable.configureView.restoreDefault', 'Restore default')}
-              </Button>
+              </button>
             )}
             <span className="flex-1" />
-            <Button
-              variant="outline"
+            <button
+              type="button"
+              className={btnTonal}
               onClick={() => handleOpenChange(false)}
             >
               {t('dynamicTable.configureView.cancel', 'Cancel')}
-            </Button>
+            </button>
             {/* One button, and its label states exactly what will happen — the
                 base view, an update in place, or a brand-new view. */}
-            <Button
-              variant="primary"
+            <button
+              type="button"
+              className={btnPrimary}
               disabled={!canSave}
               onClick={handleSave}
             >
@@ -906,7 +1000,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                 : editingPerspective
                   ? t('dynamicTable.configureView.saveView', 'Save view')
                   : t('dynamicTable.configureView.saveAsNewView', 'Save as new view')}
-            </Button>
+            </button>
           </div>
         </div>
       </SheetContent>

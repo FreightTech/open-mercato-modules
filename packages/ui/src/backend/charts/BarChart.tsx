@@ -94,8 +94,7 @@ export function BarChart({
     return resolveChartColor(colors?.[idx], idx)
   }
 
-  const hasWrapper = !!title
-  const wrapperClass = hasWrapper ? `rounded-lg border bg-card p-4 ${className}` : className
+  const wrapperClass = className
 
   if (error) {
     return (

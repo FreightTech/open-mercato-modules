@@ -3,7 +3,6 @@
 import * as React from 'react'
 import { createContext, useContext } from 'react'
 import { cn } from '@open-mercato/shared/lib/utils'
-import { Button } from './button'
 
 type TabsContextValue = {
   value: string
@@ -61,11 +60,14 @@ export type TabsListProps = {
   className?: string
 }
 
+// FMS UX 03.11: chip tabs, no segmented/underline — no track; the selected
+// trigger takes `--m3-secondary-container`, the others are plain text with the
+// hover state layer (the ChipTabs look in primitives-v2).
 export function TabsList({ children, className }: TabsListProps) {
   return (
     <div
       className={cn(
-        'inline-flex h-9 items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground',
+        'inline-flex items-center justify-start gap-1 bg-transparent text-[var(--m3-on-surface-variant)]',
         className,
       )}
       role="tablist"
@@ -87,23 +89,24 @@ export function TabsTrigger({ value, children, className, disabled }: TabsTrigge
   const isSelected = selectedValue === value
 
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      size="sm"
       role="tab"
       aria-selected={isSelected}
+      data-state={isSelected ? 'active' : 'inactive'}
       disabled={disabled}
       onClick={() => onValueChange(value)}
       className={cn(
-        isSelected
-          ? 'bg-background text-foreground shadow'
-          : 'hover:bg-background/50 hover:text-foreground',
+        'inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--m3-shape-full)] px-3 text-body-medium-sm',
+        'transition-[background-color,color] duration-[var(--m3-duration-short2)] ease-[var(--m3-ease-standard)]',
+        'focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--field-v2-stroke-focus,#666)] disabled:pointer-events-none disabled:opacity-40',
+        'text-[var(--m3-on-surface-variant)] data-[state=inactive]:hover:bg-[var(--m3-state-layer-hover)] data-[state=inactive]:hover:text-[var(--m3-on-surface)]',
+        'data-[state=active]:bg-[var(--m3ft-v2-surface-container-high,var(--m3-surface-container-high))] data-[state=active]:text-[var(--m3ft-v2-on-surface,var(--m3-on-surface))]',
         className,
       )}
     >
       {children}
-    </Button>
+    </button>
   )
 }
 

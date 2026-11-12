@@ -601,6 +601,23 @@ export type SearchSuggestionsContext = {
 
 export type SearchSuggestionsRenderer = (ctx: SearchSuggestionsContext) => React.ReactNode;
 
+/** One coded view chip on the views row (see `presetViews`). */
+export interface PresetView {
+  id: string;
+  label: string;
+  /** A count after the label; `tone: 'error'` paints it as an alert. */
+  count?: number;
+  tone?: 'error';
+}
+
+export interface PresetViewsConfig {
+  items: PresetView[];
+  value: string;
+  /** The preset that "Default view" stands for (usually "all"). */
+  defaultValue: string;
+  onChange: (id: string) => void;
+}
+
 /**
  * What `searchBarStart` is handed when it is a function.
  *
@@ -701,6 +718,13 @@ export interface TableUIConfig {
    * table from a place both renderers paint.
    */
   beforeBody?: React.ReactNode | ((ctx: SearchBarRenderContext) => React.ReactNode);
+  /**
+   * Coded views the module offers next to "Default view" (e.g. "My open",
+   * "Overdue"), drawn as chips of the same views row — not a second row above
+   * the table (FMS UX 03.11). A preset narrows the base view; picking a saved
+   * view returns the preset to `defaultValue`, so one chip is selected at a time.
+   */
+  presetViews?: PresetViewsConfig;
   /**
    * A suggestions panel under the search box — the Drive-style "hits as you
    * type" affordance.

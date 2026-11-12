@@ -314,12 +314,12 @@ function WidgetPaneBody({
           data-pane-widget-header=""
         >
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-body-medium-sm" title={title}>
+            <span className="truncate text-body-medium-sm font-semibold" title={title}>
               {title}
             </span>
             {description && (
               <span
-                className="truncate text-body-regular-sm text-[var(--m3-on-surface-variant)]"
+                className="truncate text-body-regular-xs text-[var(--m3-on-surface-variant)]"
                 title={description}
                 data-pane-widget-description=""
               >

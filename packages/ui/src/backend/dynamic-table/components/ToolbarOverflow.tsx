@@ -185,7 +185,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
           // sidebar: a pane on the left anchors its menu over the nav, and
           // nav links intercepted the clicks, so menu rows that happened to
           // overlap a link were dead while their neighbours worked.
-          className="fixed z-[1000] overflow-y-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] py-1 text-[var(--m3-on-surface)] shadow-m3-2"
+          className="fixed z-[1000] overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] py-1 text-[var(--m3-on-surface)] shadow-m3-2"
           style={{ top: placement.top, left: placement.left, width: MENU_WIDTH, maxHeight: placement.maxHeight }}
           data-toolbar-overflow-menu=""
         >
@@ -229,35 +229,27 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
               <div className="px-2 pb-1 pt-1.5 text-label-semibold-2xs uppercase text-[var(--m3-on-surface-variant)]">
                 {t('dynamicTable.density.label', 'Row height')}
               </div>
-              <div className="px-2 pb-1.5">
-                {/* M3 connected button group, replacing an iOS-style inset
-                    track with an elevated thumb. No track fill, no gaps and no
-                    shadow: one pill-shaped outline, hairlines between the
-                    segments, and the selected one takes the same
-                    `secondary-container` blue that a selected row and a
-                    selected menu item take. The check glyph is M3's own
-                    selected marker for a segmented button. */}
-                <div className="flex overflow-hidden rounded-m3-full border border-[var(--m3-outline)]">
-                  {DENSITY_LEVELS.map((level, index) => (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() => setDensityPreference(level, densityTableKey)}
-                      className={[
-                        'flex flex-1 items-center justify-center gap-1 py-1 text-caption-medium-md transition-colors',
-                        index > 0 ? 'border-l border-[var(--m3-outline)]' : '',
-                        density === level
-                          ? 'bg-[var(--m3-secondary-container)] text-[var(--m3-on-secondary-container)]'
-                          : 'text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-state-layer-hover)]',
-                      ].join(' ')}
-                      data-density-option={level}
-                      aria-pressed={density === level}
-                    >
-                      {density === level ? <Check size={11} aria-hidden="true" /> : null}
-                      {t(`dynamicTable.density.${level}`, DENSITY_LABELS[level])}
-                    </button>
-                  ))}
-                </div>
+              {/* FMS UX 03.11: inside a menu the levels are menu items, not chips
+                  — borderless chips read as plain text there. One row per level,
+                  the chosen one with M3's check in the leading gutter. */}
+              <div className="px-1 pb-1" role="group" aria-label={t('dynamicTable.density.label', 'Row height')}>
+                {DENSITY_LEVELS.map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={density === level}
+                    onClick={() => setDensityPreference(level, densityTableKey)}
+                    className={row}
+                    data-testid={`dynamic-table-density-${level}`}
+                    data-density-option={level}
+                  >
+                    <span className={gutter}>
+                      {density === level ? <Check className="h-3.5 w-3.5 text-[var(--m3-on-surface)]" aria-hidden="true" /> : null}
+                    </span>
+                    {t(`dynamicTable.density.${level}`, DENSITY_LABELS[level])}
+                  </button>
+                ))}
               </div>
             </>
           )}

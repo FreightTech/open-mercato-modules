@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, MoreHorizontal, Star, Library } from 'lucide-react';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
-import { PaginationProps } from '../types/index';
+import { PaginationProps, type PresetViewsConfig } from '../types/index';
 import { PerspectiveConfig, PerspectiveTemplate, PERSPECTIVE_NAME_MAX_LENGTH } from '../types/perspective';
 import { Tab, TabBar } from '../../../primitives-v2';
 import PerspectiveTabMenu from './PerspectiveTabMenu';
@@ -49,6 +49,8 @@ interface PerspectiveTabsProps {
   onBaseViewReset?: () => void;
   /** Callback when the "Add view" tab is clicked */
   onAddPerspective?: () => void;
+  /** Coded views drawn after "Default view" (see `DynamicTableUiConfig.presetViews`). */
+  presetViews?: PresetViewsConfig;
   /**
    * @deprecated No-op since the v2 redesign. Pagination renders as a sibling
    * (`TablePagination`) on the tabs row; this component renders only the
@@ -78,6 +80,9 @@ interface PerspectiveTabsProps {
   variant?: 'bottom-bar' | 'top-tabs';
 }
 
+/** Tab value prefix of a coded preset view, so it never collides with a saved view's id. */
+const PRESET_PREFIX = '__preset:';
+
 const PerspectiveTabs: React.FC<PerspectiveTabsProps> = ({
   savedPerspectives,
   activePerspectiveId,
@@ -95,6 +100,7 @@ const PerspectiveTabs: React.FC<PerspectiveTabsProps> = ({
   onConfigureBaseView,
   onBaseViewReset,
   onAddPerspective,
+  presetViews,
 }) => {
   const t = useT();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -141,6 +147,7 @@ const PerspectiveTabs: React.FC<PerspectiveTabsProps> = ({
    * defaults.
    */
   const baseView = savedPerspectives.find(perspective => perspective.isBaseView) ?? null;
+  const presetActive = !!presetViews && presetViews.value !== presetViews.defaultValue;
 
   const visiblePerspectives = savedPerspectives.filter(
     perspective => !perspective.id.startsWith('__') && !perspective.isBaseView
@@ -202,8 +209,17 @@ const PerspectiveTabs: React.FC<PerspectiveTabsProps> = ({
     <>
     <TabBar
       className="hot-top-tabs-v2"
-      value={activePerspectiveId ?? ''}
-      onChange={(id) => onPerspectiveSelect(id || null)}
+      value={presetActive ? `${PRESET_PREFIX}${presetViews!.value}` : (activePerspectiveId ?? '')}
+      onChange={(id) => {
+        if (id.startsWith(PRESET_PREFIX)) {
+          // A preset narrows the BASE view: switch to it, then apply the preset.
+          if ((activePerspectiveId ?? '') !== (baseView?.id ?? '')) onPerspectiveSelect(baseView?.id ?? null);
+          presetViews?.onChange(id.slice(PRESET_PREFIX.length));
+          return;
+        }
+        if (presetViews && presetViews.value !== presetViews.defaultValue) presetViews.onChange(presetViews.defaultValue);
+        onPerspectiveSelect(id || null);
+      }}
       ariaLabel={t('dynamicTable.perspectives.ariaLabel', 'Perspectives')}
     >
       {/* Default (base) view — the unfiltered state. Always present and
@@ -245,6 +261,22 @@ const PerspectiveTabs: React.FC<PerspectiveTabsProps> = ({
           </span>
         )}
       </Tab>
+      {presetViews?.items
+        .filter((preset) => preset.id !== presetViews.defaultValue)
+        .map((preset) => (
+          <Tab
+            key={`preset-${preset.id}`}
+            value={`${PRESET_PREFIX}${preset.id}`}
+            data-testid={`preset-view-${preset.id}`}
+            badge={preset.count != null ? (
+              preset.tone === 'error' && preset.count > 0
+                ? <span className="hot-top-tab-badge-error-v2">{preset.count}</span>
+                : preset.count
+            ) : undefined}
+          >
+            {preset.label}
+          </Tab>
+        ))}
       {visiblePerspectives.map(perspective =>
         editingId === perspective.id ? (
           <input

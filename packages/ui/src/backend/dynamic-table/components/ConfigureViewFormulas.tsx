@@ -201,7 +201,8 @@ const ConfigureViewFormulas: React.FC<ConfigureViewFormulasProps> = ({
             <li
               key={ref.key}
               data-testid={`formula-row-${ref.key}`}
-              className="flex items-center gap-2 rounded-m3-md border border-m3-outline-variant px-2.5 py-2"
+              // FMS UX 03.11 — a filled row, no outline box.
+              className="flex items-center gap-2 rounded-[var(--m3-shape-sm)] bg-[var(--m3-surface)] px-2.5 py-2"
             >
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="text-body-medium-sm truncate">{ref.label}</span>
@@ -250,7 +251,7 @@ const ConfigureViewFormulas: React.FC<ConfigureViewFormulasProps> = ({
           `.hot-config-add-btn`, not an outline Button: the Configure View
           drawer has SEVEN "add" affordances (filter, sort, group, sum,
           highlighting rule, summarised column, calculated column) and six of
-          them are this borderless accent link. This one was the odd one out —
+          them are this borderless ghost button (FMS UX 03.11: neutral, not accent). This one was the odd one out —
           a bordered button sitting directly above "+ Add rule" in the very next
           section, so the drawer offered two different-looking controls for the
           same verb. Conforming to the majority keeps one idiom. */}
@@ -270,7 +271,8 @@ const ConfigureViewFormulas: React.FC<ConfigureViewFormulasProps> = ({
       )}
 
       {canManage && isEditorOpen && (
-        <div className="flex flex-col gap-2.5 rounded-m3-md border border-m3-outline-variant p-2.5" data-testid="formula-editor">
+        <div className="flex flex-col gap-2.5 rounded-[12px] bg-[var(--m3-surface)] p-2.5" data-testid="formula-editor">
+          {/* FMS UX 03.11 — filled surface, not a bordered frame inside the "More" surface. */}
           <label className="text-label-semibold-xs text-m3-on-surface-variant" htmlFor="formula-label-input">
             {t('dynamicTable.formula.columnName', 'Column name')}
           </label>
@@ -308,7 +310,8 @@ const ConfigureViewFormulas: React.FC<ConfigureViewFormulasProps> = ({
               <button
                 key={col.data}
                 type="button"
-                className="text-code-regular-sm rounded-m3-xs border border-m3-outline-variant px-1.5 py-0.5 hover:bg-[var(--m3-state-layer-hover)]"
+                // FMS UX 03.11 — borderless filled chip (chips carry no border — owner 03.11).
+                className="text-code-regular-sm rounded-full bg-[var(--m3-surface-container-high)] px-2 py-0.5 hover:[background-image:linear-gradient(var(--m3-state-layer-hover),var(--m3-state-layer-hover))]"
                 style={{ transition: 'var(--m3-transition-state)' }}
                 onClick={() => insert(fieldToken(col.data))}
                 title={col.data}
@@ -330,15 +333,13 @@ const ConfigureViewFormulas: React.FC<ConfigureViewFormulasProps> = ({
                   role="radio"
                   aria-checked={draft.resultType === type}
                   data-testid={`formula-type-${type}`}
-                  /* Selected reads as ONE hue. It used to pair a TEAL border
-                     (`--accent-v2`, the focus colour) with `text-primary`, so
-                     the checked chip announced itself in two different colours
-                     at once. Both halves now take `--m3-accent`, the selection
-                     blue every other selected surface in the grid uses. */
-                  className={`text-label-medium-md rounded-m3-md border px-2.5 py-1 ${
+                  /* FMS UX 03.11 — borderless pill chips: the selected one is
+                     filled near-black (the app's selected-chip look), the rest
+                     filled neutral. */
+                  className={`text-label-medium-md rounded-full px-3 py-1 ${
                     draft.resultType === type
-                      ? 'border-m3-accent text-[var(--m3-accent)]'
-                      : 'border-m3-outline-variant text-m3-on-surface-variant hover:bg-[var(--m3-state-layer-hover)]'
+                      ? 'bg-m3ft-primary text-m3ft-on-primary'
+                      : 'bg-[var(--m3-surface-container-high)] text-m3-on-surface-variant hover:text-m3-on-surface'
                   }`}
                   style={{ transition: 'var(--m3-transition-state)' }}
                   onClick={() => setDraft((prev) => ({ ...prev, resultType: type }))}
@@ -400,7 +401,7 @@ const ConfigureViewFormulas: React.FC<ConfigureViewFormulasProps> = ({
           )}
 
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1" onClick={resetDraft}>
+            <Button variant="ghost" size="sm" className="flex-1" onClick={resetDraft}>
               {t('dynamicTable.formula.cancel', 'Cancel')}
             </Button>
             <Button

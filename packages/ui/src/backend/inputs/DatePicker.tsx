@@ -108,6 +108,7 @@ export function DatePicker({
           ref={triggerRef}
           type="button"
           data-crud-focus-target=""
+          data-field=""
           disabled={disabled}
           aria-haspopup="dialog"
           className={cn(
@@ -144,7 +145,7 @@ export function DatePicker({
               <button
                 type="button"
                 onClick={handleToday}
-                className="text-sm text-primary hover:underline focus:outline-none"
+                className="text-sm text-link hover:underline focus:outline-none"
               >
                 {todayText}
               </button>

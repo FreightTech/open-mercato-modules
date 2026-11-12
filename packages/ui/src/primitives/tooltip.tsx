@@ -10,6 +10,14 @@ export const Tooltip = TooltipPrimitive.Root
 
 export const TooltipTrigger = TooltipPrimitive.Trigger
 
+/**
+ * One tooltip look for the app (FMS UX 03.11): the inverse of the page — the reading colour as the surface, the page
+ * colour as the text — radius 8, 12/16 text, the M3 menu motion. `TooltipContent` and the `title` layer
+ * (`TitleTooltips`) both wear it, so a hover hint looks the same wherever it comes from.
+ */
+export const tooltipSurfaceClass =
+  'z-[var(--z-tooltip,60)] max-w-xs break-words rounded-[var(--m3-shape-sm)] bg-[var(--foreground-v2)] px-2.5 py-1.5 text-body-regular-xs text-[var(--background-v2)] shadow-[var(--m3-elevation-2)]'
+
 export const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
@@ -19,11 +27,8 @@ export const TooltipContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 overflow-hidden rounded-md bg-slate-900 px-3 py-1.5 text-xs text-slate-50 animate-in fade-in-0 zoom-in-95',
-        'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
-        'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2',
-        'data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-        'max-w-xs break-words',
+        tooltipSurfaceClass,
+        'overflow-hidden',
         className
       )}
       {...props}

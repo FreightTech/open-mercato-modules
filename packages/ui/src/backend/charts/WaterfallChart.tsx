@@ -100,8 +100,7 @@ export function WaterfallChart({
   className = '',
   emptyMessage = 'No data available',
 }: WaterfallChartProps) {
-  const hasWrapper = !!title
-  const wrapperClass = hasWrapper ? `rounded-lg border bg-card p-4 ${className}` : className
+  const wrapperClass = className
 
   if (error) {
     return (
@@ -148,7 +147,7 @@ export function WaterfallChart({
             if (!active || !payload?.length) return null
             const p = payload[0].payload as Computed
             return (
-              <div className="rounded-lg border bg-popover px-3 py-2 text-popover-foreground shadow-md">
+              <div className="rounded-[var(--menu-v2-radius,12px)] border border-[var(--menu-v2-stroke)] bg-[var(--menu-v2-bg)] px-3 py-2 text-body-regular-xs text-[var(--field-v2-text)] shadow-[var(--menu-v2-shadow)]">
                 <div className="mb-1 text-sm font-medium">{p.label}</div>
                 <div className="text-sm tabular-nums">{valueFormatter(p.display)}</div>
               </div>

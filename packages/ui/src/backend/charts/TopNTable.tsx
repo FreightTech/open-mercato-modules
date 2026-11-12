@@ -57,7 +57,7 @@ export function TopNTable<T extends Record<string, unknown>>({
 }: TopNTableProps<T>) {
   if (error) {
     return (
-      <div className={`rounded-lg border bg-card p-4 ${className}`}>
+      <div className={className}>
         {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
         <div className="flex h-48 items-center justify-center">
           <p className="text-sm text-destructive">{error}</p>
@@ -68,7 +68,7 @@ export function TopNTable<T extends Record<string, unknown>>({
 
   if (loading) {
     return (
-      <div className={`rounded-lg border bg-card p-4 ${className}`}>
+      <div className={className}>
         {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
         <div className="flex h-48 items-center justify-center">
           <Spinner className="h-6 w-6 text-muted-foreground" />
@@ -79,7 +79,7 @@ export function TopNTable<T extends Record<string, unknown>>({
 
   if (!data || data.length === 0) {
     return (
-      <div className={`rounded-lg border bg-card p-4 ${className}`}>
+      <div className={className}>
         {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
         <div className="flex h-48 items-center justify-center">
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
@@ -97,7 +97,7 @@ export function TopNTable<T extends Record<string, unknown>>({
   }
 
   return (
-    <div className={`rounded-lg border bg-card p-4 ${className}`}>
+    <div className={className}>
       {title && <h3 className="mb-4 text-base font-medium text-card-foreground">{title}</h3>}
       <div className="overflow-x-auto">
         <table className="w-full">

@@ -62,7 +62,9 @@
 .hot-editor-dropdown,
 .hot-mention-popup,
 .hot-export-menu {
-  background: var(--m3-surface-container);
+  /* FMS UX 03.11: the lowest surface (white on a light page) and the 12 px menu corner (M3 shape md) — the grid's menus look like every
+     other dropdown of the app (theme/m3.css, menus section). */
+  background: var(--m3-surface-container-lowest);
   border: 1px solid var(--m3-outline-variant);
   border-radius: var(--m3-shape-md);
   box-shadow: var(--m3-elevation-2);
@@ -307,7 +309,7 @@
 }
 
 .hot-config-panel.hot-appearance-v2 {
-  background: var(--m3-surface-container-low);
+  background: var(--m3-surface-container-lowest);   /* FMS UX 03.11: a white sheet, no grey ground */
   border-left: 1px solid var(--m3-outline-variant);
   /* Composed inline rather than through a `--m3-shape-xl-start` token: m3.css
      ships `-start` / `-end` variants for `lg` only, and adding an `xl` one is

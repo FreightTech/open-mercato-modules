@@ -64,7 +64,7 @@ export function ContactList({
               </span>
             ) : null}
             {p.email ? (
-              <a href={`mailto:${p.email}`} className="flex min-w-0 items-center gap-2 text-body-regular-sm text-m3ft-primary hover:underline">
+              <a href={`mailto:${p.email}`} className="flex min-w-0 items-center gap-2 text-body-regular-sm text-link hover:underline">
                 <Mail className="size-4 shrink-0 text-m3ft-on-surface-variant" aria-hidden />
                 <span className="truncate">{p.email}</span>
               </a>

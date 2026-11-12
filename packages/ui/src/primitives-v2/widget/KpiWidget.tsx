@@ -82,20 +82,21 @@ export function KpiWidget({ value, delta, trend, progress, comparison, meta, ...
     <WidgetCard {...card}>
       <div className="flex flex-col gap-3">
         {comparison ? (
-          <div className="flex items-center gap-6">
+          // Values never break ("-10 tys. / zł"); a narrow tile wraps the pill under them instead (owner 05.11).
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <div className="flex flex-col gap-0.5">
-              <span className="text-display-bold-md tabular-nums text-m3ft-on-surface">{value}</span>
+              <span className="whitespace-nowrap text-display-bold-md tabular-nums text-m3ft-on-surface">{value}</span>
               <span className="text-body-regular-2xs text-m3ft-on-surface-variant">{comparison.currentLabel}</span>
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-display-bold-md tabular-nums text-m3ft-on-surface-variant">{comparison.previous}</span>
+              <span className="whitespace-nowrap text-display-bold-md tabular-nums text-m3ft-on-surface-variant">{comparison.previous}</span>
               <span className="text-body-regular-2xs text-m3ft-on-surface-variant">{comparison.previousLabel}</span>
             </div>
             {delta ? <DeltaPill delta={delta} /> : null}
           </div>
         ) : (
-          <div className={cn('flex items-center', progress ? 'gap-2' : 'gap-2.5')}>
-            <span className="text-display-bold-lg tabular-nums text-m3ft-on-surface">{value}</span>
+          <div className={cn('flex flex-wrap items-center gap-y-1.5', progress ? 'gap-x-2' : 'gap-x-2.5')}>
+            <span className="whitespace-nowrap text-display-bold-lg tabular-nums text-m3ft-on-surface">{value}</span>
             {progress?.caption ? (
               <span className="text-body-regular-xs text-m3ft-on-surface-variant">{progress.caption}</span>
             ) : null}

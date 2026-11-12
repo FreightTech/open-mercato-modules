@@ -44,7 +44,7 @@ export const M3_MENU_DIVIDER = 'my-1 h-px bg-[var(--m3-outline-variant)]'
  * (the prototype's shadow is the same two layers).
  */
 export const M3_MENU_PANEL =
-  'pointer-events-auto fixed z-[1000] overflow-y-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] p-1 shadow-m3-2'
+  'pointer-events-auto fixed z-[1000] overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] p-1 shadow-m3-2'
 
 /**
  * A control in the workspace bar — an M3 outlined assist chip at the bar's

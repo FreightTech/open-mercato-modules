@@ -193,7 +193,7 @@ function formatFieldValue(
     return (
       <Link
         href={display.href}
-        className="font-medium text-primary underline-offset-2 hover:underline focus-visible:underline"
+        className="font-medium text-link underline-offset-2 hover:underline focus-visible:underline"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
       >
@@ -651,7 +651,7 @@ function CustomDataSectionImpl({
                 {definitionHref && labels.defineFields ? (
                   <Link
                     href={definitionHref}
-                    className="font-medium text-primary underline-offset-2 hover:underline focus-visible:underline"
+                    className="font-medium text-link underline-offset-2 hover:underline focus-visible:underline"
                   >
                     {labels.defineFields}
                   </Link>

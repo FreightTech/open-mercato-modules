@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
-import { Button } from '../../primitives/button'
+import { ChipTabs } from '../../primitives-v2/ChipTabs'
 import type { DateGranularity } from '@open-mercato/shared/modules/analytics'
 
 export type InlineGranularitySelectProps = {
@@ -34,29 +34,20 @@ export function InlineGranularitySelect({
 }: InlineGranularitySelectProps) {
   const t = useT()
 
+  // FMS UX 03.11: chip tabs, no segmented/underline.
   return (
-    <div className={`inline-flex rounded-md border border-border bg-background ${className}`} role="group">
-      {GRANULARITY_OPTIONS.map((option) => {
-        const isActive = option.value === value
-        return (
-          <Button
-            key={option.value}
-            type="button"
-            variant="ghost"
-            size="sm"
-            title={t(option.titleKey, option.titleFallback)}
-            onClick={() => onChange(option.value)}
-            className={`h-auto px-2 py-0.5 text-xs font-medium transition-colors first:rounded-l-[calc(var(--radius)-2px)] last:rounded-r-[calc(var(--radius)-2px)] ${
-              isActive
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            {t(option.shortLabelKey, option.shortFallback)}
-          </Button>
-        )
-      })}
-    </div>
+    <ChipTabs
+      role="radiogroup"
+      size="sm"
+      className={className}
+      value={value}
+      onChange={onChange}
+      options={GRANULARITY_OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(option.shortLabelKey, option.shortFallback),
+        title: t(option.titleKey, option.titleFallback),
+      }))}
+    />
   )
 }
 
