@@ -8,7 +8,7 @@ import { cn } from '../utils'
   KPI, table) shares ONE shell, measured node-by-node:
 
     Card        #FFFFFF · radius 12 · no border
-                shadow 0 1 2 #101828@5% + 0 1 3 #101828@8%  (→ shadow-m3ft-card)
+                frame  1 px outline-variant, radius 16, no shadow (FMS card standard, 05.11)
     Content     vertical, padding 24 / 0 / 16 / 0, gap 16
       Header    padding-x 24, gap 8
                 title    Roboto Medium 14/20  on-surface          (text-body-medium-sm)
@@ -115,16 +115,18 @@ export const WidgetCard = React.forwardRef<HTMLElement, WidgetCardProps>(functio
       ref={ref}
       aria-labelledby={titleId}
       className={cn(
-        'flex min-w-0 flex-col overflow-hidden rounded-[12px] bg-m3ft-surface text-m3ft-on-surface shadow-m3ft-card',
+        // FMS card standard (owner 05.11, one frame for every widget — Pulpit panes, CRM, Finanse): radius 16, a 1 px
+        // outline-variant line, no shadow, 16 px inset.
+        'flex min-w-0 flex-col overflow-hidden rounded-[16px] border border-m3ft-outline-variant bg-m3ft-surface text-m3ft-on-surface',
         className,
       )}
       {...props}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4 pt-6 pb-4">
-        <header className="flex flex-col gap-4 px-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 pt-4 pb-4">
+        <header className="flex flex-col gap-3 px-4">
           <div className="flex items-start gap-2">
             <div className="flex min-w-0 flex-1 flex-col">
-              <h3 id={titleId} className="truncate text-body-medium-sm text-m3ft-on-surface">
+              <h3 id={titleId} className="truncate text-body-medium-sm font-semibold text-m3ft-on-surface">
                 {title}
               </h3>
               {subtitle ? (
@@ -145,12 +147,12 @@ export const WidgetCard = React.forwardRef<HTMLElement, WidgetCardProps>(functio
           </div>
           {headerExtra}
         </header>
-        {banner ? <div className="px-6">{banner}</div> : null}
-        <div className={cn('min-h-0 flex-1', !bleed && 'px-6', bodyClassName)}>{children}</div>
+        {banner ? <div className="px-4">{banner}</div> : null}
+        <div className={cn('min-h-0 flex-1', !bleed && 'px-4', bodyClassName)}>{children}</div>
       </div>
       {bottom ? <div className="border-t border-m3ft-outline-variant">{bottom}</div> : null}
       {footer ? (
-        <footer className="flex h-12 shrink-0 items-center justify-end gap-1 border-t border-m3ft-outline-variant pr-4 pl-6">
+        <footer className="flex h-12 shrink-0 items-center justify-end gap-1 px-4">
           {footer.action ? (
             <button
               type="button"

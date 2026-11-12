@@ -20,8 +20,9 @@ import { cn } from './utils'
     | sky       | #E0F2FE   | #BAE6FD | #0369A1 |
     | rose      | #FFE4E6   | #FECDD3 | #BE123C |
 
-  All variants pull from `-v2-status-*` tokens in tokens.css. Border
-  is rendered as a 1px outline (Figma uses 1px strokes on every variant).
+  All variants pull from `-v2-status-*` tokens in tokens.css. No border (FMS UX 03.11, owner: badges and chips
+  carry their tone in the fill alone; Figma's 1px strokes are dropped) — only `outline` keeps its line, as an inset
+  shadow, because the line is that variant's whole look.
 
   Sizes:
     sm: `label/semibold/xs` (12px / 16px) — Figma's default for tags.
@@ -80,7 +81,10 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(function Badg
     <span
       ref={ref}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border',
+        // No border on a badge (FMS UX 03.11, owner: "nie używamy borderów") — the fill alone carries the tone; the
+        // `outline` variant keeps its line as an inset shadow, the one badge whose look is the line.
+        'inline-flex items-center gap-1 rounded-full',
+        variant === 'outline' && 'shadow-[inset_0_0_0_1px_var(--status-v2-outline-border)]',
         SIZE_CLASSES[size],
         VARIANT_CLASSES[variant],
         className,

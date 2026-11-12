@@ -1619,7 +1619,7 @@ export function CrudForm<TValues extends Record<string, unknown>>({
       <div className="rounded-md border border-dashed border-muted-foreground/50 bg-muted/10 px-3 py-4 text-sm text-muted-foreground">
         <span>{text} </span>
         {customFieldsManageHref ? (
-          <Link href={customFieldsManageHref} className="font-medium text-primary hover:underline">
+          <Link href={customFieldsManageHref} className="font-medium text-link hover:underline">
             {action}
           </Link>
         ) : (

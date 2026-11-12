@@ -12,7 +12,7 @@ import { cn } from './utils'
   border-top). Background uses the existing `--sidebar` token so the
   theme system (light / dark / brand) flows in.
 
-  Width default: 240px to match the Figma "Sidebar" frame. Override via className.
+  Width default: `--sidebar-v2-width` (240px, the Figma "Sidebar" frame). Override via className.
 */
 
 export type SidebarProps = React.HTMLAttributes<HTMLElement> & {
@@ -24,7 +24,11 @@ export function Sidebar({ header, footer, className, children, ...props }: Sideb
   return (
     <aside
       className={cn(
-        'flex h-full w-[240px] shrink-0 flex-col bg-sidebar-v2 text-sidebar-v2-foreground',
+        // Width from the `--sidebar-v2-width` role (tokens.v2.css); a rail or a wider editor sets
+        // `--sidebar-v2-shell-width` on the element (one width class, so nothing competes in the cascade), and the
+        // change of width animates (FMS UX 02.11).
+        'flex h-full w-[var(--sidebar-v2-shell-width,var(--sidebar-v2-width))] shrink-0 flex-col overflow-hidden bg-sidebar-v2 text-sidebar-v2-foreground',
+        'transition-[width] duration-[var(--m3-duration-medium2)] ease-[var(--m3-ease-emphasized)]',
         className,
       )}
       {...props}

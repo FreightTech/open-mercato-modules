@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ChevronDown as LucideChevronDown } from 'lucide-react'
 import { cn } from './utils'
+import { Collapse } from './Collapse'
 
 /*
   Figma source: FMS-Componenets → NavGroup (component-set 72:154).
@@ -11,6 +12,9 @@ import { cn } from './utils'
   for controlled use.
 
   Title row is optional. When present, it acts as the toggle.
+
+  The items fold with a smooth height change (`Collapse`). In a `compact` rail the title folds away and the
+  items stay shown, so a sidebar narrowing to its rail moves instead of swapping layouts (FMS UX 02.11).
 */
 
 export type NavGroupProps = React.HTMLAttributes<HTMLDivElement> & {
@@ -21,6 +25,8 @@ export type NavGroupProps = React.HTMLAttributes<HTMLDivElement> & {
   /** Controlled collapsed state — pair with `onCollapse`. */
   collapsed?: boolean
   onCollapse?: (next: boolean) => void
+  /** Icon-only rail: the title folds away and the items stay shown. */
+  compact?: boolean
 }
 
 const ChevronDown = () => <LucideChevronDown aria-hidden="true" className="h-3 w-3" />
@@ -30,6 +36,7 @@ export function NavGroup({
   defaultCollapsed = false,
   collapsed,
   onCollapse,
+  compact = false,
   className,
   children,
   ...props
@@ -46,31 +53,38 @@ export function NavGroup({
   return (
     <div className={cn('flex w-full flex-col gap-1', className)} {...props}>
       {title ? (
-        <button
-          type="button"
-          onClick={toggle}
-          aria-expanded={!isCollapsed}
-          className={cn(
-            'group/navgroup mx-2 inline-flex items-center justify-between rounded-sm px-1 py-1',
-            'text-body-regular-xs uppercase tracking-wider text-sidebar-v2-muted',
-            'hover:text-sidebar-v2-foreground transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-v2 focus-visible:ring-offset-1',
-          )}
-        >
-          <span>{title}</span>
-          {/*
-            Chevron points UP when expanded (click-to-collapse hint), DOWN when collapsed.
-            Matches the Figma "NavGroup — state (expanded / collapsed)" interaction model.
-          */}
-          <span
-            aria-hidden="true"
-            className={cn('inline-flex transition-transform', isCollapsed ? 'rotate-0' : 'rotate-180')}
+        <Collapse open={!compact}>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={!isCollapsed}
+            className={cn(
+              'group/navgroup mx-2 flex w-[calc(100%-1rem)] items-center justify-between rounded-sm px-1 py-1',
+              'text-body-regular-xs text-sidebar-v2-muted',
+              'hover:text-sidebar-v2-foreground transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-v2 focus-visible:ring-offset-1',
+            )}
           >
-            <ChevronDown />
-          </span>
-        </button>
+            <span className="truncate">{title}</span>
+            {/*
+              Chevron points UP when expanded (click-to-collapse hint), DOWN when collapsed.
+              Matches the Figma "NavGroup — state (expanded / collapsed)" interaction model.
+            */}
+            <span
+              aria-hidden="true"
+              className={cn(
+                'inline-flex transition-transform duration-[var(--m3-duration-medium1)] ease-[var(--m3-ease-emphasized)]',
+                isCollapsed ? 'rotate-0' : 'rotate-180',
+              )}
+            >
+              <ChevronDown />
+            </span>
+          </button>
+        </Collapse>
       ) : null}
-      {!isCollapsed ? <div className="flex flex-col gap-0.5">{children}</div> : null}
+      <Collapse open={compact || !isCollapsed}>
+        <div className="flex flex-col gap-0.5">{children}</div>
+      </Collapse>
     </div>
   )
 }

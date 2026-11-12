@@ -140,18 +140,19 @@ function openDensityControls(): void {
 
 function densityOption(level: 'dense' | 'compact' | 'comfortable'): HTMLElement {
   openDensityControls()
-  return document.querySelector(`[data-density-option="${level}"]`) as HTMLElement
+  return document.querySelector(`[data-testid="dynamic-table-density-${level}"]`) as HTMLElement
 }
 
   it('shows the density picker in the toolbar, naming the current level for screen readers', () => {
     render(harness())
-    // The segmented control marks the current level with `aria-pressed`, which
-    // is what a screen reader announces now that there is no collapsed trigger
+    // The menu radio items mark the current level with `aria-checked`,
+    // which is what a screen reader announces now that there is no collapsed trigger
     // carrying the level in its label.
     const current = densityOption('dense')
     expect(current).not.toBeNull()
-    expect(current.getAttribute('aria-pressed')).toBe('true')
-    expect(densityOption('comfortable').getAttribute('aria-pressed')).toBe('false')
+    expect(current.getAttribute('role')).toBe('menuitemradio')
+    expect(current.getAttribute('aria-checked')).toBe('true')
+    expect(densityOption('comfortable').getAttribute('aria-checked')).toBe('false')
   })
 
   it('lets the user pick another level, and the whole grid restyles + re-measures', () => {

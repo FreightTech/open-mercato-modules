@@ -52,7 +52,7 @@ export type ComboSeries = {
    * uses a single `color` fill for every datum.
    */
   signColor?: boolean
-  /** Bar-only: fill for negative data when `signColor` is true (default loss red #C0392B) */
+  /** Bar-only: fill for negative data when `signColor` is true (default `--chart-v2-negative`) */
   negativeColor?: string
 }
 
@@ -111,7 +111,7 @@ export function ComboChart({
   className = '',
   categoryLabels,
 }: ComboChartProps) {
-  const wrapperClass = `rounded-lg border bg-card p-4 ${className}`
+  const wrapperClass = className
 
   if (error) {
     return (
@@ -286,7 +286,7 @@ export function ComboChart({
               const color = resolveChartColor(s.color, idx)
               const yAxisId = s.yAxis === 'right' ? 'right' : 'left'
               if (s.type === 'bar') {
-                const negativeColor = s.negativeColor ?? '#C0392B'
+                const negativeColor = s.negativeColor ?? 'var(--chart-v2-negative)'
                 return (
                   <Bar
                     key={s.key}

@@ -162,7 +162,7 @@ function EventCard({ entry }: { entry: ActivityEntry }) {
         {entry.links?.length ? (
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             {entry.links.map((l) => (
-              <Link key={l.href + l.label} href={l.href} className="inline-flex items-center gap-1 text-caption-medium-md text-m3ft-primary hover:underline">
+              <Link key={l.href + l.label} href={l.href} className="inline-flex items-center gap-1 text-caption-medium-md text-link hover:underline">
                 <Link2 className="size-3.5" aria-hidden />
                 {l.label}
               </Link>

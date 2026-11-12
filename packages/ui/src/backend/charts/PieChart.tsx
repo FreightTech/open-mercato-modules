@@ -63,8 +63,7 @@ export function PieChart({
     return data.reduce((sum, item) => sum + item.value, 0)
   }, [data])
 
-  const hasWrapper = !!title
-  const wrapperClass = hasWrapper ? `rounded-lg border bg-card p-4 ${className}` : className
+  const wrapperClass = className
 
   if (error) {
     return (

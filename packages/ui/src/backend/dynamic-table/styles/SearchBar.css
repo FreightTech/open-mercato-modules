@@ -198,10 +198,12 @@
   align-items: center;
   gap: 4px;
   flex: 0 0 auto;
-  height: 22px;
-  padding: 0 4px 0 10px;
+  /* FMS UX 03.11: the size of the view chips and pagination on the same card
+     (28 px, 14 px text) and no border — the fill carries the chip. */
+  height: 28px;
+  padding: 0 4px 0 12px;
   white-space: nowrap;
-  border: 1px solid var(--m3-outline-variant);
+  border: 0;
   border-radius: var(--m3-shape-full);
   background-color: var(--m3-surface-container-high);
   color: var(--m3-on-surface-variant);
@@ -216,9 +218,9 @@
   flex: 0 0 auto;
   white-space: nowrap;
   color: var(--m3-on-surface);
-  font-size: var(--text-caption-medium-md);
-  line-height: var(--text-caption-medium-md--line-height);
-  font-weight: var(--text-caption-medium-md--font-weight);
+  font-size: var(--text-body-medium-sm);
+  line-height: var(--text-body-medium-sm--line-height);
+  font-weight: var(--text-body-medium-sm--font-weight);
 }
 
 .hot-filter-chip-value {
@@ -228,9 +230,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--m3-on-surface-variant);
-  font-size: var(--text-body-regular-xs);
-  line-height: var(--text-body-regular-xs--line-height);
-  font-weight: var(--text-body-regular-xs--font-weight);
+  font-size: var(--text-body-regular-sm);
+  line-height: var(--text-body-regular-sm--line-height);
+  font-weight: var(--text-body-regular-sm--font-weight);
 }
 
 .hot-filter-chip-remove {
@@ -238,8 +240,8 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: none;
   background-color: transparent;
   border-radius: var(--m3-shape-full);

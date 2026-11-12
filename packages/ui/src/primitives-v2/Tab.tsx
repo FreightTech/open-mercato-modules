@@ -32,13 +32,21 @@ import { cn } from './utils'
   `TabBar` provides context so multiple Tab children share a single
   `value` / `onChange` pair. Tabs can also be controlled by passing
   `isActive` directly when used outside a TabBar.
+
+  FMS UX 03.11: chip tabs, no segmented/underline. `variant` defaults to
+  'pill' — the ChipTabs look: borderless pills, the active one on
+  `--m3-surface-container-high` (grey; the table's view chips stay blue), the others plain text with the hover state
+  layer. The underline matrix above is kept as `variant="underline"`.
 */
+
+export type TabVariant = 'underline' | 'pill'
 
 // ── Context ──────────────────────────────────────────────────────
 
 type TabBarContextValue = {
   value?: string
   onChange?: (next: string) => void
+  variant: TabVariant
 }
 
 const TabBarContext = React.createContext<TabBarContextValue | null>(null)
@@ -52,24 +60,28 @@ export type TabBarProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'>
   onChange?: (next: string) => void
   /** Optional aria-label for the tablist landmark. */
   ariaLabel?: string
+  /** 'pill' (default) = chip tabs; 'underline' = the legacy underlined row. */
+  variant?: TabVariant
 }
 
 export function TabBar({
   value,
   onChange,
   ariaLabel,
+  variant = 'pill',
   className,
   children,
   ...props
 }: TabBarProps) {
-  const ctx = React.useMemo<TabBarContextValue>(() => ({ value, onChange }), [value, onChange])
+  const ctx = React.useMemo<TabBarContextValue>(() => ({ value, onChange, variant }), [value, onChange, variant])
   return (
     <TabBarContext.Provider value={ctx}>
       <div
         role="tablist"
         aria-label={ariaLabel}
+        data-variant={variant}
         className={cn(
-          'flex items-end gap-6 border-b border-border-v2',
+          variant === 'underline' ? 'flex items-end gap-6 border-b border-border-v2' : 'flex items-center gap-1',
           className,
         )}
         {...props}
@@ -90,13 +102,16 @@ export type TabProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'valu
   isActive?: boolean
   /** Optional numeric/text badge rendered after the label. */
   badge?: React.ReactNode
+  /** Look outside a TabBar (inside one the bar's `variant` wins unless set). */
+  variant?: TabVariant
 }
 
 export const Tab = React.forwardRef<HTMLButtonElement, TabProps>(function Tab(
-  { value, isActive, badge, className, children, disabled, onClick, ...props },
+  { value, isActive, badge, variant: variantProp, className, children, disabled, onClick, ...props },
   ref,
 ) {
   const ctx = React.useContext(TabBarContext)
+  const variant = variantProp ?? ctx?.variant ?? 'pill'
   const active =
     isActive !== undefined ? isActive : ctx && value !== undefined && ctx.value === value
 
@@ -115,17 +130,32 @@ export const Tab = React.forwardRef<HTMLButtonElement, TabProps>(function Tab(
       disabled={disabled}
       onClick={handleClick}
       className={cn(
-        'relative inline-flex items-center gap-1.5 pb-2 pt-1 text-body-medium-sm transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-v2 focus-visible:ring-offset-1',
-        active
-          ? // active: dark text + --tab-v2-indicator underline (offset to overlap the TabBar's border-bottom)
-            cn(
-              'text-foreground-v2 font-medium cursor-pointer',
-              'after:absolute after:inset-x-0 after:-bottom-px after:h-[2px] after:bg-tab-v2-indicator after:content-[""]',
+        variant === 'underline'
+          ? cn(
+              'relative inline-flex items-center gap-1.5 pb-2 pt-1 text-body-medium-sm transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-v2 focus-visible:ring-offset-1',
+              active
+                ? // active: dark text + --tab-v2-indicator underline (offset to overlap the TabBar's border-bottom)
+                  cn(
+                    'text-foreground-v2 font-medium cursor-pointer',
+                    'after:absolute after:inset-x-0 after:-bottom-px after:h-[2px] after:bg-tab-v2-indicator after:content-[""]',
+                  )
+                : disabled
+                  ? 'text-muted-v2-foreground cursor-not-allowed'
+                  : 'text-status-v2-neutral-text hover:text-foreground-v2 cursor-pointer',
             )
-          : disabled
-            ? 'text-muted-v2-foreground cursor-not-allowed'
-            : 'text-status-v2-neutral-text hover:text-foreground-v2 cursor-pointer',
+          : // pill: the ChipTabs look (FMS UX 03.11). py-1 + 20px line = 28px, no fixed
+            // height, so a host that trims the padding (a split pane) can still shrink it.
+            cn(
+              'relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--m3-shape-full)] px-3 py-1 text-body-medium-sm',
+              'transition-[background-color,color] duration-[var(--m3-duration-short2)] ease-[var(--m3-ease-standard)]',
+              'focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--field-v2-stroke-focus,#666)]',
+              active
+                ? 'bg-[var(--m3ft-v2-surface-container-high,var(--m3-surface-container-high))] text-[var(--m3ft-v2-on-surface,var(--m3-on-surface))] cursor-pointer'
+                : disabled
+                  ? 'text-[var(--m3-on-surface-variant)] opacity-40 cursor-not-allowed'
+                  : 'text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-state-layer-hover)] hover:text-[var(--m3-on-surface)] cursor-pointer',
+            ),
         className,
       )}
       {...props}

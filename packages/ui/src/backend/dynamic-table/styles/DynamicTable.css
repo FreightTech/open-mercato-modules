@@ -1946,7 +1946,8 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
    kartoteka's — the 480px cap above is for the old single-column drawer. */
 .hot-config-panel.hot-config-panel--wizard,
 .hot-config-panel.hot-config-panel--wizard.hot-appearance-v2 {
-    max-width: min(1080px, 100vw) !important;
+    /* FMS UX 05.11: rules on the left, the columns as their own pane on the right — 980 px. */
+    max-width: min(980px, 100vw) !important;
     width: 100% !important;
 }
 
@@ -1971,21 +1972,27 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 
 .hot-config-panel-header-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center; /* FMS UX 03.11 — the 36px close centres on the title block */
     justify-content: space-between;
+    gap: 12px;
 }
 
+/* FMS UX 03.11 — named typography tokens instead of raw 18px/600. */
 .hot-config-panel-title {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: var(--text-heading-semibold-md);
+    line-height: var(--text-heading-semibold-md--line-height);
+    letter-spacing: var(--text-heading-semibold-md--letter-spacing);
+    font-weight: var(--text-heading-semibold-md--font-weight);
     color: var(--m3-on-surface);
     margin: 0;
-    line-height: 1.3;
 }
 
+/* FMS UX 03.11 — 36px round ghost icon button; the ring shows on keyboard
+   focus only (`:focus-visible`), never as a box after a click or on open. */
 .hot-config-panel-close {
-    width: 24px;
-    height: 24px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2006,16 +2013,22 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     background-color: var(--m3-state-layer-pressed);
 }
 
-.hot-config-panel-close:focus-visible {
+.hot-config-panel-close:focus {
     outline: none;
-    box-shadow: var(--m3-focus-ring-inset);
 }
 
+.hot-config-panel-close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--m3ft-v2-outline, var(--m3-outline));
+}
+
+/* FMS UX 03.11 — one short context line (the view's name), token type. */
 .hot-config-panel-subtitle {
-    font-size: 14px;
+    font-size: var(--text-body-regular-sm);
+    line-height: var(--text-body-regular-sm--line-height);
+    font-weight: var(--text-body-regular-sm--font-weight);
     color: var(--m3-on-surface-variant);
-    margin: 2px 0 0;
-    line-height: 1.4;
+    margin: 0;
 }
 
 /* Body */
@@ -2029,10 +2042,24 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 }
 
 /* Collapsible Sections */
-.hot-config-section {
-    border: 1px solid var(--m3-outline-faint);
-    border-radius: var(--m3-shape-md);
+/* FMS UX 03.11 — "Więcej" accordions: quiet rows on one filled surface
+   (radius 16) with a divider between them, not outlined boxes. */
+.hot-config-more-list {
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    background: var(--m3-surface-container-low);
     overflow: hidden;
+}
+
+.hot-config-section {
+    border: none;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.hot-config-more-list > .hot-config-section + .hot-config-section {
+    border-top: 1px solid var(--m3-outline-variant);
 }
 
 .hot-config-section-header {
@@ -2041,8 +2068,9 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     gap: 8px;
     width: 100%;
     padding: 12px 14px;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--text-body-medium-sm);
+    line-height: var(--text-body-medium-sm--line-height);
+    font-weight: var(--text-body-medium-sm--font-weight);
     color: var(--m3-on-surface);
     background: transparent;
     border: none;
@@ -2051,7 +2079,16 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 }
 
 .hot-config-section-header:hover {
-    background: var(--m3-surface-container);
+    background: var(--m3-state-layer-hover);
+}
+
+.hot-config-section-header:focus {
+    outline: none;
+}
+
+.hot-config-section-header:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--m3ft-v2-outline, var(--m3-outline));
 }
 
 .hot-config-section-header svg {
@@ -2079,8 +2116,9 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 
 .hot-config-section-badge {
     flex: 0 0 auto;
-    font-size: 12px;
-    font-weight: 400;
+    font-size: var(--text-body-regular-xs);
+    line-height: var(--text-body-regular-xs--line-height);
+    font-weight: var(--text-body-regular-xs--font-weight);
     white-space: nowrap;
     color: var(--m3-on-surface-variant);
 }
@@ -2128,32 +2166,21 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     overflow-y: auto;
 }
 
+/* FMS UX 03.11 — column rows: borderless, one radius (--m3-shape-sm). */
 .hot-config-fields-item {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
     cursor: pointer;
-    font-size: 14px;
-    border: 1px solid var(--m3-outline-faint);
-    margin-top: -1px;
-}
-
-.hot-config-fields-item:first-child {
-    margin-top: 0;
-    border-radius: var(--m3-shape-sm) var(--m3-shape-sm) 0 0;
-}
-
-.hot-config-fields-item:last-child {
-    border-radius: 0 0 var(--m3-shape-sm) var(--m3-shape-sm);
-}
-
-.hot-config-fields-item:first-child:last-child {
+    font-size: var(--text-body-regular-sm);
+    line-height: var(--text-body-regular-sm--line-height);
+    border: none;
     border-radius: var(--m3-shape-sm);
 }
 
 .hot-config-fields-item:hover {
-    background: var(--m3-surface-container);
+    background: var(--m3-state-layer-hover);
 }
 
 /* Drag ghost — see the note on `.dragging`. */
@@ -2164,7 +2191,7 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 
 .hot-config-fields-item.is-drag-over {
     background: var(--m3-secondary-container);
-    border-top-color: var(--m3-primary);
+    box-shadow: inset 0 2px 0 var(--m3-primary);
 }
 
 .hot-config-fields-grip {
@@ -2496,20 +2523,38 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 }
 
 /* Shared Buttons */
+/* FMS UX 03.11 — "+ Dodaj warunek / sortowanie / grupę": a neutral ghost
+   button (on-surface text, 32px, pill, state-layer hover), not an accent link.
+   The negative inline margin keeps the "+" aligned with the rows above. */
 .hot-config-add-btn {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 0;
-    font-size: 13px;
-    color: var(--m3-accent);
+    align-self: flex-start;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    margin-left: -8px;
+    font-size: var(--text-body-medium-sm);
+    line-height: var(--text-body-medium-sm--line-height);
+    font-weight: var(--text-body-medium-sm--font-weight);
+    color: var(--m3-on-surface);
     background: transparent;
     border: none;
+    border-radius: var(--m3-shape-full);
     cursor: pointer;
 }
 
 .hot-config-add-btn:hover:not(:disabled) {
-    background-color: var(--m3-state-layer-accent-hover);
+    background-color: var(--m3-state-layer-hover);
+}
+
+.hot-config-add-btn:focus {
+    outline: none;
+}
+
+.hot-config-add-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--m3ft-v2-outline, var(--m3-outline));
 }
 
 .hot-config-add-btn:disabled {
@@ -2519,8 +2564,10 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 
 .hot-config-clear-btn {
     padding: 4px 8px;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--text-body-medium-sm);
+    line-height: var(--text-body-medium-sm--line-height);
+    font-weight: var(--text-body-medium-sm--font-weight);
+    border-radius: var(--m3-shape-full);
     color: var(--m3-on-surface-variant);
     background: transparent;
     border: none;
@@ -2532,8 +2579,11 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 }
 
 /* Footer */
+/* FMS UX 03.11 — buttons are styled in ConfigureViewPanel (ghost Restore left,
+   tonal Cancel, one near-black primary CTA right); this only lays them out. */
 .hot-config-panel-footer {
     display: flex;
+    align-items: center;
     gap: 8px;
     padding: 12px 20px;
     border-top: 1px solid var(--m3-outline-faint);
@@ -2596,25 +2646,37 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 }
 
 .hot-config-save-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--m3-on-surface);
+    font-size: var(--text-body-regular-sm);
+    line-height: var(--text-body-regular-sm--line-height);
+    font-weight: var(--text-body-regular-sm--font-weight);
+    color: var(--m3-on-surface-variant);
 }
 
+/* FMS UX 03.11 — the app's field (visual-language §1): 40px, filled
+   surface-container-high, no border, radius 10, grey 2px ring on focus. */
 .hot-config-save-input {
-    padding: 6px 10px;
-    font-size: 13px;
-    border: 1px solid var(--m3-outline-faint);
-    border-radius: var(--m3-shape-sm);
-    background: var(--m3-surface-container-lowest);
+    height: 40px;
+    padding: 0 12px;
+    font-size: var(--text-body-regular-sm);
+    line-height: var(--text-body-regular-sm--line-height);
+    font-weight: var(--text-body-regular-sm--font-weight);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--m3ft-v2-surface-container-high, var(--m3-surface-container-high));
     color: var(--m3-on-surface);
     outline: none;
-    margin-bottom: 4px;
+}
+
+.hot-config-save-input::placeholder {
+    color: var(--m3-on-surface-variant);
 }
 
 .hot-config-save-input:focus {
-    border-color: var(--m3-focus-ring-color);
-    box-shadow: var(--m3-focus-halo);
+    outline: none;
+}
+
+.hot-config-save-input:focus-visible {
+    box-shadow: 0 0 0 2px var(--m3ft-v2-outline, var(--m3-outline));
 }
 
 .hot-config-save-colors {
@@ -3255,6 +3317,8 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     border: 1px solid var(--m3-outline-variant);
     border-radius: var(--m3-shape-md);
     box-shadow: var(--m3-elevation-3);
+    /* Enters as every dropdown does (FMS UX 02.11; the surface itself is ContextMenu.css's menu family). */
+    animation: menu-v2-in var(--m3-duration-medium1) var(--m3-ease-emphasized-decelerate) both;
     overflow-y: auto;
     overflow-x: hidden;
     max-height: 280px;
@@ -3272,9 +3336,11 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     display: block;
     width: 100%;
     flex-shrink: 0;
-    padding: 6px 8px;
+    min-height: 32px;
+    padding: 6px 10px;
     border: none;
     border-radius: var(--m3-shape-sm);
+    transition: var(--m3-transition-state);
     background: transparent;
     color: var(--m3-on-surface);
     text-align: left;
@@ -3295,6 +3361,8 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 
 .hot-select-menu-option[data-selected] {
     font-weight: 600;
+    background: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
 }
 
 /* Loading / empty / error are three DIFFERENT strings on purpose. A silently
@@ -3474,12 +3542,14 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 32px;
+    height: 28px;
     padding: 0 10px;
     border: none;
     border-radius: var(--m3-shape-full);
     background: transparent;
     color: var(--m3-on-surface-variant);
+    font-size: var(--text-body-regular-sm);
+    line-height: var(--text-body-regular-sm--line-height);
     cursor: pointer;
     white-space: nowrap;
     transition: var(--m3-transition-state);
@@ -3655,22 +3725,20 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 /* ============================================
    VIEW MODE SWITCH (list / grid)
 
-   M3 segmented button. The container carries the outline and the pill radius;
-   the segments are transparent until selected, when they take the
+   Chip tabs (FMS UX 03.11; was an M3 segmented button with an outlined
+   container). The pills are transparent until selected, when they take the
    secondary-container / on-secondary-container PAIR. Hover and press are 8%
    state layers of the content colour, never a background swap — a hover that
    replaces the fill would erase the selected/unselected distinction for as
    long as the cursor is over it.
    ============================================ */
 
+/* FMS UX 03.11: chip tabs, no segmented/underline — no outlined container any
+   more; the two options are borderless pills (the ChipTabs look), 4px apart. */
 .hot-viewmode-switch {
     display: inline-flex;
     align-items: center;
-    /* 1px gap so the two segments' focus rings never touch. */
-    gap: 1px;
-    padding: 2px;
-    border: 1px solid var(--m3-outline-variant);
-    border-radius: var(--m3-shape-full);
+    gap: 4px;
     background: transparent;
 }
 

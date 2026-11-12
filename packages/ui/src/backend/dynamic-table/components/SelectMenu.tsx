@@ -216,6 +216,7 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({
         aria-label={ariaLabel}
         disabled={disabled}
         className={`hot-select-trigger ${className}`.trim()}
+        data-field=""
         onClick={() => {
           setActiveIndex(Math.max(0, entries.findIndex((o) => o.value === value)));
           setOpen((o) => !o);

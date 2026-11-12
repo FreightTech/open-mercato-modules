@@ -153,7 +153,7 @@ export function PhoneNumberField({
       {!disabled && duplicate && duplicateLabel && duplicateLinkLabel ? (
         <p className="text-xs text-amber-600">
           {duplicateLabel(duplicate)}{' '}
-          <a className="font-medium text-primary underline underline-offset-2" href={duplicate.href}>
+          <a className="font-medium text-link underline underline-offset-2" href={duplicate.href}>
             {duplicateLinkLabel}
           </a>
         </p>

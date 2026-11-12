@@ -19,11 +19,14 @@ type Props = {
   visibleColumns: string[];
   hiddenColumns: string[];
   onColumnVisibilityChange: (visible: string[], hidden: string[]) => void;
+  /** One search for both halves (the drawer's "Szukaj kolumny", owner 04.11); omit to show everything. */
+  query?: string;
 };
 
 const titleOf = (columns: ColumnDef[], key: string) => columns.find((c) => c.data === key)?.title || key;
 
-export function ColumnSlots({ columns, visibleColumns, hiddenColumns, onColumnVisibilityChange }: Props) {
+export function ColumnSlots({ columns, visibleColumns, hiddenColumns, onColumnVisibilityChange, query = '' }: Props) {
+  const slotNeedle = query.trim().toLowerCase();
   const t = useT();
   const [dragged, setDragged] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -51,7 +54,11 @@ export function ColumnSlots({ columns, visibleColumns, hiddenColumns, onColumnVi
 
   return (
     <ol className="flex flex-col gap-1" data-wizard-columns="">
-      {visibleColumns.map((key, index) => (
+      {/* A column with no title (the row-selection checkbox) is not something to arrange or hide here. */}
+      {visibleColumns
+        .filter((key) => titleOf(columns, key).trim() !== "")
+        .filter((key) => !slotNeedle || titleOf(columns, key).toLowerCase().includes(slotNeedle))
+        .map((key) => (
         <li
           key={key}
           draggable
@@ -75,20 +82,21 @@ export function ColumnSlots({ columns, visibleColumns, hiddenColumns, onColumnVi
           }}
           data-wizard-column={key}
           className={[
-            'flex h-9 items-center gap-2 rounded-[8px] bg-[var(--m3-surface)] pl-1.5 pr-1',
+            // FMS UX 03.11 — a list row on the sheet itself: no box, no ordinal; the
+            // state layer on hover, the handle says it can be dragged.
+            'group/col flex h-9 items-center gap-2 rounded-[var(--m3-shape-sm)] pl-1.5 pr-1 transition-colors hover:bg-[var(--m3-state-layer-hover)]',
             dragged === key ? 'opacity-50' : '',
             over === key ? 'outline outline-2 outline-[var(--m3-primary)]' : '',
           ].join(' ')}
         >
           <GripVertical className="size-4 shrink-0 cursor-grab text-[var(--m3-on-surface-variant)]" aria-hidden />
-          <span className="w-5 shrink-0 text-right text-label-semibold-xs tabular-nums text-[var(--m3-on-surface-variant)]">{index + 1}</span>
           <span className="min-w-0 flex-1 truncate text-body-regular-sm text-[var(--m3-on-surface)]">{titleOf(columns, key)}</span>
           <button
             type="button"
             onClick={() => hide(key)}
             aria-label={t('dynamicTable.configureView.hideColumn', 'Hide column {name}', { name: titleOf(columns, key) })}
             title={t('dynamicTable.configureView.hideColumnShort', 'Hide')}
-            className="flex size-7 shrink-0 items-center justify-center rounded-[6px] text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-surface-container)]"
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-state-layer-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3ft-outline"
           >
             <X className="size-3.5" aria-hidden />
           </button>
@@ -98,9 +106,10 @@ export function ColumnSlots({ columns, visibleColumns, hiddenColumns, onColumnVi
   );
 }
 
-export function ColumnCatalog({ columns, visibleColumns, hiddenColumns, onColumnVisibilityChange }: Props) {
+export function ColumnCatalog({ columns, visibleColumns, hiddenColumns, onColumnVisibilityChange, query: externalQuery }: Props) {
   const t = useT();
-  const [query, setQuery] = useState('');
+  const [ownQuery, setQuery] = useState('');
+  const query = externalQuery ?? ownQuery;
   const needle = query.trim().toLowerCase();
   const list = hiddenColumns.filter((key) => !needle || titleOf(columns, key).toLowerCase().includes(needle));
 
@@ -117,14 +126,15 @@ export function ColumnCatalog({ columns, visibleColumns, hiddenColumns, onColumn
 
   return (
     <div className="flex flex-col gap-2">
-      {hiddenColumns.length > 6 ? (
+      {externalQuery === undefined && hiddenColumns.length > 6 ? (
         <label className="relative block">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--m3-on-surface-variant)]" aria-hidden />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('dynamicTable.configureView.catalogSearch', 'Search columns')}
-            className="h-9 w-full rounded-[8px] bg-[var(--m3-surface-container)] pl-8 pr-2 text-body-regular-sm text-[var(--m3-on-surface)] outline-none focus:outline-2 focus:outline-[var(--m3-primary)]"
+            // FMS UX 03.11 — the app field: filled, radius 10, grey ring on focus.
+            className="h-9 w-full rounded-[10px] bg-m3ft-surface-container-high pl-8 pr-2 text-body-regular-sm text-[var(--m3-on-surface)] placeholder:text-[var(--m3-on-surface-variant)] outline-none focus-visible:ring-2 focus-visible:ring-m3ft-outline"
           />
         </label>
       ) : null}
@@ -135,7 +145,7 @@ export function ColumnCatalog({ columns, visibleColumns, hiddenColumns, onColumn
               type="button"
               onClick={() => show(key)}
               data-wizard-catalog-item={key}
-              className="flex h-9 w-full items-center gap-3 rounded-[8px] px-2 text-left hover:bg-[var(--m3-surface-container)]"
+              className="flex h-9 w-full items-center gap-3 rounded-[var(--m3-shape-sm)] px-2 text-left hover:bg-[var(--m3-state-layer-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-m3ft-outline"
             >
               <span className="min-w-0 flex-1 truncate text-body-regular-sm text-[var(--m3-on-surface)]">{titleOf(columns, key)}</span>
               <Plus className="size-4 shrink-0 text-[var(--m3-on-surface-variant)]" aria-hidden />

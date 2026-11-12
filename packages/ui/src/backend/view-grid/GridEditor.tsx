@@ -19,6 +19,7 @@
 import * as React from 'react'
 import { ChevronDown, ChevronUp, GripVertical, Info, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { Sheet, SheetContent } from '../../primitives/sheet'
+import { ChipTabs } from '../../primitives-v2/ChipTabs'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { cn } from './cn'
 import {
@@ -344,23 +345,19 @@ export function GridEditor<T extends W>({ sections: given, onChange, name, optio
         // "Gęstość" — compact widgets show more on the page (the table's Tight spacing, 12 px text).
         <div className="flex items-center gap-3" data-testid="grid-editor-density">
           <span className="text-body-medium-sm text-m3ft-on-surface">{t('split_views.grid.density', 'Gęstość widżetów')}</span>
-          <span role="group" aria-label={t('split_views.grid.density', 'Gęstość widżetów')} className="inline-flex rounded-[10px] border border-m3ft-outline-variant p-0.5">
-            {(['standard', 'compact'] as const).map((d) => (
-              <button
-                key={d}
-                type="button"
-                aria-pressed={viewDensity(sections) === d}
-                onClick={() => set(setDensity(sections, d))}
-                data-testid={`grid-editor-density-${d}`}
-                className={cn(
-                  'inline-flex h-7 items-center rounded-[8px] px-2.5 text-body-regular-sm',
-                  viewDensity(sections) === d ? 'bg-m3ft-surface-container-high text-m3ft-on-surface' : 'text-m3ft-on-surface-variant hover:bg-m3ft-surface-container',
-                )}
-              >
-                {d === 'compact' ? t('split_views.grid.densityCompact', 'Kompaktowa') : t('split_views.grid.densityStandard', 'Standardowa')}
-              </button>
-            ))}
-          </span>
+          {/* FMS UX 03.11: chip tabs, no segmented/underline. */}
+          <ChipTabs
+            role="radiogroup"
+            size="sm"
+            ariaLabel={t('split_views.grid.density', 'Gęstość widżetów')}
+            value={viewDensity(sections)}
+            onChange={(d) => set(setDensity(sections, d))}
+            options={(['standard', 'compact'] as const).map((d) => ({
+              value: d,
+              label: d === 'compact' ? t('split_views.grid.densityCompact', 'Kompaktowa') : t('split_views.grid.densityStandard', 'Standardowa'),
+              testId: `grid-editor-density-${d}`,
+            }))}
+          />
         </div>
       ) : null}
       {shown.map((section, si) => {
@@ -372,25 +369,23 @@ export function GridEditor<T extends W>({ sections: given, onChange, name, optio
             <div className="flex items-center gap-2">
               <strong className="min-w-0 flex-1 text-body-medium-sm text-m3ft-on-surface">{t('split_views.grid.sectionN', 'Sekcja {n}', { n: si + 1 })}</strong>
               {flow ? <span className="text-body-regular-sm text-m3ft-on-surface-variant">{t('split_views.grid.columns', 'Kolumny')}</span> : null}
-              <span role="group" aria-label={t('split_views.grid.slotsInRow', 'Sloty w rzędzie — sekcja {n}', { n: si + 1 })} className="inline-flex rounded-[10px] border border-m3ft-outline-variant p-0.5">
-                {GRID_COLUMNS.filter((n) => n <= maxColumns).map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    aria-pressed={section.columns === n}
-                    disabled={n < minColumns}
-                    title={n < minColumns ? t('split_views.grid.columnsBlocked', 'Najpierw przenieś albo usuń widżety z ostatnich slotów') : t('split_views.grid.nSlots', '{n} w rzędzie', { n })}
-                    onClick={() => set(setColumns(sections, section.id, n))}
-                    data-testid={`grid-editor-columns-${si}-${n}`}
-                    className={cn(
-                      'inline-flex h-7 min-w-7 items-center justify-center rounded-[8px] px-1.5 text-body-regular-sm tabular-nums disabled:opacity-35',
-                      section.columns === n ? 'bg-m3ft-surface-container-high text-m3ft-on-surface' : 'text-m3ft-on-surface-variant hover:bg-m3ft-surface-container',
-                    )}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </span>
+              {/* FMS UX 03.11: chip tabs, no segmented/underline. Values are strings
+                  for ChipTabs; the slot count goes back to a number on change. */}
+              <ChipTabs
+                role="radiogroup"
+                size="sm"
+                ariaLabel={t('split_views.grid.slotsInRow', 'Sloty w rzędzie — sekcja {n}', { n: si + 1 })}
+                value={String(section.columns)}
+                onChange={(v) => set(setColumns(sections, section.id, Number(v) as typeof section.columns))}
+                options={GRID_COLUMNS.filter((n) => n <= maxColumns).map((n) => ({
+                  value: String(n),
+                  label: <span className="tabular-nums">{n}</span>,
+                  disabled: n < minColumns,
+                  title: n < minColumns ? t('split_views.grid.columnsBlocked', 'Najpierw przenieś albo usuń widżety z ostatnich slotów') : t('split_views.grid.nSlots', '{n} w rzędzie', { n }),
+                  testId: `grid-editor-columns-${si}-${n}`,
+                }))}
+                className="shrink-0 [&>button]:min-w-7 [&>button]:justify-center [&>button]:px-2"
+              />
               <button type="button" className={iconBtn} aria-label={t('split_views.grid.sectionUp', 'Sekcja {n} wyżej', { n: si + 1 })} disabled={si === 0} onClick={() => set(moveSection(sections, section.id, -1))}>
                 <ChevronUp className="size-4" aria-hidden />
               </button>
@@ -472,6 +467,9 @@ export function GridCustomizeSheet<T extends W>({
   restoreLabel,
   saving,
   extra,
+  lead,
+  applyLabel,
+  applyDisabled,
   ...editor
 }: Omit<GridEditorProps<T>, 'sections' | 'onChange'> & {
   open: boolean
@@ -490,6 +488,16 @@ export function GridCustomizeSheet<T extends W>({
    * the draft — for controls that act on what is being edited, not on the page.
    */
   extra?: React.ReactNode | ((draft: GridSection<T>[], setDraft: (next: GridSection<T>[]) => void) => React.ReactNode)
+  /**
+   * Content ABOVE the sections — the same drawer then creates a view (owner 05.11: "Dodaj widok" opens this
+   * configurator with the view's name on top instead of a separate dialog). A function gets the draft too, so a
+   * "start from" choice can replace it.
+   */
+  lead?: React.ReactNode | ((draft: GridSection<T>[], setDraft: (next: GridSection<T>[]) => void) => React.ReactNode)
+  /** The primary button's label (default "Zastosuj"; "Dodaj widok" when the drawer creates a view). */
+  applyLabel?: string
+  /** Keeps the primary button off until the lead is filled (e.g. no view name yet). */
+  applyDisabled?: boolean
 }) {
   const t = useT()
   const [draft, setDraft] = React.useState(sections)
@@ -510,7 +518,7 @@ export function GridCustomizeSheet<T extends W>({
         onKeyDown={(event) => {
           if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
             event.preventDefault()
-            void onApply(draft)
+            if (!applyDisabled) void onApply(draft)
           }
         }}
       >
@@ -524,6 +532,7 @@ export function GridCustomizeSheet<T extends W>({
           </button>
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          {lead ? <div className="mb-5 flex flex-col gap-3" data-testid="grid-customize-lead">{typeof lead === 'function' ? lead(draft, setDraft) : lead}</div> : null}
           <GridEditor {...editor} sections={draft} onChange={setDraft} />
           {typeof extra === 'function' ? extra(draft, setDraft) : extra}
         </div>
@@ -537,9 +546,9 @@ export function GridCustomizeSheet<T extends W>({
             </button>
           ) : null}
           <span className="flex-1" />
-          <button type="button" className={gridBtnPrimary} onClick={() => void onApply(draft)} disabled={saving} data-testid="grid-customize-apply">
+          <button type="button" className={gridBtnPrimary} onClick={() => void onApply(draft)} disabled={saving || applyDisabled} data-testid="grid-customize-apply">
             {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-            {t('split_views.grid.apply', 'Zastosuj')}
+            {applyLabel ?? t('split_views.grid.apply', 'Zastosuj')}
           </button>
         </footer>
       </SheetContent>

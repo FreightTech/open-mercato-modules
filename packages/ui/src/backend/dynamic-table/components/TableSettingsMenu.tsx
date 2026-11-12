@@ -5,7 +5,7 @@
  * shown.
  *
  * From the designer's prototype (gt-demo `TableSettingsMenu`): one gear per
- * table, holding the density segmented control and a switch per bar. It is
+ * table, holding the density chip tabs and a switch per bar. It is
  * deliberately separate from the ⋯ menu, which is about what you can DO with
  * the table (export, open, swap, remove). The designer's rule: "enlarging the
  * content and what the table shows is a table setting only" — a widget has no
@@ -19,9 +19,10 @@
 
 import * as React from 'react'
 import ReactDOM from 'react-dom'
-import { Check, Settings } from 'lucide-react'
+import { Settings } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { Toggle } from '../../../primitives-v2/Toggle'
+import { ChipTabs } from '../../../primitives-v2/ChipTabs'
 import { DENSITY_LEVELS, type DensityLevel } from '../types/density'
 import { setDensityPreference, useDensityPreference } from '../hooks/useDensityPreference'
 import { computeAnchoredPosition } from '../utils/anchoredPosition'
@@ -117,7 +118,7 @@ export function TableSettingsMenu({
           ref={panelRef}
           role="dialog"
           aria-label={label}
-          className="fixed z-[1000] flex flex-col gap-2.5 overflow-y-auto rounded-m3-lg border border-[var(--m3-outline-faint)] bg-[var(--m3-surface-bright)] p-3 text-[var(--m3-on-surface)] shadow-m3-2"
+          className="fixed z-[1000] flex flex-col gap-2.5 overflow-y-auto rounded-m3-md border border-[var(--m3-outline-variant)] bg-[var(--m3-surface-container-lowest)] p-3 text-[var(--m3-on-surface)] shadow-m3-2"
           // Flipped above the ⚙, `top` is where the panel's BOTTOM edge goes.
           style={{
             ...(placement.flipAbove ? { bottom: window.innerHeight - placement.top } : { top: placement.top }),
@@ -133,31 +134,23 @@ export function TableSettingsMenu({
               <div className="text-label-semibold-2xs uppercase tracking-wider text-[var(--m3-on-surface-variant)]">
                 {t('dynamicTable.density.label', 'Row height')}
               </div>
-              {/* M3 connected button group — the same control the ⋯ menu used,
-                  so the selected look (secondary-container + check) matches a
-                  selected row and a selected menu item everywhere. */}
-              <div className="flex h-7 overflow-hidden rounded-m3-full border border-[var(--m3-outline)]" role="group">
-                {DENSITY_LEVELS.map((level, index) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setDensityPreference(level, densityTableKey)}
-                    className={[
-                      'flex flex-1 items-center justify-center gap-1 text-caption-medium-md transition-colors duration-[var(--m3-duration-short2)] ease-m3-standard',
-                      index > 0 ? 'border-l border-[var(--m3-outline)]' : '',
-                      density === level
-                        ? 'bg-[var(--m3-secondary-container)] text-[var(--m3-on-secondary-container)]'
-                        : 'text-[var(--m3-on-surface-variant)] hover:bg-[var(--m3-state-layer-hover)]',
-                    ].join(' ')}
-                    aria-pressed={density === level}
-                    title={t(`dynamicTable.density.${level}Hint`, '')}
-                    data-density-option={level}
-                  >
-                    {density === level ? <Check size={11} aria-hidden="true" /> : null}
-                    {t(`dynamicTable.density.${level}`, DENSITY_FALLBACK[level])}
-                  </button>
-                ))}
-              </div>
+              {/* FMS UX 03.11: chip tabs, no segmented/underline — the same
+                  ChipTabs as the ⋯ menu; the chosen level takes the
+                  `secondary-container` tint a selected row takes. */}
+              <ChipTabs
+                role="radiogroup"
+                size="sm"
+                ariaLabel={t('dynamicTable.density.label', 'Row height')}
+                value={density}
+                onChange={(level) => setDensityPreference(level, densityTableKey)}
+                options={DENSITY_LEVELS.map((level) => ({
+                  value: level,
+                  label: t(`dynamicTable.density.${level}`, DENSITY_FALLBACK[level]),
+                  title: t(`dynamicTable.density.${level}Hint`, '') || undefined,
+                  testId: `dynamic-table-density-${level}`,
+                }))}
+                className="[&>button]:flex-1 [&>button]:justify-center [&>button]:px-2"
+              />
             </div>
           )}
           {toggles.map((toggle) => (

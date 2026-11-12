@@ -272,9 +272,9 @@ function PillLabel(props: {
         height={18}
         rx={9}
         ry={9}
-        fill="#ffffff"
+        fill="var(--m3-surface-container-lowest)"
         fillOpacity={0.96}
-        stroke="#cbd5e1"
+        stroke="var(--chart-v2-grid)"
         strokeWidth={1}
       />
       <text
@@ -283,7 +283,7 @@ function PillLabel(props: {
         textAnchor="middle"
         fontSize={10}
         fontWeight={600}
-        fill="#1f2937"
+        fill="var(--field-v2-text)"
       >
         {text}
       </text>
@@ -316,8 +316,7 @@ export function ScatterChart({
   xDomain = ['dataMin', 'dataMax'],
   yDomain = ['dataMin', 'dataMax'],
 }: ScatterChartProps) {
-  const hasWrapper = !!title
-  const wrapperClass = hasWrapper ? `rounded-lg border bg-card p-4 ${className}` : className
+  const wrapperClass = className
 
   const hasSeries = !!series && series.length > 0
   const isEmpty = hasSeries
@@ -454,7 +453,7 @@ export function ScatterChart({
             if (!active || !payload?.length) return null
             const p = payload[0].payload as ScatterChartDataItem
             return (
-              <div className="rounded-lg border bg-popover px-3 py-2 text-popover-foreground shadow-md">
+              <div className="rounded-[var(--menu-v2-radius,12px)] border border-[var(--menu-v2-stroke)] bg-[var(--menu-v2-bg)] px-3 py-2 text-body-regular-xs text-[var(--field-v2-text)] shadow-[var(--menu-v2-shadow)]">
                 {p.label && <div className="mb-1 text-sm font-medium">{p.label}</div>}
                 <div className="text-xs text-muted-foreground">
                   {xLabel ?? 'x'}: <span className="tabular-nums">{xFormatter(p.x)}</span>

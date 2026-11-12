@@ -59,6 +59,17 @@
   --color-table-v2-row-warning: var(--table-v2-row-warning);
   --color-table-v2-control-border: var(--table-v2-control-border);
 
+  /* Field — one look for every input, textarea, select and select trigger
+     (FMS UX 04.11): light fill, 1 px light stroke, the darker fill on hover. */
+  --color-field: var(--field-v2-bg);
+  --color-field-hover: var(--field-v2-bg-hover);
+  --color-field-stroke: var(--field-v2-stroke);
+
+  /* Link — its own role, separate from the primary fill (FMS UX 03.11): a
+     primary near-black button must not turn every link black. */
+  --color-link: var(--link-v2);
+  --color-link-hover: var(--link-v2-hover);
+
   /* Primary (deep navy) */
   --color-primary-v2: var(--primary-v2);
   --color-primary-v2-hover: var(--primary-v2-hover);
@@ -205,6 +216,64 @@
 
   /* Primary (deep navy from Figma) */
   --primary-v2: #0E3762;
+  /* Link: blue, AA on white (6.4:1), on the light-grey hover (5.8:1) and on the
+     selected tint #DCE8F8 (5.1:1). */
+  --link-v2: #0B57D0;
+  /* Fields, menus and choice controls — set by the owner in the field editor
+     (.ai/uspojnienie-designu-2/edytor-pol, export 04.11). Colours stay on the
+     M3 surface roles where they match, so a host theme that retints the
+     surfaces retints the fields with them. */
+  --field-v2-bg: var(--m3ft-v2-surface-container-low);          /* #F7F7F7 */
+  --field-v2-bg-hover: var(--m3ft-v2-surface-container-high);   /* #ECECEC */
+  --field-v2-stroke: var(--m3ft-v2-outline-variant);            /* #E2E2E2 */
+  --field-v2-stroke-focus: var(--m3ft-v2-on-surface-variant);   /* #666666 */
+  --field-v2-stroke-width: 1px;
+  --field-v2-error: var(--m3-error);                           /* #E7000B */
+  --field-v2-radius: 16px;
+  --field-v2-height-sm: 32px;
+  --field-v2-height-md: 36px;
+  --field-v2-height-lg: 40px;
+  --field-v2-padding-x: 12px;
+  --field-v2-font-size: 14px;
+  --field-v2-font-weight: 400;
+  --field-v2-text: var(--m3ft-v2-on-surface);                 /* #1B1B1B */
+  --field-v2-placeholder: #8A8A8A;
+  --field-v2-icon: var(--m3ft-v2-on-surface-variant);         /* #666666 */
+  --field-v2-search-radius: 9999px;          /* the table toolbar search stays a pill */
+  --menu-v2-bg: var(--m3-surface-container-lowest);           /* #FFFFFF */
+  --menu-v2-stroke: var(--m3ft-v2-outline-variant);           /* #E2E2E2 */
+  --menu-v2-radius: 12px;
+  --menu-v2-padding: 4px;
+  --menu-v2-shadow: var(--m3-elevation-2);
+  --menu-v2-option-height: 32px;
+  --menu-v2-option-radius: 8px;
+  --menu-v2-search-radius: 8px;              /* a field inside a list takes the options' corner */
+  --menu-v2-option-hover: #EFEFEF;
+  --menu-v2-option-selected-bg: var(--m3-secondary-container);       /* #DBEAFE */
+  --menu-v2-option-selected-text: var(--m3-on-secondary-container); /* #0E3762 */
+  --control-v2-accent: var(--primary-v2);                     /* #171717 in FMS */
+  --control-v2-size: 16px;
+  /* Charts (owner 05.11): ONE data palette for every chart — the FMS blue family first (the series the eye should
+     follow), then contrasting hues for categories; signs use the roles (success / error), never a series colour. */
+  --chart-v2-1: var(--m3ft-v2-chart-1);      /* #5D74A6 — the main series */
+  --chart-v2-2: #A5BCE6;                     /* light blue — the second series */
+  --chart-v2-3: #334A7A;                     /* deep blue */
+  --chart-v2-4: #4E9A8F;                     /* teal — a category */
+  --chart-v2-5: #C9853A;                     /* amber — a category */
+  --chart-v2-6: #8A6BB0;                     /* violet — a category */
+  --chart-v2-muted: var(--m3ft-v2-chart-muted, #C7CBD1);  /* plan / comparison / reference lines */
+  --chart-v2-positive: var(--m3ft-v2-success, #16A34A);
+  --chart-v2-negative: var(--m3-error);
+  --chart-v2-grid: var(--m3ft-v2-outline-variant);
+  --chart-v2-axis: var(--m3ft-v2-on-surface-variant);
+
+  /* Buttons (owner 04.11): one shape for every button — the pill of "Typy zadań" / "Nowe zadanie"; the variant
+     carries the weight of the action, not the shape. */
+  --button-v2-radius: 9999px;
+  --button-v2-height-sm: 32px;
+  --button-v2-height-md: 36px;
+  --button-v2-height-lg: 40px;
+  --link-v2-hover: #0842A0;
   --primary-v2-hover: #0B2C4F;   /* derived: ~10% darker; Figma uses an effect not exposed via MCP */
   --primary-v2-foreground: #FFFFFF;
 
@@ -429,6 +498,12 @@
 
   /* Primary (Figma `btn-new`) */
   --primary-v2: #1A5A9E;
+  --link-v2: #A8C7FA;
+  --field-v2-placeholder: #8E8E8E;
+  --chart-v2-2: #5D74A6;
+  --chart-v2-3: #A5BCE6;
+  --menu-v2-option-hover: rgb(255 255 255 / .08);
+  --link-v2-hover: #D3E3FD;
   --primary-v2-hover: #164C86;       /* derived: ~12% darker */
   --primary-v2-foreground: #FFFFFF;
 
@@ -556,4 +631,11 @@
   --topbar-v2-field-placeholder: #64748B;  /* slate-500 */
   --topbar-v2-avatar-bg: #E2E8F0;          /* slate-200 — avatar stays light (Figma) */
   --topbar-v2-avatar-text: #94A3B8;        /* slate-400 */
+}
+
+/* ── Sidebar widths (FMS UX 02.11) ─────────────────────────────────────────────────────────────────────────────
+   The full sidebar and its icon-only rail; the shell animates between them, an app sets its own full width. */
+:root {
+  --sidebar-v2-width: 240px;
+  --sidebar-v2-rail-width: 72px;
 }

@@ -620,3 +620,263 @@
     --m3-duration-long2: 1ms;
   }
 }
+
+/*
+ * Menus, popovers and select lists — one look and one motion for every list that opens from a control
+ * (FMS UX 02.11). Built from the M3 roles above — surface-container-lowest, outline-variant, shape-lg / shape-sm,
+ * elevation-2, state-layer-hover, secondary-container (the selection tint) — and the motion tokens, so it sits at the
+ * end of this file. Menus take shape-lg (16) rather than the shape-md (12) the shape scale lists for them: the
+ * customer-portal look FMS carries over from 4R.
+ *
+ * Covers what the components of this package draw (PopoverContent, the grid's .hot-select-menu family) and
+ * what a host renders from other libraries by their slots: @open-mercato/ui's dropdown, popover and select
+ * content, and the browser's own <select>, made customizable where the engine allows (`appearance:
+ * base-select`, Chromium 135+; elsewhere it stays the system list).
+ */
+
+@keyframes menu-v2-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes menu-v2-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-2px) scale(0.98); }
+}
+
+/* Surfaces. */
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="select-content"],
+       [data-slot="menu-v2"], [role="menu"].bg-popover) {
+  border: 1px solid var(--menu-v2-stroke);
+  border-radius: var(--menu-v2-radius);
+  background: var(--menu-v2-bg);
+  padding: var(--menu-v2-padding);
+  box-shadow: var(--menu-v2-shadow);
+}
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="select-content"],
+       [data-slot="menu-v2"], [data-slot="tooltip-content"], [role="menu"].bg-popover)[data-state="open"],
+:where([data-slot="tooltip-content"])[data-state="delayed-open"] {
+  animation: menu-v2-in var(--m3-duration-medium1) var(--m3-ease-emphasized-decelerate) both;
+}
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="select-content"],
+       [data-slot="menu-v2"], [data-slot="tooltip-content"], [role="menu"].bg-popover)[data-state="closed"] {
+  animation: menu-v2-out var(--m3-duration-short3) var(--m3-ease-emphasized-accelerate) both;
+}
+
+/* Options — every list option and menu item in the app, whatever list draws it (owner 04.11: one option height;
+   custom popovers drew 27 / 36 / 48 px rows). A two-line option (a person with an e-mail) grows past the minimum. */
+:where([role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="option"]):not(.hot-table *) {
+  height: auto;
+  min-height: var(--menu-v2-option-height);
+  /* A one-line option (20 px text) lands exactly on the token height; a two-line one grows. */
+  padding-block: calc((var(--menu-v2-option-height) - 20px) / 2);
+  border-radius: var(--menu-v2-option-radius);
+  padding-inline: 10px;
+  transition: var(--m3-transition-state);
+}
+:where([role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="option"]):is(:hover, :focus-visible, [data-highlighted]) {
+  background-color: var(--menu-v2-option-hover);
+}
+:where([role="menuitemradio"], [role="option"]):is([data-state="checked"], [aria-selected="true"]) {
+  background-color: var(--menu-v2-option-selected-bg);
+  color: var(--menu-v2-option-selected-text);
+}
+
+/* The browser's own <select>: the same list, where the engine lets it be styled. */
+@supports (appearance: base-select) {
+  select:not([multiple]):not([size]),
+  select:not([multiple]):not([size])::picker(select) {
+    appearance: base-select;
+  }
+  select:not([multiple]):not([size]) {
+    display: inline-flex;
+    align-items: center;
+    /* The chevron at the field's right edge, 12 px in, not after the text with a blank strip behind it (owner 03.11). */
+    gap: 8px;
+    padding-inline-end: 12px !important;
+  }
+  /* The chevron is the select's own picker icon: 16 px, the secondary colour, turned up while the list is open. A
+     select that draws its own chevron (a sibling icon, or `appearance-none` styling) keeps only that one; a host
+     that paints a chevron as the select's background drops it where this rule applies. */
+  select:not([multiple]):not([size])::picker-icon {
+    content: "";
+    width: 16px;
+    height: 16px;
+    margin-inline-start: auto;
+    background-color: currentColor;
+    opacity: 0.7;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: rotate var(--m3-duration-medium1) var(--m3-ease-emphasized);
+  }
+  select:not([multiple]):not([size]):open::picker-icon { rotate: 180deg; }
+  select:not([multiple]):not([size]):is(.appearance-none, :has(+ svg), :has(+ span > svg))::picker-icon { display: none; }
+  select:not([multiple]):not([size])::picker(select) {
+    margin-block: 4px;
+    min-width: anchor-size(width);
+    padding: 4px;
+    border: 1px solid var(--menu-v2-stroke);
+    border-radius: var(--menu-v2-radius);
+    background: var(--menu-v2-bg);
+    box-shadow: var(--menu-v2-shadow);
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+    transition:
+      opacity var(--m3-duration-short3) var(--m3-ease-emphasized-accelerate),
+      transform var(--m3-duration-short3) var(--m3-ease-emphasized-accelerate),
+      overlay var(--m3-duration-short3) allow-discrete,
+      display var(--m3-duration-short3) allow-discrete;
+  }
+  select:not([multiple]):not([size]):open::picker(select) {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--m3-duration-medium1) var(--m3-ease-emphasized-decelerate),
+      transform var(--m3-duration-medium1) var(--m3-ease-emphasized-decelerate),
+      overlay var(--m3-duration-medium1) allow-discrete,
+      display var(--m3-duration-medium1) allow-discrete;
+  }
+  @starting-style {
+    select:not([multiple]):not([size]):open::picker(select) { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  }
+  select:not([multiple]):not([size]) option {
+    background: transparent;
+    min-height: 32px;
+    padding: 6px 10px;
+    border-radius: var(--menu-v2-option-radius);
+    transition: var(--m3-transition-state);
+  }
+  select:not([multiple]):not([size]) option::checkmark { display: none; }
+  select:not([multiple]):not([size]) option:is(:hover, :focus-visible) { background: var(--menu-v2-option-hover); outline: none; }
+  select:not([multiple]):not([size]) option:checked {
+    background: var(--menu-v2-option-selected-bg);
+    color: var(--m3-on-secondary-container);
+    font-weight: 500;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FIELDS — one look for every input, textarea, select and select trigger
+   (FMS UX 04.11, owner: "uspójnić globalnie"): the light fill, a 1 px light
+   stroke, the darker fill on hover, the stroke darkens on focus.
+
+   UNLAYERED on purpose: Tailwind utilities live in `@layer utilities`, so this
+   wins over a module's own `bg-*` / `border-*` on a field without `!important`
+   — one rule instead of a class sweep. `!important` utilities still win, which
+   is how a quiet field (RecordFacts) stays quiet.
+
+   What counts as a field:
+   - a text-like <input>, a <textarea>, a single <select>;
+   - anything marked `data-field` (a select trigger button, a wrapper that draws
+     the frame around a bare input, a date trigger) and the shadcn slots.
+   Opt-outs:
+   - an input that paints no frame of its own (`bg-transparent`, `border-0`,
+     `border-none`) — it sits inside a wrapper that is the field;
+   - `data-field-bare` on the element or an ancestor;
+   - the app top bar (`header.bg-topbar-v2-bg`, its own preset style), grid cells and grid editors, a record's
+     facts grid (`.record-facts`, RecordFacts: values read as text and edit in place).
+   ══════════════════════════════════════════════════════════════════════════ */
+:is(
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"],
+            [type="submit"], [type="button"], [type="reset"], [type="image"]),
+  textarea,
+  select:not([multiple], [size])
+):not([class*="bg-transparent"], [class*="border-0"], [class*="border-none"], [data-field-bare]),
+[data-field],
+/* The shadcn field pattern of upstream @open-mercato/ui (a wrapper or trigger drawn with `border-input` +
+   `bg-background`: its search inputs, date triggers) — one look without patching the upstream package. Not the
+   choice controls and buttons that share those classes (Radix checkbox / radio / switch, the `outline` Button with
+   `dark:border-input`): they keep their own look — a checked checkbox its fill (PR #698 review). `:where` keeps the
+   rule's specificity unchanged. */
+:is(div, label, button)[class*="border-input"][class*="bg-background"]:where(:not([role="checkbox"], [role="radio"], [role="switch"], [data-slot="button"])),
+[data-slot="input"],
+[data-slot="input-wrapper"],
+[data-slot="textarea"],
+[data-slot="select-trigger"] {
+  &:not(:is(header.bg-topbar-v2-bg *, .hot-table *, .hot-cell *, [class*="hot-editor"], [class*="hot-editor"] *, [class*="cell-editor"], [class*="cell-editor"] *, .record-facts *, [data-field-bare] *, [data-field] *,
+            .hot-table-pagination-select)) {
+    background-color: var(--field-v2-bg);
+    border: var(--field-v2-stroke-width) solid var(--field-v2-stroke);
+    color: var(--field-v2-text);
+    transition: background-color var(--m3-duration-short2, 100ms) var(--m3-ease-standard, ease),
+      border-color var(--m3-duration-short2, 100ms) var(--m3-ease-standard, ease);
+
+    /* A pill stays a pill (the table toolbar search, chip-like filters); every other field takes the field radius. */
+    &:not([class*="rounded-full"], .search-input) { border-radius: var(--field-v2-radius); }
+    &:is([class*="rounded-full"], .search-input) { border-radius: var(--field-v2-search-radius); }
+    /* Field text 14/400 — except a field that is a TITLE (a heading-sized input such as "Nazwa zadania"), which keeps
+       its own type token. */
+    &:not([class*="text-heading"], [class*="text-title"], [class*="text-display"], [class*="text-lg"], [class*="text-xl"], [class*="text-2xl"]) {
+      font-size: var(--field-v2-font-size);
+      font-weight: var(--field-v2-font-weight);
+    }
+    &::placeholder, & ::placeholder { color: var(--field-v2-placeholder); opacity: 1; }
+    /* An empty trigger reads as a placeholder (PR #698 review): a date / time picker without a value marks itself
+       `text-muted-foreground`, a Radix select showing its placeholder `data-placeholder` — the field text colour above
+       must not cover that. Buttons only: on a wrapper or an input the class would also mute the typed text. */
+    &:is(button):is([class~="text-muted-foreground"], [data-placeholder]) { color: var(--field-v2-placeholder); }
+    /* Icons drawn inside the field (chevron, magnifier, calendar) take the field icon colour. */
+    & > svg, & > span > svg { color: var(--field-v2-icon); }
+    /* Three heights (owner 04.11): S 32 — tables, panels, lists; M 36 — forms; L 40 — "Nowe…" drawers. A field's own
+       height class is mapped onto the nearest of the three, so the 28 / 30 / 34 / 44 / 48 in-betweens disappear. */
+    &:not(textarea):is([class~="h-7"], [class~="h-8"], [class*="h-[30px]"], [class*="h-[28px]"]) { height: var(--field-v2-height-sm); min-height: 0; }
+    &:not(textarea):is([class~="h-9"], [class*="h-[34px]"], [class*="h-[36px]"]) { height: var(--field-v2-height-md); min-height: 0; }
+    &:not(textarea):is([class~="h-10"], [class~="h-11"], [class~="h-12"], [class*="h-[44px]"], [class*="h-[48px]"]) { height: var(--field-v2-height-lg); min-height: 0; }
+    /* Inside a list or popover (the "Szukaj…" row of a select, a person picker) a field takes the corner of the
+       options under it (8 px), so it reads as part of the list (owner 04.11). */
+    &:is(:is([role="menu"], [role="listbox"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"],
+             [data-radix-popper-content-wrapper]) *) { border-radius: var(--menu-v2-search-radius); }
+    &:hover:not(:disabled, [aria-disabled="true"], :focus, :focus-within) { background-color: var(--field-v2-bg-hover); }
+    &:is(:focus, :focus-within, [data-state="open"], [aria-expanded="true"]) {
+      border-color: var(--field-v2-stroke-focus);
+      outline: none;
+      box-shadow: none;
+    }
+    /* Keyboard focus keeps a visible ring (WCAG 2.4.7, PR #698 review): the focus stroke doubled by an outline of the
+       same token, on the field or on the wrapper whose input has it. An outline, not a box-shadow, so it also shows in
+       forced-colours mode. Same specificity as the rule above and after it, so it wins. */
+    &:is(:focus-visible, :has(:focus-visible)) {
+      outline: var(--field-v2-stroke-width) solid var(--field-v2-stroke-focus);
+      outline-offset: 0;
+    }
+    /* An error shows through as `aria-invalid` (or `data-invalid`). Class-name matching was tried and dropped: it also
+       caught conditional variants (`data-[x]:border-red-…`) and painted fields red that were not in error. */
+    &:is([aria-invalid="true"], [data-invalid="true"]) { border-color: var(--field-v2-error); outline-color: var(--field-v2-error); }
+    &:is(:disabled, [aria-disabled="true"]) { opacity: 0.6; cursor: not-allowed; }
+  }
+}
+
+
+/* Choice controls (owner 04.11): native checkboxes and radios take the control accent and size. */
+input:is([type="checkbox"], [type="radio"]):not(.sr-only, [class*="opacity-0"]) {
+  accent-color: var(--control-v2-accent);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BUTTONS — one shape (owner 04.11, reference "Typy zadań" + "Nowe zadanie"):
+   every button takes `--button-v2-radius` (the pill) and one of three heights.
+   Unlayered like FIELDS, so it also corrects upstream @open-mercato/ui buttons
+   (`rounded-md`) and hand-rolled filled buttons in modules without a sweep.
+   Not touched: tabs, chips, menu items, list options, toggles, select
+   triggers (those are fields), grid cells, the app top bar.
+   ══════════════════════════════════════════════════════════════════════════ */
+:is(
+  [data-slot="button"],
+  /* EXACT fill classes only (`~=`): a substring match also caught hover variants (`hover:bg-…`) and turned a dashed
+     drop slot into a pill (owner 05.11). */
+  button:is([class~="bg-m3ft-primary"], [class~="bg-primary"], [class~="bg-foreground"], [class~="bg-destructive"],
+            [class~="bg-m3ft-surface-container"], [class~="bg-m3ft-surface-container-high"], [class~="bg-m3ft-surface-container-highest"],
+            [class~="bg-secondary"], [class~="bg-[#171717]"], [class~="bg-[#1b1b1b]"], [class~="bg-m3ft-on-surface"],
+            /* outline buttons: a light fill with a frame (modules' own `btn` constants, upstream `variant="outline"`) */
+            :is([class~="bg-m3ft-surface"], [class~="bg-card"], [class~="bg-background"], [class~="bg-white"])[class~="border"]),
+  /* icon-only buttons (a lone svg): their hover surface is a circle, whatever radius the module's `btnIcon` constant
+     carries (owner 05.11: the hover radius did not match). */
+  button:has(> svg:only-child)
+):not([role="tab"], [role="option"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="radio"],
+      [role="switch"], [role="checkbox"], [aria-haspopup="listbox"], [data-field], [data-field] *, [data-chip], .hot-table *,
+      header.bg-topbar-v2-bg *, [role="tablist"] *, [role="menu"] *, [role="listbox"] *, [class*="border-dashed"]) {
+  border-radius: var(--button-v2-radius);
+  &:is([class~="h-7"], [class~="h-8"], [class*="h-[28px]"], [class*="h-[30px]"]) { height: var(--button-v2-height-sm); }
+  &:is([class~="h-9"], [class*="h-[34px]"], [class*="h-[36px]"]) { height: var(--button-v2-height-md); }
+  &:is([class~="h-10"], [class~="h-11"], [class*="h-[44px]"]) { height: var(--button-v2-height-lg); }
+}

@@ -856,9 +856,10 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
 
       <div
         ref={setAreaElement}
-        // `px-2` and NEVER `p-2` for the grid: horizontal breathing room is
-        // free, vertical padding would cost grid height on every list page.
-        className={`min-h-0 flex-1${isSplit ? ' pb-2 pl-2 pr-[calc(0.5rem+var(--ws-overlay,0px))]' : ''}${hasBoxes ? ' flex flex-col overflow-y-auto' : ' flex'}`}
+        // No side padding on the grid (FMS UX 03.11): the page's own 16px gutter is the edge, so a split view's panes
+        // line up with every other page's cards; the gap between panes is the grid's. Only the overlay rail keeps
+        // its room on the right; vertical padding would cost grid height on every list page.
+        className={`min-h-0 flex-1${isSplit ? ' pb-2 pr-[var(--ws-overlay,0px)]' : ''}${hasBoxes ? ' flex flex-col overflow-y-auto' : ' flex'}`}
         style={isSplit && !hasBoxes ? { overflow: 'auto' } : undefined}
         data-split-root=""
       >

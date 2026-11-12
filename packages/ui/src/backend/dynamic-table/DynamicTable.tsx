@@ -665,6 +665,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     searchBarEnd,
     searchBarStart,
     beforeBody,
+    presetViews,
     enableFullscreen = false,
     onFullscreenChange,
     enableFillHandle = false,
@@ -716,7 +717,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
 
   // Auto-hide perspective tabs when no perspectives are configured
   const hasPerspectives = !!(propSavedPerspectives || deprecatedSavedFilters);
-  const hidePerspectiveTabs = hidePerspectiveTabsExplicit ?? !hasPerspectives;
+  const appTableDefaults = useContext(DynamicTableDefaultsContext);
+  const hidePerspectiveTabs = hidePerspectiveTabsExplicit ?? appTableDefaults.hidePerspectiveTabs ?? !hasPerspectives;
 
   // Translator + locale are read HERE, above the column build, because the
   // formula column defs need `t` for their per-cell error tooltips and the
@@ -3928,7 +3930,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     document.addEventListener('pointerdown', arm, true)
     document.addEventListener('keydown', arm, true)
     window.addEventListener('resize', letGo)
-    return () => {
+  return () => {
       ro.disconnect()
       document.removeEventListener('pointerdown', arm, true)
       document.removeEventListener('keydown', arm, true)
@@ -3970,6 +3972,48 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   )
 
   // Table content shared between normal and fullscreen modes
+  // One structure everywhere (owner 03.11, second pass): title + search on the first row, views + pagination under
+  // it — also in a widget or a pane. The one-row variant is switched off; kept as a flag for a later decision.
+  const tabsInToolbar = false
+  const perspectiveTabsNode = (
+    <PerspectiveTabs
+      savedPerspectives={savedPerspectives}
+      activePerspectiveId={activePerspectiveId}
+      onPerspectiveSelect={handlePerspectiveSelect}
+      onPerspectiveRename={handlePerspectiveRename}
+      onPerspectiveDelete={handlePerspectiveDelete}
+      onPerspectiveDuplicate={handlePerspectiveDuplicate}
+      onPerspectiveSetDefault={handlePerspectiveSetDefault}
+      defaultPerspectiveId={defaultPerspectiveId}
+      sharedTemplates={sharedTemplates}
+      publishableRoles={canPublishTemplates ? publishableRoles : undefined}
+      onPerspectivePublish={canPublishTemplates ? handlePerspectivePublish : undefined}
+      onPerspectiveTemplateCopy={handlePerspectiveTemplateCopy}
+      onPerspectiveEdit={(id) => {
+        // Load the perspective's config into the working state, then open
+        // the panel pre-populated for editing. Saving with the same name
+        // updates it in place (save upserts by name).
+        handlePerspectiveSelect(id);
+        setEditingPerspectiveId(id);
+        setConfigureBaseView(false);
+        setConfigPanelInitialSection(null);
+        setConfigPanelOpen(true);
+      }}
+      onConfigureBaseView={() => {
+        // Configure the BASE tab, not a new view: the drawer's Save
+        // then personalizes "Default view" for this user instead of
+        // demanding a name for something they already have.
+        setEditingPerspectiveId(null);
+        setConfigureBaseView(true);
+        setConfigPanelInitialSection(null);
+        setConfigPanelOpen(true);
+      }}
+      onBaseViewReset={handleBaseViewReset}
+      onAddPerspective={() => { setEditingPerspectiveId(null); setConfigureBaseView(false); setConfigPanelInitialSection(null); setConfigPanelOpen(true); }}
+      presetViews={presetViews}
+    />
+  )
+
   const tableContent = (
     <div
       ref={outerContainerRef}
@@ -4033,13 +4077,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       )}
 
       {!hideToolbar && (
-        <div className="hot-toolbar">
+        <div className="hot-toolbar" data-tabs-inline={tabsInToolbar ? 'true' : undefined}>
           {/* Custom slot: top bar start (inline only for embedded tables) */}
           {hidePerspectiveTabs && topBarStart}
 
           {!hideTitle && (
             <h3 className="hot-toolbar-title">{displayTableName}</h3>
           )}
+
+          {tabsInToolbar && !hidePerspectiveTabs && <div className="hot-tabs-row hot-tabs-row--inline">{perspectiveTabsNode}</div>}
 
           {!hideSearch && (
             <SearchBar
@@ -4053,6 +4099,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
 
           {/* Spacer */}
           <div className="hot-toolbar-spacer" />
+
+          {tabsInToolbar && pagination && !hidePagination && (
+            <div className="hot-tabs-row hot-tabs-row--inline"><TablePagination pagination={pagination} /></div>
+          )}
 
           <div className="hot-toolbar-actions">
             {/* A13 — WHICH filters are running, and the one-click way out of
@@ -4150,46 +4200,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       )}
 
       {/* Toolbar row 2 (Figma 220:2935): [perspective tabs] … [pagination].
-          Pagination is right-aligned on the tabs line (no bottom footer). */}
-      {(!hidePerspectiveTabs || (pagination && !hidePagination)) && (
+          Pagination is right-aligned on the tabs line (no bottom footer). A table without a search box (a pane, a
+          widget) carries them on its title row instead — one row (FMS UX 03.11). */}
+      {!tabsInToolbar && (!hidePerspectiveTabs || (pagination && !hidePagination)) && (
         <div className="hot-tabs-row">
-          {!hidePerspectiveTabs && (
-            <PerspectiveTabs
-              savedPerspectives={savedPerspectives}
-              activePerspectiveId={activePerspectiveId}
-              onPerspectiveSelect={handlePerspectiveSelect}
-              onPerspectiveRename={handlePerspectiveRename}
-              onPerspectiveDelete={handlePerspectiveDelete}
-              onPerspectiveDuplicate={handlePerspectiveDuplicate}
-              onPerspectiveSetDefault={handlePerspectiveSetDefault}
-              defaultPerspectiveId={defaultPerspectiveId}
-              sharedTemplates={sharedTemplates}
-              publishableRoles={canPublishTemplates ? publishableRoles : undefined}
-              onPerspectivePublish={canPublishTemplates ? handlePerspectivePublish : undefined}
-              onPerspectiveTemplateCopy={handlePerspectiveTemplateCopy}
-              onPerspectiveEdit={(id) => {
-                // Load the perspective's config into the working state, then open
-                // the panel pre-populated for editing. Saving with the same name
-                // updates it in place (save upserts by name).
-                handlePerspectiveSelect(id);
-                setEditingPerspectiveId(id);
-                setConfigureBaseView(false);
-                setConfigPanelInitialSection(null);
-                setConfigPanelOpen(true);
-              }}
-              onConfigureBaseView={() => {
-                // Configure the BASE tab, not a new view: the drawer's Save
-                // then personalizes "Default view" for this user instead of
-                // demanding a name for something they already have.
-                setEditingPerspectiveId(null);
-                setConfigureBaseView(true);
-                setConfigPanelInitialSection(null);
-                setConfigPanelOpen(true);
-              }}
-              onBaseViewReset={handleBaseViewReset}
-              onAddPerspective={() => { setEditingPerspectiveId(null); setConfigureBaseView(false); setConfigPanelInitialSection(null); setConfigPanelOpen(true); }}
-            />
-          )}
+          {!hidePerspectiveTabs && perspectiveTabsNode}
           <div className="hot-tabs-row-spacer" />
           {pagination && !hidePagination && (
             <TablePagination pagination={pagination} />

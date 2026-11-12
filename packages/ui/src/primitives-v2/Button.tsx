@@ -3,40 +3,34 @@ import { Slot } from '@radix-ui/react-slot'
 import { cn } from './utils'
 
 /*
-  Figma source: FMS-Componenets → Button (component-set 44:92).
+  Figma source: FMS-Componenets → Button (component-set 44:92), restyled by
+  FMS UX 03.11 ("one button system"): one pill shape, a near-black filled
+  primary and tonal (filled, borderless) secondary buttons.
 
-  Variant × state matrix extracted from Figma (one entry per leaf
-  variant's `fills` / `strokes` / text fill):
+    | Variant     | Fill                                   | Border | Text
+    |-------------|----------------------------------------|--------|-----------------
+    | primary     | --primary-v2 (near-black in FMS)       | —      | --primary-v2-fg
+    | secondary   | tonal: surface-container-high          | —      | on-surface
+    | outline     | = secondary (tonal, see note below)    | —      | on-surface
+    | ghost       | transparent + M3 state layer on hover  | —      | on-surface
+    | destructive | --destructive-v2                       | —      | white
 
-    | Variant     | State    | Background        | Border    | Text
-    |-------------|----------|-------------------|-----------|-----------
-    | primary     | default  | #0E3762 (-v2)     | —         | #FFFFFF
-    | primary     | hover    | #0B2C4F (-v2-hov) | —         | #FFFFFF
-    | primary     | disabled | #0E3762 @ 50%     | —         | #A0A0AA
-    | secondary   | default  | #F4F4F5           | #E4E4E7   | #18181A
-    | secondary   | hover    | #EDEDEF           | #E4E4E7   | #18181A
-    | secondary   | disabled | #F4F4F5           | #E4E4E7   | #A0A0AA
-    | outline     | default  | #FFFFFF           | #D4D4D8   | #18181A
-    | outline     | hover    | #F4F4F5           | #D4D4D8   | #18181A
-    | outline     | disabled | #FFFFFF           | #E4E4E7   | #A0A0AA
-    | ghost       | default  | transparent       | —         | #18181A
-    | ghost       | hover    | #F4F4F5           | —         | #18181A
-    | ghost       | disabled | transparent       | —         | #A0A0AA
-    | destructive | default  | #E7000B           | —         | #FFFFFF
-    | destructive | hover    | #C00009           | —         | #FFFFFF
-    | destructive | disabled | #F4F4F5           | —         | #A0A0AA
+  Hover on a filled/tonal button mixes 8 % (pressed 12 %) of its ink into the
+  fill — the M3 state layer, flattened so it works on a solid background.
+  Disabled = `opacity-40` of the same look.
 
-  Colors live in `packages/ui/src/theme/tokens.css` as `-v2` tokens.
+  Tonal fill reads `--m3ft-v2-surface-container-high` (neutral #ECECEC in FMS)
+  and falls back to the M3 role `--m3-surface-container-high` where the
+  m3-freighttech palette is not loaded.
 
-  Sizes (Figma):
-    xs: h-7 (28px) · px-2.5 (10px) · gap-1 (4px)   — compact inline CTA
-    sm: h-8 (32px) · px-3 (12px) · gap-1.5 (6px)
-    md: h-9 (36px) · px-4 (16px) · gap-2 (8px)
-    lg: h-10 (40px) · px-6 (24px) · gap-2 (8px)
-  Radius: rounded-md (= 8px with --radius=0.625rem).
-  Text: sm/md/lg use `text-sm font-semibold` (Geist 14/600). The xs size
-  uses `text-body-regular-xs` (12px / 400) — matches the in-card "small
-  pill" CTA pattern from the FMS Teczka detail mockup.
+  Sizes (heights unchanged):
+    xs: h-7 (28px) · px-2.5 · gap-1
+    sm: h-8 (32px) · px-3   · gap-1.5
+    md: h-9 (36px) · px-4   · gap-2
+    lg: h-10 (40px) · px-6  · gap-2
+  Radius: `rounded-full` on every size (the pill is in the base class, so no
+  caller has to override `rounded-md`). Text: sm/md/lg `text-body-medium-sm`,
+  xs `text-body-regular-xs`.
 */
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive'
@@ -60,18 +54,20 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 /*
-  One row per variant. Each row carries default / hover / disabled
-  triplet, plus the focus ring color. Disabled rules use Tailwind's
-  `disabled:` modifier (works on native <button>) so callers don't
-  need to track state in React.
+  One row per variant: default / hover / pressed / disabled plus the focus
+  ring. Hover affordances are gated on `enabled:` so they never trigger on a
+  disabled button; disabled keeps the variant's look at 40 % opacity.
 */
-/**
- * Disabled state follows the Figma design system: each variant keeps its own
- * brand color (faded navy, faded red, etc.) instead of collapsing to a neutral
- * gray. We achieve that with `disabled:opacity-40` — preserving bg, text, and
- * border tone, just dimmed. Hover affordances are gated on `enabled:` so they
- * never trigger when the button is disabled.
- */
+// FMS UX 03.11: one button system — tonal fill with the M3 state layer baked
+// in (8 % hover / 12 % pressed of the ink over the fill). Literal strings on
+// purpose: Tailwind only emits classes it can read verbatim in the source.
+const TONAL = cn(
+  'bg-[color:var(--m3ft-v2-surface-container-high,var(--m3-surface-container-high))]',
+  'text-[color:var(--m3ft-v2-on-surface,var(--m3-on-surface))]',
+  'enabled:hover:bg-[color:color-mix(in_srgb,var(--m3ft-v2-on-surface,var(--m3-on-surface))_8%,var(--m3ft-v2-surface-container-high,var(--m3-surface-container-high)))]',
+  'enabled:active:bg-[color:color-mix(in_srgb,var(--m3ft-v2-on-surface,var(--m3-on-surface))_12%,var(--m3ft-v2-surface-container-high,var(--m3-surface-container-high)))]',
+)
+
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: cn(
     'bg-primary-v2 text-primary-v2-foreground',
@@ -80,20 +76,21 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
     'disabled:opacity-40',
   ),
   secondary: cn(
-    'bg-secondary-v2 text-secondary-v2-foreground border border-border-v2',
-    'enabled:hover:bg-secondary-v2-hover',
+    TONAL,
     'focus-visible:ring-primary-v2',
     'disabled:opacity-40',
   ),
+  // FMS UX 03.11: `outline` keeps its name for the API but renders the same
+  // tonal pill as `secondary` — the owner wants no borders on button pills.
   outline: cn(
-    'bg-background-v2 text-foreground-v2 border border-border-v2-strong',
-    'enabled:hover:bg-secondary-v2',
+    TONAL,
     'focus-visible:ring-primary-v2',
     'disabled:opacity-40',
   ),
   ghost: cn(
-    'bg-transparent text-foreground-v2',
-    'enabled:hover:bg-secondary-v2',
+    'bg-transparent text-[color:var(--m3ft-v2-on-surface,var(--m3-on-surface))]',
+    'enabled:hover:bg-m3-state-layer-hover',
+    'enabled:active:bg-m3-state-layer-pressed',
     'focus-visible:ring-primary-v2',
     'disabled:opacity-40',
   ),
@@ -105,18 +102,19 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   ),
 }
 
+// FMS UX 03.11: one button system — the pill lives in the base class.
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  xs: 'h-7 gap-1 rounded-md px-2.5 text-body-regular-xs',
-  sm: 'h-8 gap-1.5 rounded-md px-3 text-sm font-semibold',
-  md: 'h-9 gap-2 rounded-md px-4 text-sm font-semibold',
-  lg: 'h-10 gap-2 rounded-md px-6 text-sm font-semibold',
+  xs: 'h-7 gap-1 px-2.5 text-body-regular-xs',
+  sm: 'h-8 gap-1.5 px-3 text-body-medium-sm',
+  md: 'h-9 gap-2 px-4 text-body-medium-sm',
+  lg: 'h-10 gap-2 px-6 text-body-medium-sm',
 }
 
 const ICON_ONLY_SIZE_CLASSES: Record<ButtonSize, string> = {
-  xs: 'h-7 w-7 rounded-md',
-  sm: 'h-8 w-8 rounded-md',
-  md: 'h-9 w-9 rounded-md',
-  lg: 'h-10 w-10 rounded-md',
+  xs: 'h-7 w-7',
+  sm: 'h-8 w-8',
+  md: 'h-9 w-9',
+  lg: 'h-10 w-10',
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -135,7 +133,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
   ref,
 ) {
   const base =
-    'inline-flex cursor-pointer items-center justify-center whitespace-nowrap transition-colors ' +
+    'inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-full transition-colors ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ' +
     'focus-visible:ring-offset-background-v2 disabled:cursor-not-allowed'
 

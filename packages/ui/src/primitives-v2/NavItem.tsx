@@ -32,14 +32,16 @@ export type NavItemProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   isActive?: boolean
   /** Render a custom element (e.g. Next's Link) — return a JSX element that the parent will style. */
   render?: (props: { className: string; children: React.ReactNode }) => React.ReactElement
+  /** Icon-only rail: the label and the badge fade out, the icon stays where it is (FMS UX 02.11). */
+  compact?: boolean
 }
 
 export const NavItem = React.forwardRef<HTMLButtonElement, NavItemProps>(function NavItem(
-  { icon, badge, isActive = false, render, className, children, disabled, ...props },
+  { icon, badge, isActive = false, render, compact = false, className, children, disabled, ...props },
   ref,
 ) {
   const baseClass = cn(
-    'group/navitem relative inline-flex w-full items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-body-medium-sm transition-colors',
+    'group/navitem relative inline-flex w-full items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-body-medium-sm transition-[background-color,color,border-color] duration-[var(--m3-duration-short2)] ease-[var(--m3-ease-standard)]',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-v2 focus-visible:ring-offset-1',
     isActive
       ? // Active: white pill with 1px slate/200 border, brand-blue text + icon
@@ -68,8 +70,15 @@ export const NavItem = React.forwardRef<HTMLButtonElement, NavItemProps>(functio
           {icon}
         </span>
       ) : null}
-      <span className="flex-1 truncate text-left">{children}</span>
-      {badge != null ? (
+      <span
+        className={cn(
+          'flex-1 truncate text-left transition-opacity duration-[var(--m3-duration-short4)] ease-[var(--m3-ease-standard)]',
+          compact ? 'opacity-0' : 'opacity-100',
+        )}
+      >
+        {children}
+      </span>
+      {badge != null && !compact ? (
         typeof badge === 'string' || typeof badge === 'number' ? (
           <span
             className={cn(

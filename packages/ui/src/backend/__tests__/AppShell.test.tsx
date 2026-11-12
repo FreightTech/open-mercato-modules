@@ -3,7 +3,7 @@
  */
 
 import * as React from 'react'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { AppShell, ApplyBreadcrumb } from '../AppShell'
 import { renderWithProviders } from '@open-mercato/shared/lib/testing/renderWithProviders'
 
@@ -398,8 +398,9 @@ describe('AppShell', () => {
       // Trigger sidebar refresh via the custom event the component listens on
       window.dispatchEvent(new Event('om:refresh-sidebar'))
 
+      // In the sidebar — the breadcrumb now names the page from the nav too (FMS UX 03.11).
       await waitFor(() => {
-        expect(screen.getByText('Users List')).toBeInTheDocument()
+        expect(within(screen.getByTestId('sidebar')).getByText('Users List')).toBeInTheDocument()
       })
     } finally {
       global.fetch = previousFetch

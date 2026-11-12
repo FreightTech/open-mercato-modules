@@ -69,6 +69,7 @@ export function TimePicker({
         <button
           type="button"
           data-crud-focus-target=""
+          data-field=""
           disabled={disabled}
           aria-haspopup="dialog"
           className={cn(
@@ -98,7 +99,7 @@ export function TimePicker({
               <button
                 type="button"
                 onClick={handleNow}
-                className="text-sm text-primary hover:underline focus:outline-none"
+                className="text-sm text-link hover:underline focus:outline-none"
               >
                 {nowText}
               </button>
