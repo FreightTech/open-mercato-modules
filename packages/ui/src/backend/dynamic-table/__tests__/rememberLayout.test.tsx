@@ -294,3 +294,15 @@ describe('a table whose host keeps views', () => {
     expect(saves).toHaveLength(0)
   })
 })
+
+describe('a table in a split-view pane', () => {
+  it('lets the table decide about the views bar unless the pane switched it off or on', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { paneHideViews } = require('../split-view/SplitViewHost') as typeof import('../split-view/SplitViewHost')
+    expect(paneHideViews(undefined)).toBeUndefined()
+    expect(paneHideViews({})).toBeUndefined()
+    expect(paneHideViews({ viewsBar: false })).toBe(true)
+    expect(paneHideViews({ tabs: false })).toBe(true)
+    expect(paneHideViews({ viewsBar: true })).toBe(false)
+  })
+})
