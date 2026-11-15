@@ -611,7 +611,8 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
           <div className="flex min-h-0 flex-1">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
             {/* Name and colour first — what this view is, before what it shows (FMS UX 04.11). */}
-          <div className={`hot-config-panel-save order-7 mt-auto${allowNamedViews ? '' : ' hidden'}`} data-config-view-name="">
+          {allowNamedViews && (
+          <div className="hot-config-panel-save order-7 mt-auto" data-config-view-name="">
             <div className="flex w-full max-w-[420px] flex-col gap-1">
               <label className="hot-config-save-label">{t('dynamicTable.configureView.viewName', 'View name')}</label>
               {/* FMS UX 03.11 — the app's field (filled, radius 10, no outline;
@@ -680,6 +681,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                 </div>
               )}
           </div>
+          )}
             {/* ── The view itself ── */}
             <div className="contents">
 

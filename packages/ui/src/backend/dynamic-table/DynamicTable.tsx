@@ -539,6 +539,25 @@ export interface DynamicTableProps {
 }
 
 // ============================================
+/**
+ * `fields` added to `visible` where the table declares them (after the nearest column before them that is shown), not
+ * at the far end: a column's place in the table config is a design decision.
+ */
+function insertInDeclaredOrder(visible: string[], fields: string[], order: string[]): string[] {
+  const next = [...visible];
+  for (const field of [...fields].sort((a, b) => order.indexOf(a) - order.indexOf(b))) {
+    if (next.includes(field)) continue;
+    const at = order.indexOf(field);
+    let insertAfter = -1;
+    for (let i = at - 1; i >= 0; i--) {
+      const pos = next.indexOf(order[i]);
+      if (pos >= 0) { insertAfter = pos; break; }
+    }
+    next.splice(insertAfter + 1, 0, field);
+  }
+  return next;
+}
+
 // MAIN DYNAMIC TABLE COMPONENT
 // ============================================
 const DynamicTable: React.FC<DynamicTableProps> = ({
@@ -1025,6 +1044,46 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePerspectiveId, controlledActiveId, savedPerspectives, baseColumns, initialHiddenColumns, defaultGrouping, ownLayoutEnabled]);
+
+  /**
+   * A COLUMN THAT ARRIVES AFTER THE FIRST RENDER.
+   *
+   * The effect above applies a view once per active id, so a column the page adds later — one that waits on a
+   * feature check ("Weryfikacja 2FA" in Back office › Role waits on `two_factor.admin`) — entered neither list and was
+   * simply not drawn, with a "changed view" button on a table nobody touched. The rule is the base view's own
+   * (`resolvePerspectiveState`): a column the view has no opinion about takes the table's default — shown, unless the
+   * table hides it by default — in its declared place; a column the person hid stays hidden; a named view keeps its
+   * columns. Only NEW keys are placed; what the person did to the others is left alone.
+   */
+  const knownColumnKeysRef = useRef<string[] | null>(null);
+  const columnKeysSignature = baseColumns.map((c) => c.data).join('\u0000');
+  useEffect(() => {
+    const keys = baseColumns.map((c) => c.data);
+    const known = knownColumnKeysRef.current;
+    knownColumnKeysRef.current = keys;
+    if (known === null) return;
+    const added = keys.filter((k) => !known.includes(k));
+    if (added.length === 0) return;
+    const perspective = activePerspectiveId ? savedPerspectives.find((p) => p.id === activePerspectiveId) ?? null : null;
+    const resolved = resolvePerspectiveState({
+      baseColumns,
+      perspective,
+      defaultHiddenColumns: initialHiddenColumns,
+      defaultGrouping,
+    });
+    const show = added.filter((k) => resolved.visibleColumns.includes(k));
+    const hide = added.filter((k) => !resolved.visibleColumns.includes(k));
+    setVisibleColumns((current) => {
+      const missing = show.filter((k) => !current.includes(k));
+      return missing.length ? insertInDeclaredOrder(current, missing, keys) : current;
+    });
+    setHiddenColumns((current) => {
+      const next = current.filter((k) => !show.includes(k));
+      for (const k of hide) if (!next.includes(k)) next.push(k);
+      return next.length === current.length && next.every((k, i) => k === current[i]) ? current : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnKeysSignature]);
 
   // Display name: use perspective name if selected (except for built-in perspectives starting with '_'), otherwise default tableName
   const displayTableName = useMemo(() => {
@@ -4106,8 +4165,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     defaultGrouping,
   });
   const sortKey = (rules: Array<{ field: string; direction: string }>) => rules.map((r) => `${r.field}:${r.direction}`).join(',');
+  const tableColumnKeys = baseColumns.map((c) => c.data);
   const layoutDiffers =
-    visibleColumns.join('|') !== tableDefaultState.visibleColumns.join('|')
+    visibleColumns.filter((k) => tableColumnKeys.includes(k)).join('|') !== tableDefaultState.visibleColumns.join('|')
     || sortKey(sortRules) !== sortKey(tableDefaultState.sortRules)
     || sortKey(groupRules) !== sortKey(tableDefaultState.groupRules)
     || [...frozenColumns].sort().join('|') !== [...tableDefaultState.frozenColumns].sort().join('|')
@@ -4123,18 +4183,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   const showViewChanged = hidePerspectiveTabs && layoutDiffers;
   /** Bring hidden columns back where the table declares them, and keep that like any other column change. */
   const showColumns = (fields: string[]) => {
-    const order = baseColumns.map((c) => c.data);
-    const visible = [...visibleColumns];
-    for (const field of [...fields].sort((a, b) => order.indexOf(a) - order.indexOf(b))) {
-      if (visible.includes(field)) continue;
-      const at = order.indexOf(field);
-      let insertAfter = -1;
-      for (let i = at - 1; i >= 0; i--) {
-        const pos = visible.indexOf(order[i]);
-        if (pos >= 0) { insertAfter = pos; break; }
-      }
-      visible.splice(insertAfter + 1, 0, field);
-    }
+    const visible = insertInDeclaredOrder(visibleColumns, fields, baseColumns.map((c) => c.data));
     const hidden = hiddenColumns.filter((c) => !fields.includes(c));
     handleColumnVisibilityChange(visible, hidden);
     persistColumnLayout(visible, hidden);

@@ -35,6 +35,14 @@ import type {
 type StoredRow = { settings: PerspectiveSettings }
 
 /**
+ * A role without `perspectives.use` gets a 403 here. The app's default answer to a 403 is to send the person to the
+ * login page — from a call this table makes on its own, on EVERY table, that would lock them out of the app. So the
+ * call says "no redirect", and a refusal only means the table works without remembering (no flash).
+ */
+const NO_REDIRECT = { 'x-om-forbidden-redirect': '0' } as const
+const isRefusal = (status: number | undefined) => status === 401 || status === 403
+
+/**
  * The rows already read in this page session, so a table that unmounts and mounts again (a folder's widgets when the
  * person opens the next folder) paints the person's layout without a second request. Keyed by the person: the same
  * `fms.dt.uid` the column widths and the density are scoped by.
@@ -83,6 +91,9 @@ export function useOwnBaseView(options: {
   // A change made before the read answered wins over what the read brings back.
   const changedRef = React.useRef(false)
   const failureShownRef = React.useRef(false)
+  // Writes of one table go one after another: the first one creates the row, and a second one sent before it answered
+  // would create it again — the unique index (person, table, `__base__`) refuses that with an error the person sees.
+  const writeChainRef = React.useRef<Promise<void>>(Promise.resolve())
 
   React.useEffect(() => {
     if (!active) return
@@ -98,7 +109,18 @@ export function useOwnBaseView(options: {
     }
     setLoaded(false)
     void (async () => {
-      const response = await apiCall<PerspectivesIndexResponse>(`/api/perspectives/${encodeURIComponent(tableId as string)}`)
+      let response: Awaited<ReturnType<typeof apiCall<PerspectivesIndexResponse>>>
+      try {
+        response = await apiCall<PerspectivesIndexResponse>(`/api/perspectives/${encodeURIComponent(tableId as string)}`, {
+          headers: { ...NO_REDIRECT },
+        })
+      } catch {
+        if (!cancelled) {
+          writableRef.current = false
+          setLoaded(true)
+        }
+        return
+      }
       if (cancelled) return
       if (!response.ok || !response.result) {
         writableRef.current = false
@@ -149,20 +171,29 @@ export function useOwnBaseView(options: {
       rowCache.set(cacheKey, next)
       setRow(next)
       if (!writableRef.current) return
-      void (async () => {
-        const response = await apiCall<{ perspective?: { id?: string } }>(
-          `/api/perspectives/${encodeURIComponent(tableId as string)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              perspectiveId: serverIdRef.current,
-              name: BASE_VIEW_PERSPECTIVE_NAME,
-              settings,
-              isDefault: false,
-            }),
-          },
-        )
+      const write = async () => {
+        if (!writableRef.current) return
+        let response: Awaited<ReturnType<typeof apiCall<{ perspective?: { id?: string } }>>>
+        try {
+          response = await apiCall<{ perspective?: { id?: string } }>(
+            `/api/perspectives/${encodeURIComponent(tableId as string)}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...NO_REDIRECT },
+              body: JSON.stringify({
+                // Read when the write is SENT, after the one before it answered: a second write updates the row the
+                // first one created instead of creating it again.
+                perspectiveId: serverIdRef.current,
+                name: BASE_VIEW_PERSPECTIVE_NAME,
+                settings,
+                isDefault: false,
+              }),
+            },
+          )
+        } catch {
+          writableRef.current = false
+          return
+        }
         if (response.ok) {
           const id = response.result?.perspective?.id
           if (id) {
@@ -170,12 +201,16 @@ export function useOwnBaseView(options: {
             const cached = rowCache.get(cacheKey) as (StoredRow & { serverId?: string }) | null | undefined
             if (cached) rowCache.set(cacheKey, { ...cached, serverId: id } as StoredRow)
           }
+        } else if (isRefusal(response.status)) {
+          // Not allowed to keep views: the table goes on without remembering, quietly.
+          writableRef.current = false
         } else if (!failureShownRef.current) {
           // Said once per table, not once per click: the layout still applies on screen.
           failureShownRef.current = true
           flash(saveFailedMessage, 'error')
         }
-      })()
+      }
+      writeChainRef.current = writeChainRef.current.then(write, write)
     },
     [active, cacheKey, tableId, saveFailedMessage],
   )

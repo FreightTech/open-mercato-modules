@@ -21,10 +21,12 @@ import type { PerspectiveConfig, PerspectiveSaveEvent } from '../types/perspecti
 import { BASE_VIEW_PERSPECTIVE_NAME } from '../types/perspective'
 import { __resetOwnBaseViewCache } from '../hooks/useOwnBaseView'
 import { apiCall } from '@freighttech/ui/backend/utils/apiCall'
+import { flash } from '@freighttech/ui/backend/FlashMessages'
 
 jest.mock('@freighttech/ui/backend/utils/apiCall', () => ({ apiCall: jest.fn() }))
 jest.mock('@freighttech/ui/backend/FlashMessages', () => ({ flash: jest.fn() }))
 const mockApiCall = apiCall as unknown as jest.Mock
+const mockFlash = flash as unknown as jest.Mock
 
 const columns: ColumnDef[] = [
   { data: 'leg', title: 'Odcinek' },
@@ -37,7 +39,7 @@ const rows = [
   { id: '2', leg: '2', from: 'WAW', carrier: 'AF', etd: '2026-11-18' },
 ]
 
-type Call = { url: string; method: string; body?: any }
+type Call = { url: string; method: string; body?: any; headers?: Record<string, string> }
 let calls: Call[] = []
 let serverRows: Array<{ id: string; name: string; settings: any }> = []
 
@@ -47,7 +49,7 @@ function serve() {
     const body = init?.body ? JSON.parse(init.body) : undefined
     // Only the perspectives route is this test's business (the grid also asks /api/auth/feature-check).
     if (!url.startsWith('/api/perspectives')) return { ok: false, result: null }
-    calls.push({ url, method, body })
+    calls.push({ url, method, body, headers: (init as { headers?: Record<string, string> } | undefined)?.headers })
     if (method === 'GET') return { ok: true, result: { perspectives: serverRows, rolePerspectives: [], defaultPerspectiveId: null } }
     return { ok: true, result: { perspective: { id: body?.perspectiveId ?? 'srv-1' } } }
   })
@@ -72,8 +74,10 @@ function Grid(props: Record<string, unknown>) {
   return React.createElement(DynamicTable as any, { data: rows, columns, tableRef, height: 400, ...props })
 }
 
+const tree = (props: Record<string, unknown>) =>
+  React.createElement(I18nProvider as any, { locale: 'en', dict: {} }, React.createElement(Grid, props))
 function mount(props: Record<string, unknown> = {}) {
-  return render(React.createElement(I18nProvider as any, { locale: 'en', dict: {} }, React.createElement(Grid, props)))
+  return render(tree(props))
 }
 
 const headers = (container: HTMLElement) =>
@@ -104,6 +108,7 @@ const viewsBar = () => document.querySelector('.hot-top-tabs-v2')
 const changedButton = () => document.querySelector<HTMLElement>('[data-view-changed]')
 
 beforeEach(() => {
+  mockFlash.mockReset()
   calls = []
   serverRows = []
   __resetOwnBaseViewCache()
@@ -220,7 +225,7 @@ describe('a table whose page keeps no views', () => {
     act(() => { changedButton()!.click() })
     act(() => { document.querySelector<HTMLElement>('[data-view-changed-configure]')!.click() })
     await waitFor(() => expect(document.querySelector('.hot-config-panel')).not.toBeNull())
-    expect(document.querySelector('[data-config-view-name]')!.className).toContain('hidden')
+    expect(document.querySelector('[data-config-view-name]')).toBeNull()
   })
 
   it('`rememberLayout: false` reads and writes nothing', async () => {
@@ -237,6 +242,115 @@ describe('a table whose page keeps no views', () => {
     hide(container, 'Przewoźnik')
     await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
     expect(calls).toHaveLength(0)
+  })
+})
+
+describe('review 15.11 (pc2 w1:p6)', () => {
+  const twoFa: ColumnDef = { data: 'twofa', title: 'Weryfikacja 2FA' }
+
+  it('a column the page adds after the first render is shown, in its place, with no button and no write', async () => {
+    const { container, rerender } = mount({ tableId: 'back-office-roles' })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    rerender(tree({ tableId: 'back-office-roles', columns: [...columns.slice(0, 2), twoFa, ...columns.slice(2)] }))
+    await waitFor(() => expect(headerText(container)).toContain('Weryfikacja 2FA'))
+    expect(headerText(container).indexOf('Weryfikacja 2FA')).toBeLessThan(headerText(container).indexOf('Przewoźnik'))
+    expect(changedButton()).toBeNull()
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
+    expect(writes()).toHaveLength(0)
+  })
+
+  it('…also for a person with a saved row: the new column shows, the one they hid stays hidden', async () => {
+    serverRows = [{ id: 'row-7', name: BASE_VIEW_PERSPECTIVE_NAME, settings: { columnOrder: ['leg', 'from', 'carrier', 'etd'], columnVisibility: { leg: true, from: true, carrier: false, etd: true }, filters: { _baseView: true } } }]
+    const { container, rerender } = mount({ tableId: 'back-office-roles' })
+    await waitFor(() => expect(headerText(container)).not.toContain('Przewoźnik'))
+    rerender(tree({ tableId: 'back-office-roles', columns: [...columns, twoFa] }))
+    await waitFor(() => expect(headerText(container)).toContain('Weryfikacja 2FA'))
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    expect(changedButton()!.getAttribute('data-view-changed-hidden')).toBe('1')
+  })
+
+  it('…but not a column the table hides by default', async () => {
+    const { container, rerender } = mount({ tableId: 'back-office-roles', defaultHiddenColumns: ['twofa'] })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    rerender(tree({ tableId: 'back-office-roles', defaultHiddenColumns: ['twofa'], columns: [...columns, twoFa] }))
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
+    expect(headerText(container)).not.toContain('Weryfikacja 2FA')
+    expect(changedButton()).toBeNull()
+  })
+
+  it('Configure view renders no view-name field at all on a table that keeps only the default view', async () => {
+    const { container } = mount({ tableId: 'folders.teczka.flights' })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    hide(container, 'Przewoźnik')
+    await waitFor(() => expect(changedButton()).not.toBeNull())
+    act(() => { changedButton()!.click() })
+    act(() => { document.querySelector<HTMLElement>('[data-view-changed-configure]')!.click() })
+    await waitFor(() => expect(document.querySelector('.hot-config-panel')).not.toBeNull())
+    expect(document.querySelector('[data-config-view-name]')).toBeNull()
+    expect(document.querySelector('.hot-config-panel input[aria-label="View name"]')).toBeNull()
+  })
+
+  it('reads and writes without the 403 → login redirect, and a refusal leaves the table working quietly', async () => {
+    mockApiCall.mockImplementation(async (url: string, init?: { method?: string; headers?: Record<string, string> }) => {
+      if (!url.startsWith('/api/perspectives')) return { ok: false, result: null }
+      calls.push({ url, method: init?.method ?? 'GET', headers: init?.headers })
+      return { ok: false, status: 403, result: { error: 'Forbidden' } }
+    })
+    const { container } = mount({ tableId: 'no.perspectives.use' })
+    await waitFor(() => expect(calls.length).toBe(1))
+    expect(calls[0].headers?.['x-om-forbidden-redirect']).toBe('0')
+    hide(container, 'Przewoźnik')
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    expect(changedButton()).not.toBeNull()
+    expect(writes()).toHaveLength(0)
+    expect(mockFlash).not.toHaveBeenCalled()
+  })
+
+  it('a refused write is quiet too, and a write carries the same no-redirect header', async () => {
+    mockApiCall.mockImplementation(async (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      if (!url.startsWith('/api/perspectives')) return { ok: false, result: null }
+      const method = init?.method ?? 'GET'
+      calls.push({ url, method, headers: init?.headers, body: init?.body ? JSON.parse(init.body) : undefined })
+      if (method === 'GET') return { ok: true, status: 200, result: { perspectives: [], rolePerspectives: [] } }
+      return { ok: false, status: 403, result: { error: 'Forbidden' } }
+    })
+    const { container } = mount({ tableId: 'write.refused' })
+    await waitFor(() => expect(calls.length).toBe(1))
+    hide(container, 'Przewoźnik')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0].headers?.['x-om-forbidden-redirect']).toBe('0')
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
+    expect(mockFlash).not.toHaveBeenCalled()
+  })
+
+  it('two quick changes: the second write waits for the first and updates the row it created', async () => {
+    let releaseFirst: (() => void) | null = null
+    mockApiCall.mockImplementation(async (url: string, init?: { method?: string; body?: string }) => {
+      if (!url.startsWith('/api/perspectives')) return { ok: false, result: null }
+      const method = init?.method ?? 'GET'
+      const body = init?.body ? JSON.parse(init.body) : undefined
+      calls.push({ url, method, body })
+      if (method === 'GET') return { ok: true, status: 200, result: { perspectives: [], rolePerspectives: [] } }
+      if (!body.perspectiveId) {
+        await new Promise<void>((r) => { releaseFirst = r })
+        return { ok: true, status: 200, result: { perspective: { id: 'created-1' } } }
+      }
+      return { ok: true, status: 200, result: { perspective: { id: body.perspectiveId } } }
+    })
+    const { container } = mount({ tableId: 'quick.writes' })
+    await waitFor(() => expect(calls.length).toBe(1))
+    hide(container, 'Przewoźnik')
+    hide(container, 'Odcinek')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    // The second change is not sent while the first (the create) is unanswered.
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
+    expect(writes()).toHaveLength(1)
+    await act(async () => { releaseFirst!() })
+    await waitFor(() => expect(writes()).toHaveLength(2))
+    expect(writes()[1].body.perspectiveId).toBe('created-1')
+    expect(writes()[1].body.settings.columnVisibility.leg).toBe(false)
+    expect(mockFlash).not.toHaveBeenCalled()
   })
 })
 
@@ -327,7 +441,7 @@ describe('the table menu (⋯) without a views bar', () => {
     expect(document.querySelector('[data-toolbar-configure-view]')).not.toBeNull()
     act(() => { document.querySelector<HTMLElement>('[data-toolbar-add-view]')!.click() })
     expect(document.querySelector('.hot-config-panel')).not.toBeNull()
-    expect(document.querySelector('[data-config-view-name]')!.className).not.toContain('hidden')
+    expect(document.querySelector('[data-config-view-name]')).not.toBeNull()
   })
 })
 
