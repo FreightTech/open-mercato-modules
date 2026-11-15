@@ -484,6 +484,38 @@ describe('a table whose host keeps views', () => {
     expect(saves[0].perspective.sorting).toEqual([expect.objectContaining({ field: 'etd', direction: 'asc' })])
   })
 
+  it('0.14.36 — a host that leaves the id null on its default tab still opens it the way the person left it', () => {
+    // split-view's useSavedViews (Księgowość › Zamknięcie, payables, batches…) keeps null for "Widok domyślny" (G14).
+    // GEPARD-283 sweep, pc2 w1:p1: Oddział hidden there was written to __base__ and came back after a reload.
+    const { container } = mount({ tableId: 'host.table', savedPerspectives: [base, named], activePerspectiveId: null })
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    expect(headerText(container)).toContain('ETD')
+  })
+
+  it('…also when the base row arrives after the table is on screen', () => {
+    const { container, rerender } = mount({ tableId: 'host.table', savedPerspectives: [], activePerspectiveId: null })
+    expect(headerText(container)).toContain('Przewoźnik')
+    rerender(tree({ tableId: 'host.table', savedPerspectives: [base, named], activePerspectiveId: null }))
+    expect(headerText(container)).not.toContain('Przewoźnik')
+  })
+
+  it('…and the base row the grid just wrote is taken as applied: no re-apply, no second write', () => {
+    const saves: PerspectiveSaveEvent[] = []
+    const props = {
+      tableId: 'host.table',
+      activePerspectiveId: null,
+      onEvent: (name: string, detail: unknown) => { if (name === TableEvents.PERSPECTIVE_SAVE) saves.push(detail as PerspectiveSaveEvent) },
+    }
+    const { container, rerender } = mount({ ...props, savedPerspectives: [] })
+    hide(container, 'Przewoźnik')
+    expect(saves).toHaveLength(1)
+    // The host stores it and hands it back with a server id — same columns as on screen.
+    const written = { ...saves[0].perspective, id: 'srv-base' }
+    rerender(tree({ ...props, savedPerspectives: [written] }))
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    expect(saves).toHaveLength(1)
+  })
+
   it('leaves a named view\'s saved sort alone', () => {
     const saves: PerspectiveSaveEvent[] = []
     const { container } = mount({
@@ -532,5 +564,94 @@ describe('a table in a split-view pane', () => {
     expect(paneHideViews({ viewsBar: false })).toBe(true)
     expect(paneHideViews({ tabs: false })).toBe(true)
     expect(paneHideViews({ viewsBar: true })).toBe(false)
+  })
+})
+
+describe('0.14.36 — a table with the built-in column menu off can still hide, remember and give back a column', () => {
+  // Small edit grids (folder lines, cost/revenue lines, flight paste, bundle editor…) set disableBuiltinColumnMenu to
+  // keep their headers plain. Owner 15.11 (GEPARD-283): every DynamicTable has the layout options.
+  const ui = { hideToolbar: true, disableBuiltinColumnMenu: true }
+  const items = () => [...document.querySelectorAll<HTMLElement>('.hot-col-menu-item')].map((b) => (b.textContent ?? '').trim())
+
+  it('keeps the classic header (⇅ button, no funnel) and adds a ⋮ with sort, hide — no filter, freeze or move', async () => {
+    const { container } = mount({ tableId: 'folders-edit-grid', uiConfig: ui })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    const th = [...container.querySelectorAll<HTMLElement>('th.hot-col-header')].find((h) => (h.textContent ?? '').includes('Przewoźnik'))!
+    expect(th.querySelector('.hot-col-sort-btn')).not.toBeNull()
+    expect(th.querySelector('.hot-col-funnel')).toBeNull()
+    expect(th.classList.contains('hot-col-header-modern')).toBe(false)
+    openColumnMenu(container, 'Przewoźnik')
+    const labels = items()
+    expect(labels.some((l) => /^sort/i.test(l))).toBe(true)
+    expect(labels.some((l) => /hide field/i.test(l))).toBe(true)
+    expect(labels.some((l) => /filter/i.test(l))).toBe(false)
+    expect(labels.some((l) => /freeze/i.test(l))).toBe(false)
+    expect(labels.some((l) => /move (left|right)/i.test(l))).toBe(false)
+  })
+
+  it('hides a column, remembers it, shows the changed-view button, and gives the column back from the menu', async () => {
+    const { container, unmount } = mount({ tableId: 'folders-edit-grid', uiConfig: ui })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    expect(writes()).toHaveLength(0)
+    hide(container, 'Przewoźnik')
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0].body.settings.columnVisibility.carrier).toBe(false)
+    await waitFor(() => expect(changedButton()).not.toBeNull())
+    unmount()
+
+    // Next visit: the person's row comes back with the column hidden.
+    serverRows = [{ id: 'srv-1', name: BASE_VIEW_PERSPECTIVE_NAME, settings: writes()[0].body.settings }]
+    __resetOwnBaseViewCache()
+    const again = mount({ tableId: 'folders-edit-grid', uiConfig: ui })
+    await waitFor(() => expect(headerText(again.container)).not.toContain('Przewoźnik'))
+    openColumnMenu(again.container, 'Z')
+    const entry = document.querySelector<HTMLElement>('[data-col-menu-show-hidden]')
+    expect(entry!.textContent).toContain('(1)')
+    act(() => { entry!.click() })
+    act(() => { document.querySelector<HTMLElement>('[data-col-menu-show="carrier"]')!.click() })
+    expect(headerText(again.container)).toContain('Przewoźnik')
+  })
+
+  it('a double-click on the header still opens the host\'s own column actions, not the menu', async () => {
+    const { container } = mount({
+      tableId: 'folders-edit-grid',
+      uiConfig: ui,
+      columnActions: () => [{ id: 'host-x', label: 'Host action' }],
+    })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    const th = [...container.querySelectorAll<HTMLElement>('th.hot-col-header')].find((h) => (h.textContent ?? '').includes('Z'))!
+    act(() => { fireEvent.doubleClick(th) })
+    // The host's context menu, as before the change — not the ⋮ layout menu.
+    expect(items()).toEqual(['Host action'])
+  })
+})
+
+describe('0.14.36 — "Restore default" on a table with default groups keeps them after the next visit', () => {
+  // GEPARD-283 sweep, pc2 w1:p6: offer › Wycena › Sprzedaż reset, reload → no groups and "Widok zmieniony".
+  const grouping = [{ id: 'g-leg', field: 'leg', direction: 'asc' as const }]
+  it('writes the table\'s default grouping, and the next visit opens grouped with no changed-view button', async () => {
+    serverRows = [{ id: 'row-g', name: BASE_VIEW_PERSPECTIVE_NAME, settings: { columnOrder: ['leg', 'from', 'etd'], columnVisibility: { carrier: false }, filters: { _baseView: true } } }]
+    const { container, unmount } = mount({ tableId: 'offers.pricing.sell-lines', uiConfig: { hideToolbar: true }, defaultGrouping: grouping })
+    await waitFor(() => expect(headerText(container)).not.toContain('Przewoźnik'))
+    openColumnMenu(container, 'Z')
+    act(() => { document.querySelector<HTMLElement>('[data-col-menu-reset-layout]')!.click() })
+    const confirm = [...document.querySelectorAll<HTMLElement>('[role="dialog"] button')].find((b) => /reset view|przywróć widok/i.test(b.textContent ?? ''))
+    act(() => { fireEvent.click(confirm!) })
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    const written = writes()[0].body.settings
+    // The row says "grouped the table's way", so no reading of it (own row, host's row, unseen columns or not) can take
+    // the empty list for "the person ungrouped it".
+    expect(written.grouping).toEqual([expect.objectContaining({ field: 'leg', desc: false })])
+    unmount()
+
+    serverRows = [{ id: 'row-g', name: BASE_VIEW_PERSPECTIVE_NAME, settings: written }]
+    __resetOwnBaseViewCache()
+    calls = []
+    const again = mount({ tableId: 'offers.pricing.sell-lines', uiConfig: { hideToolbar: true }, defaultGrouping: grouping })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)) })
+    expect(headerText(again.container)).toContain('Przewoźnik')
+    expect(changedButton()).toBeNull()
   })
 })

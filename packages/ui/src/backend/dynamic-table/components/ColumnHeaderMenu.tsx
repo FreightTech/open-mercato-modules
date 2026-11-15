@@ -21,8 +21,9 @@ interface ColumnHeaderMenuProps {
    * serve (a calculated column), which falls back to the old behaviour.
    */
   onQuickFilter?: () => void;
-  onFilterByField: () => void;
-  onFreezeToggle: () => void;
+  /** Omitted in the minimal menu (`disableBuiltinColumnMenu`): no filter and no freeze items. */
+  onFilterByField?: () => void;
+  onFreezeToggle?: () => void;
   onHideField: () => void;
   /**
    * 0.14.33 — columns the person hid (beyond the table's defaults). When there are any, the menu offers them back
@@ -136,27 +137,31 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
           <span>{t('dynamicTable.columnMenu.clearSort', 'Clear sort')}</span>
         </button>
       )}
-      <button
-        className="hot-col-menu-item"
-        onClick={() => {
-          if (onQuickFilter) { onQuickFilter(); return; }
-          onFilterByField();
-          onClose();
-        }}
-      >
-        <Filter className="w-4 h-4" />
-        <span>{t('dynamicTable.columnMenu.filter', 'Filter by this field')}</span>
-      </button>
-      {onQuickFilter && (
+      {(onQuickFilter || onFilterByField) && (
+        <button
+          className="hot-col-menu-item"
+          onClick={() => {
+            if (onQuickFilter) { onQuickFilter(); return; }
+            onFilterByField?.();
+            onClose();
+          }}
+        >
+          <Filter className="w-4 h-4" />
+          <span>{t('dynamicTable.columnMenu.filter', 'Filter by this field')}</span>
+        </button>
+      )}
+      {onQuickFilter && onFilterByField && (
         <button className="hot-col-menu-item" onClick={() => { onFilterByField(); onClose(); }}>
           <SlidersHorizontal className="w-4 h-4" />
           <span>{t('dynamicTable.columnMenu.advancedFilter', 'Advanced filter…')}</span>
         </button>
       )}
-      <button className="hot-col-menu-item" onClick={() => { onFreezeToggle(); onClose(); }}>
-        {isFrozen ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
-        <span>{isFrozen ? t('dynamicTable.columnMenu.unfreeze', 'Unfreeze column') : t('dynamicTable.columnMenu.freeze', 'Freeze column')}</span>
-      </button>
+      {onFreezeToggle && (
+        <button className="hot-col-menu-item" onClick={() => { onFreezeToggle(); onClose(); }}>
+          {isFrozen ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+          <span>{isFrozen ? t('dynamicTable.columnMenu.unfreeze', 'Unfreeze column') : t('dynamicTable.columnMenu.freeze', 'Freeze column')}</span>
+        </button>
+      )}
       <button className="hot-col-menu-item" onClick={() => { onHideField(); onClose(); }}>
         <EyeOff className="w-4 h-4" />
         <span>{t('dynamicTable.columnMenu.hide', 'Hide field')}</span>

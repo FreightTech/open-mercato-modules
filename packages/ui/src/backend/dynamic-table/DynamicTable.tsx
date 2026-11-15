@@ -998,21 +998,36 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // which one won was an effect-ordering accident. Do not add another.
   const appliedPerspectiveRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
-    if (appliedPerspectiveRef.current === activePerspectiveId) return;
+    // 0.14.36 (GEPARD-283 sweep, pc2 w1:p1): a host that keeps views may leave the id null on its default tab
+    // ("Widok domyślny" — split-view's useSavedViews does, by design). That tab IS the person's own base row when they
+    // have one: a column hidden there was written to `__base__` and must come back hidden, not reset to the defaults.
+    const baseRow = activePerspectiveId ? null : savedPerspectives.find(p => p.isBaseView) ?? null;
+    const appliedKey = activePerspectiveId ?? (baseRow ? `base:${baseRow.id}` : null);
+    if (appliedPerspectiveRef.current === appliedKey) return;
     // Nothing to apply yet: an id is set but its config hasn't loaded. Stay put
     // rather than resetting to defaults, and retry once the fetch lands.
     const perspective = activePerspectiveId
       ? savedPerspectives.find(p => p.id === activePerspectiveId)
-      : null;
+      : baseRow;
     if (activePerspectiveId && !perspective) return;
 
-    appliedPerspectiveRef.current = activePerspectiveId;
     const next = resolvePerspectiveState({
       baseColumns,
       perspective,
       defaultHiddenColumns: initialHiddenColumns,
       defaultGrouping,
     });
+    // The base row the grid itself just wrote (first hidden column, first sort) arrives with what is already on screen:
+    // mark it applied and keep the person's live state (their header filters above all) instead of re-applying it.
+    if (baseRow && appliedPerspectiveRef.current === null) {
+      const same = (a: string[], b: string[]) => a.join('|') === b.join('|');
+      const sortKey = (rules: SortRule[]) => rules.map((r) => `${r.field}:${r.direction}`).join(',');
+      if (same(next.visibleColumns, visibleColumns) && same(next.hiddenColumns, hiddenColumns) && sortKey(next.sortRules) === sortKey(sortRules)) {
+        appliedPerspectiveRef.current = appliedKey;
+        return;
+      }
+    }
+    appliedPerspectiveRef.current = appliedKey;
     setVisibleColumns(next.visibleColumns);
     setHiddenColumns(next.hiddenColumns);
     setFilters(next.filters);
@@ -1762,7 +1777,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       columns: { visible: [], hidden: [] },
       filters: [],
       sorting: [],
-      grouping: [],
+      // The table's OWN default grouping, not []: an empty list on a base row reads as "the person ungrouped it"
+      // (resolvePerspectiveState keeps a base row's grouping), so a reset table opened ungrouped on the next visit
+      // with "Widok zmieniony" (GEPARD-283 sweep, pc2 w1:p6: offer pricing, Finanse › Pozycje, bundle drawer).
+      grouping: defaultGrouping ?? [],
       aggregations: [],
       lookupColumns: [],
       rollupColumns: [],
@@ -4676,6 +4694,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 onMouseDown={(e) => handleColumnHeaderMouseDown(e, dragHandlers.handleDragStart)}
                 onMouseMove={handleMouseMove}
                 modernLayout={!disableBuiltinColumnMenu}
+                minimalColumnMenu={disableBuiltinColumnMenu}
                 onSortAsc={handleModernSortAsc}
                 onSortDesc={handleModernSortDesc}
                 onSortClear={handleModernSortClear}
