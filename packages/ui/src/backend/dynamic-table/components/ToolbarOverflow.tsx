@@ -15,7 +15,7 @@
 
 import * as React from 'react'
 import ReactDOM from 'react-dom'
-import { Check, Download, Maximize2, MoreHorizontal, SlidersHorizontal } from 'lucide-react'
+import { Check, Download, Maximize2, MoreHorizontal, Plus, Settings2, SlidersHorizontal } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { DENSITY_LEVELS, type DensityLevel } from '../types/density'
 import { setDensityPreference, useDensityPreference } from '../hooks/useDensityPreference'
@@ -47,6 +47,10 @@ export interface ToolbarOverflowProps {
   onFullscreen?: () => void
   /** Host-supplied rows appended below the table's own. */
   extras?: React.ReactNode
+  /** Opens the table's Configure view panel — offered when the table shows no views bar. */
+  onConfigureView?: () => void
+  /** Starts a new named view — offered when the table shows no views bar and its host keeps named views. */
+  onAddView?: () => void
   /**
    * `more` (default): the `⋯` button among the toolbar's actions. `settings`: a sliders button titled
    * "Table settings", for the menu placed after the pagination (`tableMenuPlacement: 'pagination'`).
@@ -78,6 +82,8 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
   onFullscreen,
   extras,
   look = 'more',
+  onConfigureView,
+  onAddView,
 }) => {
   const t = useT()
   const [open, setOpen] = React.useState(false)
@@ -149,7 +155,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
     }
   }, [open])
 
-  if (!onExport && !showDensity && !onFullscreen && !extras) return null
+  if (!onExport && !showDensity && !onFullscreen && !extras && !onConfigureView && !onAddView) return null
 
   // One M3 menu row: the concentric 8px corner the overlay sheet gives every
   // other menu item, a translucent hover state layer, and the 12/16 body token
@@ -189,6 +195,33 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
           style={{ top: placement.top, left: placement.left, width: MENU_WIDTH, maxHeight: placement.maxHeight }}
           data-toolbar-overflow-menu=""
         >
+          {(onConfigureView || onAddView) && (
+            <div className="px-1">
+              {onConfigureView && (
+                <button
+                  type="button"
+                  onClick={() => { setOpen(false); onConfigureView() }}
+                  className={row}
+                  data-toolbar-configure-view=""
+                >
+                  <span className={gutter}><Settings2 className={gutterIcon} /></span>
+                  {t('dynamicTable.perspectives.configure', 'Configure view…')}
+                </button>
+              )}
+              {onAddView && (
+                <button
+                  type="button"
+                  onClick={() => { setOpen(false); onAddView() }}
+                  className={row}
+                  data-toolbar-add-view=""
+                >
+                  <span className={gutter}><Plus className={gutterIcon} /></span>
+                  {t('dynamicTable.toolbar.addView', 'Add view…')}
+                </button>
+              )}
+              <div className="mx-1 my-1 border-t border-[var(--m3-outline-faint)]" />
+            </div>
+          )}
           {onExport && (
             <div className="px-1">
               <button

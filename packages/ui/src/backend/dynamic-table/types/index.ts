@@ -642,8 +642,19 @@ export interface TableUIConfig {
   hideSearch?: boolean;
   /** Hide the "Add Row" button */
   hideAddRowButton?: boolean;
-  /** Hide the perspective tabs row (All, Base, +) */
+  /**
+   * The saved-view row ('Default view ··· + Add view'). Unset (and unset in the app's `DynamicTableDefaults`): shown
+   * only when the table has something to switch between — a named saved view, a template shared with the person's
+   * role, or `presetViews`. The person's own default-view row alone never shows it (0.14.32).
+   */
   hidePerspectiveTabs?: boolean;
+  /**
+   * Remember each person's own layout of this table — hidden, moved and pinned columns, sorting, the view mode — in
+   * their own default-view row (`/api/perspectives/<tableId>`, name `__base__`), written only when they change
+   * something. Applies to a table with a `tableId` whose host passes no `savedPerspectives` / `activePerspectiveId`
+   * (a host that does keeps that row itself). Default: true; `false` turns it off for this table.
+   */
+  rememberLayout?: boolean;
   /**
    * Offer a view switcher in the toolbar's icon cluster.
    *
