@@ -626,3 +626,32 @@ describe('0.14.36 — a table with the built-in column menu off can still hide, 
     expect(items()).toEqual(['Host action'])
   })
 })
+
+describe('0.14.36 — "Restore default" on a table with default groups keeps them after the next visit', () => {
+  // GEPARD-283 sweep, pc2 w1:p6: offer › Wycena › Sprzedaż reset, reload → no groups and "Widok zmieniony".
+  const grouping = [{ id: 'g-leg', field: 'leg', direction: 'asc' as const }]
+  it('writes the table\'s default grouping, and the next visit opens grouped with no changed-view button', async () => {
+    serverRows = [{ id: 'row-g', name: BASE_VIEW_PERSPECTIVE_NAME, settings: { columnOrder: ['leg', 'from', 'etd'], columnVisibility: { carrier: false }, filters: { _baseView: true } } }]
+    const { container, unmount } = mount({ tableId: 'offers.pricing.sell-lines', uiConfig: { hideToolbar: true }, defaultGrouping: grouping })
+    await waitFor(() => expect(headerText(container)).not.toContain('Przewoźnik'))
+    openColumnMenu(container, 'Z')
+    act(() => { document.querySelector<HTMLElement>('[data-col-menu-reset-layout]')!.click() })
+    const confirm = [...document.querySelectorAll<HTMLElement>('[role="dialog"] button')].find((b) => /reset view|przywróć widok/i.test(b.textContent ?? ''))
+    act(() => { fireEvent.click(confirm!) })
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    const written = writes()[0].body.settings
+    // The row says "grouped the table's way", so no reading of it (own row, host's row, unseen columns or not) can take
+    // the empty list for "the person ungrouped it".
+    expect(written.grouping).toEqual([expect.objectContaining({ field: 'leg', desc: false })])
+    unmount()
+
+    serverRows = [{ id: 'row-g', name: BASE_VIEW_PERSPECTIVE_NAME, settings: written }]
+    __resetOwnBaseViewCache()
+    calls = []
+    const again = mount({ tableId: 'offers.pricing.sell-lines', uiConfig: { hideToolbar: true }, defaultGrouping: grouping })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)) })
+    expect(headerText(again.container)).toContain('Przewoźnik')
+    expect(changedButton()).toBeNull()
+  })
+})

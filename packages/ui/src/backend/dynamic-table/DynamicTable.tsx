@@ -1777,7 +1777,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       columns: { visible: [], hidden: [] },
       filters: [],
       sorting: [],
-      grouping: [],
+      // The table's OWN default grouping, not []: an empty list on a base row reads as "the person ungrouped it"
+      // (resolvePerspectiveState keeps a base row's grouping), so a reset table opened ungrouped on the next visit
+      // with "Widok zmieniony" (GEPARD-283 sweep, pc2 w1:p6: offer pricing, Finanse › Pozycje, bundle drawer).
+      grouping: defaultGrouping ?? [],
       aggregations: [],
       lookupColumns: [],
       rollupColumns: [],
