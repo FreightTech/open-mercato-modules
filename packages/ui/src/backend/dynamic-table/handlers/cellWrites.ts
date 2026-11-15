@@ -18,6 +18,7 @@
 
 import type { ColumnDef } from '../types/index';
 import type { CellStore } from '../store/index';
+import { isCellReadOnly } from '../utils/readOnly';
 import { dispatch } from '../events/events';
 
 // ============================================
@@ -258,7 +259,7 @@ export function applyCellWrites(
 
     const prop = column.data;
 
-    if (column.readOnly || (respectDisableFill && column.disableFill)) {
+    if (isCellReadOnly(column, store.getRowData(row), row) || (respectDisableFill && column.disableFill)) {
       results.push({ row, col, prop, status: 'rejected', reason: 'readOnly' });
       continue;
     }

@@ -49,7 +49,8 @@ function sourceValues(col: ColumnDef): string[] | null {
  * level up, in `applyCellWrites`, where the row is known.
  */
 export function coerceCellValue(value: unknown, column: ColumnDef): CoerceResult {
-  if (column.readOnly) return { ok: false, reason: 'readOnly' };
+  // The whole-column flag only: a per-row predicate is decided where the row is known (applyCellWrites, the editor).
+  if (column.readOnly === true) return { ok: false, reason: 'readOnly' };
   if (!column.type) return { ok: true, value };
   if (isEmptyInput(value)) return { ok: true, value: null };
 

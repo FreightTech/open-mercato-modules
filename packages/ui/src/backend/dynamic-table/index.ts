@@ -112,6 +112,9 @@ export type { BuildFormulaColumnDefsOptions } from './utils/formulaColumns';
 // clipboard + fill-series primitives they are built from.
 export { applyCellWrites, createCellWriter, isCellValueUnchanged } from './handlers/cellWrites';
 export { coerceCellValue } from './utils/coerceCellValue';
+// 0.14.35 — read-only per row: `ColumnDef.readOnly` may be a predicate; this answers it for one cell.
+export { isCellReadOnly, isColumnReadOnly } from './utils/readOnly';
+export type { ColumnReadOnly } from './utils/readOnly';
 export {
   padGrid,
   parseClipboardGrid,

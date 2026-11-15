@@ -1,5 +1,6 @@
 // types/index.ts
 
+import type { ColumnReadOnly } from '../utils/readOnly';
 import type { PerspectiveConfig } from './perspective';
 // The batch-save event strings are DEFINED in `handlers/cellWrites` (the module
 // that emits them) and imported here so there is exactly one spelling of each.
@@ -222,7 +223,13 @@ export interface ColumnDef {
   badgeVariant?: DynamicTableBadgeVariant | ((value: any, rowData: any) => DynamicTableBadgeVariant);
   /** With `badge`: static value → variant lookup (e.g. `{ Active: 'success' }`). */
   badgeMap?: Record<string, DynamicTableBadgeVariant>;
-  readOnly?: boolean;
+  /**
+   * `true`: the whole column is read-only (as before). A function: read-only for the rows where it returns true — such
+   * a cell opens no editor (not even a custom `editor`; double-click, Enter, Tab, one-click pickers), refuses paste,
+   * fill, cut and Delete/Backspace clear, and draws with the read-only cell style; the column's other rows stay
+   * editable (0.14.35). See `isCellReadOnly` in `utils/readOnly`.
+   */
+  readOnly?: ColumnReadOnly;
   /**
    * One click opens this column's editor (no double-click). Default: on for `dropdown`,
    * `multiselect` and `date` columns and for editors from `createEntitySearchEditor` /

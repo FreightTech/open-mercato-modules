@@ -45,6 +45,7 @@ import { useColumnVirtualizer } from './hooks/useColumnVirtualizer';
 import { getPinnedColumnIndices } from './utils/columnWindow';
 import { computeColumnFill } from './utils/columnFill';
 import { columnOpensOnClick } from './utils/pickerColumn';
+import { isCellReadOnly, isColumnReadOnly } from './utils/readOnly';
 import { useDensityPreference } from './hooks/useDensityPreference';
 import { useOwnBaseView } from './hooks/useOwnBaseView';
 import { ViewChangedButton } from './components/ViewChangedButton';
@@ -3048,7 +3049,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     const anyFillable = (() => {
       for (let c = bounds.startCol; c <= bounds.endCol; c++) {
         const col = cols[c];
-        if (col && !col.readOnly && !col.disableFill) return true;
+        if (col && !isColumnReadOnly(col) && !col.disableFill) return true;
       }
       return false;
     })();
@@ -3611,6 +3612,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     // than in the hook because `flash` and the translations live at this level.
     if (e.key === 'Enter' && !e.shiftKey && !metaOrCtrl && !store.getEditingCell()) {
       const b = store.getSelectionBounds();
+      if (b && b.startRow === b.endRow && b.startCol === b.endCol && typeof cols[b.startCol]?.readOnly === 'function'
+        && isCellReadOnly(cols[b.startCol], store.getRowData(b.startRow), b.startRow)) {
+        // Read-only for this row only (0.14.35): say so, the same way a read-only column does.
+        e.preventDefault();
+        flash(t('dynamicTable.cell.readOnlyCell', 'This cell is read-only'), 'info');
+        return;
+      }
       if (b && b.startRow === b.endRow && b.startCol === b.endCol && !columnMountsEditor(cols[b.startCol])) {
         e.preventDefault();
         flash(
