@@ -24,7 +24,8 @@ interface ColumnHeaderMenuProps {
   /** Omitted in the minimal menu (`disableBuiltinColumnMenu`): no filter and no freeze items. */
   onFilterByField?: () => void;
   onFreezeToggle?: () => void;
-  onHideField: () => void;
+  /** Omitted for the last column with a title: a table with no column is not a layout. */
+  onHideField?: () => void;
   /**
    * 0.14.33 — columns the person hid (beyond the table's defaults). When there are any, the menu offers them back
    * ("Pokaż ukryte kolumny"): in a table without a toolbar this menu is the only place to do it.
@@ -162,10 +163,12 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
           <span>{isFrozen ? t('dynamicTable.columnMenu.unfreeze', 'Unfreeze column') : t('dynamicTable.columnMenu.freeze', 'Freeze column')}</span>
         </button>
       )}
-      <button className="hot-col-menu-item" onClick={() => { onHideField(); onClose(); }}>
-        <EyeOff className="w-4 h-4" />
-        <span>{t('dynamicTable.columnMenu.hide', 'Hide field')}</span>
-      </button>
+      {onHideField && (
+        <button className="hot-col-menu-item" onClick={() => { onHideField(); onClose(); }}>
+          <EyeOff className="w-4 h-4" />
+          <span>{t('dynamicTable.columnMenu.hide', 'Hide field')}</span>
+        </button>
+      )}
       {onShowColumns && hiddenCount > 0 && (
         <>
           <button

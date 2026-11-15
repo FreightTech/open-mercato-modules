@@ -574,7 +574,8 @@ describe('0.14.36 — a table with the built-in column menu off can still hide, 
   const items = () => [...document.querySelectorAll<HTMLElement>('.hot-col-menu-item')].map((b) => (b.textContent ?? '').trim())
 
   it('keeps the classic header (⇅ button, no funnel) and adds a ⋮ with sort, hide — no filter, freeze or move', async () => {
-    const { container } = mount({ tableId: 'folders-edit-grid', uiConfig: ui })
+    // Wide columns: a narrow one gives up its ⇅ for the ⋮ (0.14.37, below).
+    const { container } = mount({ tableId: 'folders-edit-grid', uiConfig: ui, columns: columns.map((c) => ({ ...c, width: 200 })) })
     await waitFor(() => expect(calls.length).toBeGreaterThan(0))
     const th = [...container.querySelectorAll<HTMLElement>('th.hot-col-header')].find((h) => (h.textContent ?? '').includes('Przewoźnik'))!
     expect(th.querySelector('.hot-col-sort-btn')).not.toBeNull()
@@ -653,5 +654,46 @@ describe('0.14.36 — "Restore default" on a table with default groups keeps the
     await act(async () => { await new Promise((r) => setTimeout(r, 20)) })
     expect(headerText(again.container)).toContain('Przewoźnik')
     expect(changedButton()).toBeNull()
+  })
+})
+
+describe('0.14.37 — the minimal ⋮ is visible on narrow columns, and absent on a column with no title', () => {
+  const ui = { hideToolbar: true, disableBuiltinColumnMenu: true }
+  const narrowColumns: ColumnDef[] = [
+    { data: 'grip', title: '', width: 28 },
+    { data: 'leg', title: 'Odcinek', width: 70 },
+    { data: 'from', title: 'Z', width: 200 },
+  ]
+  it('a narrow column keeps its ⋮ (not collapsed) and gives up the ⇅ button instead', async () => {
+    const { container } = mount({ tableId: 'folders-edit-grid-narrow', uiConfig: ui, columns: narrowColumns })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    const ths = [...container.querySelectorAll<HTMLElement>('th.hot-col-header')]
+    const leg = ths.find((h) => (h.textContent ?? '').includes('Odcinek'))!
+    expect(leg.hasAttribute('data-narrow')).toBe(false)
+    expect(leg.querySelector('.hot-col-kebab')).not.toBeNull()
+    expect(leg.querySelector('.hot-col-sort-btn')).toBeNull()
+    const wide = ths.find((h) => (h.textContent ?? '').trim().startsWith('Z'))!
+    expect(wide.querySelector('.hot-col-sort-btn')).not.toBeNull()
+    expect(wide.querySelector('.hot-col-kebab')).not.toBeNull()
+  })
+  it('a column with no title (drag grip) has no ⋮', async () => {
+    const { container } = mount({ tableId: 'folders-edit-grid-narrow', uiConfig: ui, columns: narrowColumns })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    const grip = container.querySelector<HTMLElement>('th.hot-col-header[data-col="0"]')!
+    expect(grip.querySelector('.hot-col-kebab')).toBeNull()
+  })
+})
+
+describe('0.14.37 — the last column with a title cannot be hidden', () => {
+  it('offers "Hide field" while another titled column is visible, and not on the last one', async () => {
+    const two: ColumnDef[] = [{ data: 'grip', title: '' }, { data: 'leg', title: 'Odcinek' }, { data: 'from', title: 'Z' }]
+    const { container } = mount({ tableId: 'last-column', uiConfig: { hideToolbar: true }, columns: two })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    hide(container, 'Odcinek')
+    expect(headerText(container)).not.toContain('Odcinek')
+    openColumnMenu(container, 'Z')
+    const labels = [...document.querySelectorAll<HTMLElement>('.hot-col-menu-item')].map((b) => (b.textContent ?? '').trim())
+    expect(labels.some((l) => /hide field/i.test(l))).toBe(false)
+    expect(labels.some((l) => /show hidden columns/i.test(l))).toBe(true)
   })
 })

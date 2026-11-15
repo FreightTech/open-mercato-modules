@@ -506,7 +506,13 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
       // BOTH controls", which is exactly when the kebab should get out of the
       // way. Halving the chrome is what returns the label. See density.css.
       const NARROW_HEADER_PX = 104;
-      const isNarrow = (showFunnel || modernLayout || minimalColumnMenu) && colWidth < NARROW_HEADER_PX;
+      const isNarrow = (showFunnel || modernLayout) && colWidth < NARROW_HEADER_PX;
+      // 0.14.37 — the minimal menu (disableBuiltinColumnMenu) has no funnel to stay visible, so on a narrow column the
+      // ⋮ must not collapse (pc2 w1:p1: invisible until hover on most small-grid columns). The classic ⇅ button gives
+      // up its place instead; sorting is in the ⋮ menu and an active sort keeps its arrow.
+      const minimalNarrow = minimalColumnMenu && colWidth < NARROW_HEADER_PX;
+      // A column with no title (a drag grip, a selection gutter) is not a field a person would hide (pc2 w1:p6).
+      const hasTitle = Boolean(String(col.title ?? '').trim());
 
       // ── The floor below which the funnel cannot be shown either ──────────
       //
@@ -637,8 +643,8 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
             >
               {col.title || col.data}
             </span>
-            {/* Classic layout: sort button. Modern layout: sort indicator only (no button) */}
-            {!modernLayout ? (
+            {/* Classic layout: sort button. Modern layout (and a narrow minimal-menu column): sort indicator only */}
+            {!modernLayout && !minimalNarrow ? (
               <button
                 className="hot-col-sort-btn"
                 tabIndex={-1}
@@ -713,7 +719,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
               </button>
             )}
             {/* v2: visible per-column options trigger (opens the modern column menu) */}
-            {(modernLayout || minimalColumnMenu) && (
+            {(modernLayout || (minimalColumnMenu && hasTitle)) && (
               <button
                 type="button"
                 className="hot-col-kebab"
@@ -877,7 +883,13 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
             }
             onFilterByField={minimalColumnMenu ? undefined : () => onFilterByField?.(headerMenu.colIndex)}
             onFreezeToggle={minimalColumnMenu ? undefined : () => onFreezeToggle?.(headerMenu.colIndex)}
-            onHideField={() => onHideField?.(headerMenu.colIndex)}
+            /* 0.14.37 — never the last column with a title: hiding it emptied the table and stored a row the next load
+               ignored (GEPARD-283 sweep, pc2 w1:pB, B8). */
+            onHideField={
+              columns.filter((c) => String(c.title ?? '').trim()).length > 1
+                ? () => onHideField?.(headerMenu.colIndex)
+                : undefined
+            }
             hiddenColumns={hiddenColumnsToShow}
             onShowColumns={onShowColumns}
             onResetLayout={onResetLayout}
