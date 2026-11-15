@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useCallback, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10, ArrowUpNarrowWide, ArrowDownWideNarrow, ArrowUpDown, Filter, SlidersHorizontal, Pin, PinOff, EyeOff, ArrowLeftToLine, ArrowRightToLine } from 'lucide-react';
+import { ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10, ArrowUpNarrowWide, ArrowDownWideNarrow, ArrowUpDown, Filter, SlidersHorizontal, Pin, PinOff, Eye, EyeOff, ArrowLeftToLine, ArrowRightToLine, ChevronDown, RotateCcw } from 'lucide-react';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { ColumnDef, ContextMenuAction } from '../types/index';
 import { getSortDirectionLabels } from '../types/perspective';
@@ -25,6 +25,14 @@ interface ColumnHeaderMenuProps {
   onFreezeToggle: () => void;
   onHideField: () => void;
   /**
+   * 0.14.33 — columns the person hid (beyond the table's defaults). When there are any, the menu offers them back
+   * ("Pokaż ukryte kolumny"): in a table without a toolbar this menu is the only place to do it.
+   */
+  hiddenColumns?: Array<{ field: string; title: string }>;
+  onShowColumns?: (fields: string[]) => void;
+  /** "Przywróć domyślny…" — the table's default layout (the caller asks first). */
+  onResetLayout?: () => void;
+  /**
    * A16 — the keyboard/menu route to column reordering. Supplied only when the
    * move is legal: `undefined` at either end of the column's pinned run, so the
    * menu never offers a move the drag would refuse.
@@ -48,6 +56,9 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
   onFilterByField,
   onFreezeToggle,
   onHideField,
+  hiddenColumns,
+  onShowColumns,
+  onResetLayout,
   onMoveLeft,
   onMoveRight,
   onClose,
@@ -56,6 +67,8 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
 }) => {
   const t = useT();
   const menuRef = useRef<HTMLDivElement>(null);
+  const [hiddenOpen, setHiddenOpen] = useState(false);
+  const hiddenCount = hiddenColumns?.length ?? 0;
 
   // Close on outside click
   useEffect(() => {
@@ -148,6 +161,50 @@ const ColumnHeaderMenu: React.FC<ColumnHeaderMenuProps> = ({
         <EyeOff className="w-4 h-4" />
         <span>{t('dynamicTable.columnMenu.hide', 'Hide field')}</span>
       </button>
+      {onShowColumns && hiddenCount > 0 && (
+        <>
+          <button
+            className="hot-col-menu-item"
+            aria-expanded={hiddenOpen}
+            onClick={() => setHiddenOpen((open) => !open)}
+            data-col-menu-show-hidden=""
+          >
+            <Eye className="w-4 h-4" />
+            <span>{t('dynamicTable.columnMenu.showHidden', 'Show hidden columns ({count})', { count: String(hiddenCount) })}</span>
+            <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${hiddenOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+          </button>
+          {hiddenOpen && (
+            <div className="flex flex-col pl-6" role="group" data-col-menu-hidden-list="">
+              {hiddenColumns!.map((hidden) => (
+                <button
+                  key={hidden.field}
+                  className="hot-col-menu-item"
+                  onClick={() => { onShowColumns([hidden.field]); onClose(); }}
+                  data-col-menu-show={hidden.field}
+                >
+                  <span className="min-w-0 truncate">{hidden.title}</span>
+                  <span className="ml-auto shrink-0 text-[var(--m3-primary)]">{t('dynamicTable.viewChanged.show', 'Show')}</span>
+                </button>
+              ))}
+              {hiddenCount > 1 && (
+                <button
+                  className="hot-col-menu-item"
+                  onClick={() => { onShowColumns(hiddenColumns!.map((h) => h.field)); onClose(); }}
+                  data-col-menu-show-all=""
+                >
+                  <span>{t('dynamicTable.viewChanged.showAll', 'Show all')}</span>
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      {onResetLayout && (
+        <button className="hot-col-menu-item" onClick={() => { onResetLayout(); onClose(); }} data-col-menu-reset-layout="">
+          <RotateCcw className="w-4 h-4" />
+          <span>{t('dynamicTable.viewChanged.reset', 'Restore default…')}</span>
+        </button>
+      )}
       {(onMoveLeft || onMoveRight) && (
         <>
           <div className="hot-col-menu-divider" />

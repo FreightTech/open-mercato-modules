@@ -104,6 +104,7 @@ import { useGrouping, computeAggregates } from './hooks/useGrouping';
 // Import components
 import PerspectiveTabs from './components/PerspectiveTabs';
 import ConfigureViewPanel from './components/ConfigureViewPanel';
+import PerspectiveDeleteDialog from './components/PerspectiveDeleteDialog';
 import SearchBar from './components/SearchBar';
 import ActiveFilterChips from './components/ActiveFilterChips';
 import EmptyState from './components/EmptyState';
@@ -557,6 +558,9 @@ function insertInDeclaredOrder(visible: string[], fields: string[], order: strin
   }
   return next;
 }
+
+/** The header's own slot for the "changed view" button when the table has no toolbar and no actions column. */
+const HEADER_END_SLOT_WIDTH = 40;
 
 // MAIN DYNAMIC TABLE COMPONENT
 // ============================================
@@ -1111,6 +1115,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
    * a name for the new view.
    */
   const [configureBaseView, setConfigureBaseView] = useState(false);
+  /** "Przywróć domyślny…" from the column menu asks first, like the views bar and the "changed view" button. */
+  const [confirmLayoutReset, setConfirmLayoutReset] = useState(false);
   /** This user's saved personalization of the base tab, if any. */
   const baseViewPerspective = useMemo(
     () => savedPerspectives.find((p) => p.isBaseView) ?? null,
@@ -1421,16 +1427,53 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     // frozenColumns: re-measure engagement when the pinned set changes.
   }, [tableRef, cols.length, showActionsColumn, isFullscreen, frozenColumns]);
 
+  // -------------------- "VIEW CHANGED" (no views bar) --------------------
+  // While the layout on screen differs from the table's default — a column hidden or moved, a sort, a pinned column,
+  // another view mode — a table without the views bar offers the way back in one small button. Header filters are not
+  // part of it: they are temporary by contract and have their own "Clear all filters" pill (A2/D6).
+  const onDefaultTab = !activePerspectiveId || activePerspectiveId === baseViewPerspective?.id;
+  const tableDefaultState = resolvePerspectiveState({
+    baseColumns,
+    perspective: null,
+    defaultHiddenColumns: initialHiddenColumns,
+    defaultGrouping,
+  });
+  const sortKey = (rules: Array<{ field: string; direction: string }>) => rules.map((r) => `${r.field}:${r.direction}`).join(',');
+  const tableColumnKeys = baseColumns.map((c) => c.data);
+  const layoutDiffers =
+    visibleColumns.filter((k) => tableColumnKeys.includes(k)).join('|') !== tableDefaultState.visibleColumns.join('|')
+    || sortKey(sortRules) !== sortKey(tableDefaultState.sortRules)
+    || sortKey(groupRules) !== sortKey(tableDefaultState.groupRules)
+    || [...frozenColumns].sort().join('|') !== [...tableDefaultState.frozenColumns].sort().join('|')
+    || (viewMode ?? 'table') !== (tableDefaultState.viewMode ?? 'table')
+    || aggregations.length !== tableDefaultState.aggregations.length
+    || lookupColumns.length > 0
+    || rollupColumns.length > 0
+    || formulas.length > 0
+    || conditionalFormats.length > 0;
+  const userHiddenColumns = baseColumns
+    .filter((c) => hiddenColumns.includes(c.data) && !tableDefaultState.hiddenColumns.includes(c.data))
+    .map((c) => ({ field: c.data, title: typeof c.title === 'string' && c.title ? c.title : c.data }));
+  const showViewChanged = hidePerspectiveTabs && layoutDiffers;
+  /**
+   * 0.14.33 — with no toolbar the button sits in the header row itself, never over it (pc2 w1:p6: a floating corner
+   * icon covered the last column's funnel and ⋮). In the actions column's header when there is one (it is empty);
+   * otherwise in a slot of its own after the last column, whose width the columns leave free.
+   */
+  const headerSlotShown = hideToolbar && showViewChanged;
+  const headerSlotWidth = headerSlotShown && !showActionsColumn ? HEADER_END_SLOT_WIDTH : 0;
+
   const totalWidth = useMemo(() => {
     return (
       cols.reduce((sum, _, idx) => sum + store.getColumnWidth(idx), 0) +
       (rowHeaders ? ROW_HEADER_WIDTH : 0) +
-      (showActionsColumn ? actionsColumnWidth : 0)
+      (showActionsColumn ? actionsColumnWidth : 0) +
+      headerSlotWidth
     );
-  }, [cols, store, rowHeaders, actionsColumnWidth, showActionsColumn, storeRevision]);
+  }, [cols, store, rowHeaders, actionsColumnWidth, showActionsColumn, storeRevision, headerSlotWidth]);
 
   /** Row furniture that sits outside the column widths. */
-  const furnitureWidth = (rowHeaders ? ROW_HEADER_WIDTH : 0) + (showActionsColumn ? actionsColumnWidth : 0);
+  const furnitureWidth = (rowHeaders ? ROW_HEADER_WIDTH : 0) + (showActionsColumn ? actionsColumnWidth : 0) + headerSlotWidth;
 
   // Stable width getter for the pinned totals row, so its `memo` survives a
   // render that changed nothing it cares about. Widths only move when the store
@@ -4157,30 +4200,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // While the layout on screen differs from the table's default — a column hidden or moved, a sort, a pinned column,
   // another view mode — a table without the views bar offers the way back in one small toolbar button. Header filters
   // are not part of it: they are temporary by contract and have their own "Clear all filters" pill (A2/D6).
-  const onDefaultTab = !activePerspectiveId || activePerspectiveId === baseViewPerspective?.id;
-  const tableDefaultState = resolvePerspectiveState({
-    baseColumns,
-    perspective: null,
-    defaultHiddenColumns: initialHiddenColumns,
-    defaultGrouping,
-  });
-  const sortKey = (rules: Array<{ field: string; direction: string }>) => rules.map((r) => `${r.field}:${r.direction}`).join(',');
-  const tableColumnKeys = baseColumns.map((c) => c.data);
-  const layoutDiffers =
-    visibleColumns.filter((k) => tableColumnKeys.includes(k)).join('|') !== tableDefaultState.visibleColumns.join('|')
-    || sortKey(sortRules) !== sortKey(tableDefaultState.sortRules)
-    || sortKey(groupRules) !== sortKey(tableDefaultState.groupRules)
-    || [...frozenColumns].sort().join('|') !== [...tableDefaultState.frozenColumns].sort().join('|')
-    || (viewMode ?? 'table') !== (tableDefaultState.viewMode ?? 'table')
-    || aggregations.length !== tableDefaultState.aggregations.length
-    || lookupColumns.length > 0
-    || rollupColumns.length > 0
-    || formulas.length > 0
-    || conditionalFormats.length > 0;
-  const userHiddenColumns = baseColumns
-    .filter((c) => hiddenColumns.includes(c.data) && !tableDefaultState.hiddenColumns.includes(c.data))
-    .map((c) => ({ field: c.data, title: typeof c.title === 'string' && c.title ? c.title : c.data }));
-  const showViewChanged = hidePerspectiveTabs && layoutDiffers;
   /** Bring hidden columns back where the table declares them, and keep that like any other column change. */
   const showColumns = (fields: string[]) => {
     const visible = insertInDeclaredOrder(visibleColumns, fields, baseColumns.map((c) => c.data));
@@ -4661,6 +4680,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 loadFilterSuggestions={loadFilterSuggestions}
                 onFreezeToggle={handleModernFreezeToggle}
                 onHideField={handleModernHideField}
+                headerEndSlot={headerSlotShown ? viewChangedButton : null}
+                headerEndSlotWidth={headerSlotWidth}
+                hiddenColumnsToShow={userHiddenColumns}
+                onShowColumns={showColumns}
+                onResetLayout={onDefaultTab && layoutDiffers ? () => setConfirmLayoutReset(true) : undefined}
                 /* A16 — reorder from the header itself, not only from the
                    Configure View drawer. Per-user, like every other view
                    preference. */
@@ -4879,6 +4903,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       </div>
 
       </div>{/* /hot-card */}
+
+      <PerspectiveDeleteDialog
+        variant="baseReset"
+        name={confirmLayoutReset ? 'base' : null}
+        onCancel={() => setConfirmLayoutReset(false)}
+        onConfirm={() => { setConfirmLayoutReset(false); resetToTableDefault(); }}
+      />
 
       {/* Configure View Side Panel */}
       {(
