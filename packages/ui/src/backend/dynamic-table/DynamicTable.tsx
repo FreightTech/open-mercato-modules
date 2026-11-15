@@ -4874,6 +4874,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           editingPerspective={savedPerspectives.find((p) => p.id === editingPerspectiveId) ?? null}
           baseViewPerspective={baseViewPerspective}
           isBaseViewMode={configureBaseView}
+          allowNamedViews={!ownLayoutEnabled}
           loadFilterSuggestions={loadFilterSuggestions}
           loadLookupSources={loadLookupSources}
           loadRollupSources={loadRollupSources}

@@ -212,6 +212,17 @@ describe('a table whose page keeps no views', () => {
     await waitFor(() => expect(changedButton()).toBeNull())
   })
 
+  it('"Configure view" opens the full panel on the person\'s default view, without a name for a view nothing could keep', async () => {
+    const { container } = mount({ tableId: 'folders.teczka.flights' })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    hide(container, 'Przewoźnik')
+    await waitFor(() => expect(changedButton()).not.toBeNull())
+    act(() => { changedButton()!.click() })
+    act(() => { document.querySelector<HTMLElement>('[data-view-changed-configure]')!.click() })
+    await waitFor(() => expect(document.querySelector('.hot-config-panel')).not.toBeNull())
+    expect(document.querySelector('[data-config-view-name]')!.className).toContain('hidden')
+  })
+
   it('`rememberLayout: false` reads and writes nothing', async () => {
     const { container } = mount({ tableId: 'x', uiConfig: { rememberLayout: false } })
     hide(container, 'Przewoźnik')
