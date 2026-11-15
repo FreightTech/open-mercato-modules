@@ -484,6 +484,38 @@ describe('a table whose host keeps views', () => {
     expect(saves[0].perspective.sorting).toEqual([expect.objectContaining({ field: 'etd', direction: 'asc' })])
   })
 
+  it('0.14.36 — a host that leaves the id null on its default tab still opens it the way the person left it', () => {
+    // split-view's useSavedViews (Księgowość › Zamknięcie, payables, batches…) keeps null for "Widok domyślny" (G14).
+    // GEPARD-283 sweep, pc2 w1:p1: Oddział hidden there was written to __base__ and came back after a reload.
+    const { container } = mount({ tableId: 'host.table', savedPerspectives: [base, named], activePerspectiveId: null })
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    expect(headerText(container)).toContain('ETD')
+  })
+
+  it('…also when the base row arrives after the table is on screen', () => {
+    const { container, rerender } = mount({ tableId: 'host.table', savedPerspectives: [], activePerspectiveId: null })
+    expect(headerText(container)).toContain('Przewoźnik')
+    rerender(tree({ tableId: 'host.table', savedPerspectives: [base, named], activePerspectiveId: null }))
+    expect(headerText(container)).not.toContain('Przewoźnik')
+  })
+
+  it('…and the base row the grid just wrote is taken as applied: no re-apply, no second write', () => {
+    const saves: PerspectiveSaveEvent[] = []
+    const props = {
+      tableId: 'host.table',
+      activePerspectiveId: null,
+      onEvent: (name: string, detail: unknown) => { if (name === TableEvents.PERSPECTIVE_SAVE) saves.push(detail as PerspectiveSaveEvent) },
+    }
+    const { container, rerender } = mount({ ...props, savedPerspectives: [] })
+    hide(container, 'Przewoźnik')
+    expect(saves).toHaveLength(1)
+    // The host stores it and hands it back with a server id — same columns as on screen.
+    const written = { ...saves[0].perspective, id: 'srv-base' }
+    rerender(tree({ ...props, savedPerspectives: [written] }))
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    expect(saves).toHaveLength(1)
+  })
+
   it('leaves a named view\'s saved sort alone', () => {
     const saves: PerspectiveSaveEvent[] = []
     const { container } = mount({
