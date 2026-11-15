@@ -74,6 +74,13 @@ export interface ColumnHeadersProps {
    * without a toolbar has no other way to show them again.
    */
   hiddenColumnsToShow?: Array<{ field: string; title: string }>;
+  /**
+   * 0.14.33 — what a table without a toolbar shows at the end of its header (the "changed view" button): inside the
+   * actions column's header when there is one, else in a cell of its own `headerEndSlotWidth` wide after the last
+   * column. Part of the row, so it never covers a column's funnel or ⋮.
+   */
+  headerEndSlot?: React.ReactNode;
+  headerEndSlotWidth?: number;
   onShowColumns?: (fields: string[]) => void;
   /** Back to the table's default layout (asks first); omitted when there is nothing to reset. */
   onResetLayout?: () => void;
@@ -178,6 +185,8 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
     onFreezeToggle,
     onHideField,
     hiddenColumnsToShow,
+    headerEndSlot,
+    headerEndSlotWidth = 0,
     onShowColumns,
     onResetLayout,
     onColumnReorder,
@@ -805,6 +814,24 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                     zIndex: 3,
                   }}
                 >
+                  {headerEndSlot ? <div className="hot-header-end-slot-inner" data-header-end-slot="">{headerEndSlot}</div> : null}
+                </th>
+              )}
+              {!showActionsColumn && headerEndSlot && headerEndSlotWidth > 0 && (
+                <th
+                  className="hot-col-header hot-header-end-slot"
+                  data-header-end-slot=""
+                  style={{
+                    width: headerEndSlotWidth,
+                    flexBasis: headerEndSlotWidth,
+                    flexShrink: 0,
+                    flexGrow: 0,
+                    position: 'sticky',
+                    right: 0,
+                    zIndex: 3,
+                  }}
+                >
+                  <div className="hot-header-end-slot-inner">{headerEndSlot}</div>
                 </th>
               )}
             </tr>

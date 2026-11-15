@@ -2722,10 +2722,17 @@
   opacity: 1;
 }
 
-/* 0.14.33 — the "changed view" button of a table without a toolbar: always shown while the layout differs (a hidden
-   column has to say it is hidden), not only on hover. */
-.hot-appearance-v2 .hot-pane-float-actions.hot-pane-float-actions--persistent {
-  opacity: 1;
+/* 0.14.33 — the "changed view" button of a table without a toolbar sits IN the header row (the actions column's
+   header, or a slot of its own after the last column), so it never covers a column's funnel or ⋮. */
+.hot-appearance-v2 .hot-header-end-slot-inner {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+.hot-appearance-v2 .hot-header-end-slot-inner .hot-toolbar-overflow-btn {
+  width: 28px;
+  height: 28px;
 }
 
 /* The floating actions sit over the top-right corner, which with the toolbar

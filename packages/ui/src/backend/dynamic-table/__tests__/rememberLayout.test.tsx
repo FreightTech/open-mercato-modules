@@ -375,14 +375,45 @@ describe('0.14.33 — a table without a toolbar has its way back too', () => {
     await waitFor(() => expect(writes().at(-1)!.body.settings.columnVisibility.carrier).toBe(true))
   })
 
-  it('shows the "changed view" button in the header corner while the layout differs', async () => {
+  it('shows the "changed view" button in a header cell of its own after the last column — covering nothing', async () => {
     const { container } = mount({ tableId: 'folders-teczka-activity', uiConfig: ui })
     await waitFor(() => expect(calls.length).toBeGreaterThan(0))
     expect(document.querySelector('.hot-toolbar')).toBeNull()
     expect(changedButton()).toBeNull()
+    expect(container.querySelector('[data-header-end-slot]')).toBeNull()
+    const rowWidthBefore = parseFloat((container.querySelector('.hot-headers-sticky tr') as HTMLElement).style.width)
     hide(container, 'Przewoźnik')
-    await waitFor(() => expect(document.querySelector('[data-view-changed-float] [data-view-changed]')).not.toBeNull())
+    await waitFor(() => expect(changedButton()).not.toBeNull())
     expect(changedButton()!.getAttribute('data-view-changed-hidden')).toBe('1')
+    // The button is IN the header row, in the last cell — not an overlay on top of a column's header.
+    const cells = [...container.querySelectorAll<HTMLElement>('.hot-headers-sticky tr > th')]
+    const slot = cells.at(-1)!
+    expect(slot.hasAttribute('data-header-end-slot')).toBe(true)
+    expect(slot.contains(changedButton())).toBe(true)
+    expect(slot.style.width).toBe('40px')
+    // The last data column keeps its own funnel and ⋮, outside the slot.
+    const lastColumn = cells.at(-2)!
+    expect(lastColumn.querySelector('.hot-col-kebab')).not.toBeNull()
+    expect(lastColumn.contains(changedButton())).toBe(false)
+    // The row is wider by the slot (one column hidden, one 40 px slot added): the columns leave it free.
+    const rowWidthAfter = parseFloat((container.querySelector('.hot-headers-sticky tr') as HTMLElement).style.width)
+    const hiddenWidth = rowWidthBefore - rowWidthAfter + 40
+    expect(hiddenWidth).toBeGreaterThan(0)
+    expect(container.querySelector('.hot-pane-float-actions [data-view-changed]')).toBeNull()
+  })
+
+  it('…and in the actions column\'s header when the table has one (it is empty there)', async () => {
+    const { container } = mount({
+      tableId: 'folders-teczka-activity-actions',
+      uiConfig: ui,
+      actionsRenderer: () => React.createElement('span', null, '⋮'),
+    })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    hide(container, 'Przewoźnik')
+    await waitFor(() => expect(changedButton()).not.toBeNull())
+    const actionsHeader = container.querySelector<HTMLElement>('.hot-headers-sticky th[data-actions-cell="true"]')!
+    expect(actionsHeader.contains(changedButton())).toBe(true)
+    expect(container.querySelectorAll('.hot-headers-sticky th[data-header-end-slot]')).toHaveLength(0)
   })
 
   it('"Restore default…" in the column menu asks, then empties the person\'s row', async () => {
