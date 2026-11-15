@@ -8,6 +8,8 @@
  * is one when that editor carries this mark (the package's entity-search and date-time factories
  * do), or when the column says `openOnClick: true`. `openOnClick: false` opts a column out.
  */
+import type { ColumnReadOnly } from './readOnly'
+
 export const PICKER_EDITOR_MARK = Symbol.for('freighttech.dynamicTable.pickerEditor')
 
 export function markPickerEditor<T extends object>(editor: T): T {
@@ -17,8 +19,9 @@ export function markPickerEditor<T extends object>(editor: T): T {
 
 const PICKER_TYPES = new Set(['dropdown', 'multiselect', 'date'])
 
-export function columnOpensOnClick(column: { type?: string; editor?: unknown; readOnly?: boolean; openOnClick?: boolean } | undefined): boolean {
-  if (!column || column.readOnly) return false
+export function columnOpensOnClick(column: { type?: string; editor?: unknown; readOnly?: ColumnReadOnly; openOnClick?: boolean } | undefined): boolean {
+  // A per-row predicate leaves the column a picker; the read-only rows are refused where the editor opens (the store).
+  if (!column || column.readOnly === true) return false
   if (typeof column.openOnClick === 'boolean') return column.openOnClick
   const editor = column.editor as Record<symbol, unknown> | undefined
   if (editor) return (typeof editor === 'function' || typeof editor === 'object') && editor[PICKER_EDITOR_MARK] === true

@@ -1,5 +1,6 @@
 // store.ts
 
+import { isCellReadOnly, isColumnReadOnly } from '../utils/readOnly';
 import type React from 'react';
 import {
   CellId,
@@ -317,7 +318,7 @@ export function createCellStore(initialData: any[], columns: ColumnDef[]): CellS
   const someColumnFillable = (bounds: SelectionBounds): boolean => {
     for (let c = bounds.startCol; c <= bounds.endCol; c++) {
       const col = currentColumns[c];
-      if (col && !col.readOnly && !col.disableFill) return true;
+      if (col && !isColumnReadOnly(col) && !col.disableFill) return true;
     }
     return false;
   };
@@ -680,6 +681,11 @@ export function createCellStore(initialData: any[], columns: ColumnDef[]): CellS
     },
 
     setEditingCell(row: number, col: number): void {
+      // A cell read-only for its ROW opens no editor, whatever path asked (double-click, Enter, Tab, a one-click
+      // picker, a consumer calling the store): the one place every editor opening goes through (0.14.35). A whole
+      // read-only column keeps its old rule — a custom `editor` still wins there.
+      const column = currentColumns[col];
+      if (typeof column?.readOnly === 'function' && isCellReadOnly(column, rowDataMap.get(row), row)) return;
       const prev = editingCell;
       editingCell = { row, col };
 

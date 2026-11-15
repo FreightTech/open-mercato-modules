@@ -354,6 +354,20 @@ perspective) keep the solid treatment.
 A filtered column keeps its funnel glyph lit for as long as the rule is live, whichever surface
 authored it — that is the "am I actually seeing everything?" guarantee (workshop A13).
 
+## Read-only per row (0.14.35)
+
+`ColumnDef.readOnly` takes `true` (the whole column, unchanged) or a predicate `(row, rowIndex) => boolean`:
+
+```ts
+{ data: 'boardColumn', title: 'Kolumna', type: 'dropdown', source, readOnly: (row) => row.definedByModule }
+```
+
+A cell whose predicate is true opens **no** editor — double-click, Enter (it says "This cell is read-only"), Tab, a
+one-click picker, not even a custom `editor` — refuses paste, fill, cut and Delete/Backspace clear (reported as
+`readOnly` in the batch result), and draws with the read-only cell style. The column's other rows stay editable.
+`isCellReadOnly(column, row, rowIndex)` answers it for one cell; `ColumnReadOnly` is the type. A predicate that throws
+counts as read-only.
+
 ## Every table remembers the person's layout (0.14.32)
 
 A table with a `tableId` remembers what each person did to it — hidden, moved and pinned columns, the sort chosen

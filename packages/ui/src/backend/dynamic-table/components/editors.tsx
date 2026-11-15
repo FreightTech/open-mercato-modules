@@ -1,3 +1,4 @@
+import { isCellReadOnly } from '../utils/readOnly';
 import React, { useRef, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { Check } from 'lucide-react';
@@ -1672,13 +1673,18 @@ export const getCellEditor = (
     inputRef?: React.RefObject<any>
 ): React.ReactNode => {
 
+    // 0. Read-only for this ROW (0.14.35): no editor at all, not even a custom one.
+    if (typeof col.readOnly === 'function' && isCellReadOnly(col, rowData, rowIndex)) {
+        return null;
+    }
+
     // 1. Custom editor provided
     if (col.editor) {
         return col.editor(value, onChange, onSave, onCancel, rowData, col, rowIndex, colIndex);
     }
 
-    // 2. Read-only check
-    if (col.readOnly) {
+    // 2. Read-only check (the whole column)
+    if (col.readOnly === true) {
         return null;
     }
 

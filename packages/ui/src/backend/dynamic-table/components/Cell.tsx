@@ -1,3 +1,4 @@
+import { isCellReadOnly } from '../utils/readOnly';
 import React, { memo, useRef, useEffect, useCallback } from 'react';
 import { useCellStore, useCellState } from '../hooks/index';
 import { getCellRenderer } from './renderers';
@@ -246,7 +247,7 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
 
   return (
     <td
-      className={`hot-cell ${colConfig.readOnly ? 'read-only' : ''} ${conditionalClassName} ${annotationColor ? `cell-color-${annotationColor}` : ''} ${alignClass} ${monoClass} ${selectClass}`.replace(/\s+/g, ' ').trim()}
+      className={`hot-cell ${isCellReadOnly(colConfig, rowData, row) ? 'read-only' : ''} ${conditionalClassName} ${annotationColor ? `cell-color-${annotationColor}` : ''} ${alignClass} ${monoClass} ${selectClass}`.replace(/\s+/g, ' ').trim()}
       style={style}
       data-row={row}
       data-col={col}

@@ -1,5 +1,6 @@
 // handlers.ts
 
+import { isCellReadOnly } from '../utils/readOnly';
 import { CellStore } from '../store/index';
 import {
   ColumnDef,
@@ -108,7 +109,7 @@ export function createCellHandlers(
 
   const handleStartEditing = (row: number, col: number) => {
     const column = columns[col];
-    if (column?.readOnly) return;
+    if (isCellReadOnly(column, store.getRowData(row), row)) return;
     store.setEditingCell(row, col);
   };
 
@@ -449,7 +450,7 @@ export function createMouseHandlers(
 
     if (!isNaN(row) && !isNaN(col)) {
       const column = columns[col];
-      if (!column?.readOnly) {
+      if (!isCellReadOnly(column, store.getRowData(row), row)) {
         store.setEditingCell(row, col);
       }
     }
