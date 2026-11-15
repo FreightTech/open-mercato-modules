@@ -306,6 +306,31 @@ describe('a table whose host keeps views', () => {
   })
 })
 
+describe('the table menu (⋯) without a views bar', () => {
+  const openMenu = () => {
+    const trigger = document.querySelector<HTMLElement>('[data-toolbar-overflow]')
+    if (!trigger) throw new Error('no table menu')
+    act(() => { trigger.click() })
+  }
+
+  it('offers "Configure view…" on a table that keeps the layout by itself, and no "Add view…" nothing could keep', async () => {
+    mount({ tableId: 'own.table' })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    openMenu()
+    expect(document.querySelector('[data-toolbar-configure-view]')).not.toBeNull()
+    expect(document.querySelector('[data-toolbar-add-view]')).toBeNull()
+  })
+
+  it('offers "Add view…" too where the host keeps named views', () => {
+    mount({ tableId: 'host.table', savedPerspectives: [], activePerspectiveId: null })
+    openMenu()
+    expect(document.querySelector('[data-toolbar-configure-view]')).not.toBeNull()
+    act(() => { document.querySelector<HTMLElement>('[data-toolbar-add-view]')!.click() })
+    expect(document.querySelector('.hot-config-panel')).not.toBeNull()
+    expect(document.querySelector('[data-config-view-name]')!.className).not.toContain('hidden')
+  })
+})
+
 describe('a table in a split-view pane', () => {
   it('lets the table decide about the views bar unless the pane switched it off or on', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
