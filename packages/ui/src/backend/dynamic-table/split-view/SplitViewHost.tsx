@@ -203,7 +203,6 @@ function TablePaneBody({
   // Secondary panes DO get a per-pane scope, which is what stops two panes of
   // the same table overwriting each other.
   const storageScope = isPrimary ? '' : `pane:${paneId}:`
-  const hideTabs = chrome?.viewsBar === false || chrome?.tabs === false
   const hidePagination = chrome?.viewsBar === false || chrome?.pagination === false
   return (
     <TableDisplayContext.Provider value={display}>
@@ -219,7 +218,7 @@ function TablePaneBody({
         // The workspace bar REPLACES each pane's search row while it is on, so
         // the density cost of the bar is paid back by the rows it reclaims.
         hideSearch={chrome?.search === false || hideOwnSearch || sharedSearch !== undefined}
-        hideViews={hideTabs}
+        hideViews={paneHideViews(chrome)}
         hidePagination={hidePagination}
         sharedFilters={sharedFilters}
         sharedSearch={sharedSearch}
@@ -924,3 +923,15 @@ export function SplitViewHost({ tableId }: SplitViewHostProps) {
 }
 
 export default SplitViewHost
+
+/**
+ * A pane's views bar: switched off in ⚙ → hidden; switched on → shown; never touched → `undefined`, so the table
+ * decides — and a table shows the bar only where there are named views to switch between (0.14.32, owner 15.11: no
+ * table gets a views bar by default). It used to be `false` whenever it was not off, which turned the bar on for every
+ * table in a pane.
+ */
+export function paneHideViews(chrome: { viewsBar?: boolean; tabs?: boolean } | null | undefined): boolean | undefined {
+  if (chrome?.viewsBar === false || chrome?.tabs === false) return true
+  if (chrome?.viewsBar === true) return false
+  return undefined
+}

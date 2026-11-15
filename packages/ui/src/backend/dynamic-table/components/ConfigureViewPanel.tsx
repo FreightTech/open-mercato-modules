@@ -169,6 +169,11 @@ interface ConfigureViewPanelProps {
    * the same state and must still demand a name.
    */
   isBaseViewMode?: boolean;
+  /**
+   * False when nothing can keep a NAMED view for this table — a table that remembers only the person's own default
+   * view by itself (no host views, 0.14.32). The name field goes, so Save can only mean "my default view".
+   */
+  allowNamedViews?: boolean;
   loadFilterSuggestions?: LoadFilterSuggestions;
   /** When set, the panel shows a "Linked columns" section that lists the table's
    *  FK lookup sources so the user can attach read-only related-record columns. */
@@ -224,6 +229,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
   editingPerspective,
   baseViewPerspective,
   isBaseViewMode = false,
+  allowNamedViews = true,
   loadFilterSuggestions,
   loadLookupSources,
   loadRollupSources,
@@ -605,7 +611,8 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
           <div className="flex min-h-0 flex-1">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
             {/* Name and colour first — what this view is, before what it shows (FMS UX 04.11). */}
-          <div className="hot-config-panel-save order-7 mt-auto">
+          {allowNamedViews && (
+          <div className="hot-config-panel-save order-7 mt-auto" data-config-view-name="">
             <div className="flex w-full max-w-[420px] flex-col gap-1">
               <label className="hot-config-save-label">{t('dynamicTable.configureView.viewName', 'View name')}</label>
               {/* FMS UX 03.11 — the app's field (filled, radius 10, no outline;
@@ -674,6 +681,7 @@ const ConfigureViewPanel: React.FC<ConfigureViewPanelProps> = ({
                 </div>
               )}
           </div>
+          )}
             {/* ── The view itself ── */}
             <div className="contents">
 

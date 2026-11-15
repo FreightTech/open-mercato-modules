@@ -132,7 +132,8 @@ interface TableUIConfig {
   hideTitle?: boolean;          // Hide just the title
   hideSearch?: boolean;         // Hide just the search bar
   hideAddRowButton?: boolean;   // Hide the "Add Row" button
-  hidePerspectiveTabs?: boolean;// Hide the saved-view tabs
+  hidePerspectiveTabs?: boolean;// Hide the saved-view tabs (unset: shown only when there are named views)
+  rememberLayout?: boolean;     // Remember each person's layout per tableId (default true)
   hidePagination?: boolean;     // Hide the pagination controls
   hideActionsColumn?: boolean;  // Hide the Actions column
   hideExportButton?: boolean;   // Hide the toolbar Export button
@@ -352,6 +353,26 @@ perspective) keep the solid treatment.
 
 A filtered column keeps its funnel glyph lit for as long as the rule is live, whichever surface
 authored it — that is the "am I actually seeing everything?" guarantee (workshop A13).
+
+## Every table remembers the person's layout (0.14.32)
+
+A table with a `tableId` remembers what each person did to it — hidden, moved and pinned columns, the sort chosen
+from the header or the column menu, the view mode — and opens that way next time:
+
+- **Who keeps it.** A host that keeps views (`savedPerspectives` + `activePerspectiveId`, e.g. `useDynamicTablePage`
+  or a split-view pane) writes the person's own `__base__` row as before, now including the default tab's sort. Any
+  other table keeps that same row itself (`hooks/useOwnBaseView.ts`): `GET /api/perspectives/<tableId>` once, and
+  `POST` with `name: '__base__'` only when the person changes something. Nothing is written on load.
+- **Per person.** The perspectives service scopes rows by user; only the explicit Publish action shares a view.
+- **No views bar for it.** The saved-view row shows only when there is something to switch between — a named view, a
+  template shared with the person's role, or `presetViews` — or when the table or the app asks for it
+  (`uiConfig.hidePerspectiveTabs` / `DynamicTableDefaults.hidePerspectiveTabs`). The `__base__` row alone never shows it.
+- **The way back.** While the layout differs from the table's default, the toolbar shows one small "changed view"
+  button (`ViewChangedButton`): the hidden columns with "Show" / "Show all", Configure view, and Restore default (the
+  row is emptied, never deleted — see `handleBaseViewReset`). With no views bar, the table menu also offers
+  "Configure view…" and, where the host keeps named views, "Add view…".
+- **Header filters stay temporary** (A2/D6): they are not part of the "changed view" check.
+- **Opt out:** `uiConfig.rememberLayout: false`, or `DynamicTableDefaults.rememberLayout: false` for a whole app.
 
 ## Perspectives
 

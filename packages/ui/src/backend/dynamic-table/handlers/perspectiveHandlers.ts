@@ -92,6 +92,11 @@ export interface PerspectiveHandlersDeps {
   setFrozenColumns: React.Dispatch<React.SetStateAction<Set<string>>>;
   setDateFormat: React.Dispatch<React.SetStateAction<string | undefined>>;
   setInternalActivePerspectiveId: React.Dispatch<React.SetStateAction<string | null>>;
+  /**
+   * Where a save goes when the grid keeps the person's own layout itself (no host views, see `useOwnBaseView`). The
+   * save event is still dispatched, so a host that only listens keeps hearing it.
+   */
+  persistPerspective?: (perspective: PerspectiveConfig) => void;
 }
 
 // ============================================
@@ -118,6 +123,7 @@ export function createPerspectiveHandlers({
   setInternalActivePerspectiveId,
   defaultHiddenColumns,
   defaultGrouping,
+  persistPerspective,
 }: PerspectiveHandlersDeps) {
   // -------------------- Column Handlers --------------------
 
@@ -299,6 +305,7 @@ export function createPerspectiveHandlers({
       TableEvents.PERSPECTIVE_SAVE,
       { perspective, silent }
     );
+    persistPerspective?.(perspective);
 
     // Set as active
     setInternalActivePerspectiveId(perspective.id);

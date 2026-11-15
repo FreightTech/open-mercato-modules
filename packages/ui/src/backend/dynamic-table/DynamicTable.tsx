@@ -46,6 +46,8 @@ import { getPinnedColumnIndices } from './utils/columnWindow';
 import { computeColumnFill } from './utils/columnFill';
 import { columnOpensOnClick } from './utils/pickerColumn';
 import { useDensityPreference } from './hooks/useDensityPreference';
+import { useOwnBaseView } from './hooks/useOwnBaseView';
+import { ViewChangedButton } from './components/ViewChangedButton';
 import { DENSITY_ATTRIBUTE, resolveDensityRowHeight } from './types/density';
 import { DensityControl } from './components/DensityControl';
 import { ToolbarOverflow } from './components/ToolbarOverflow';
@@ -537,6 +539,25 @@ export interface DynamicTableProps {
 }
 
 // ============================================
+/**
+ * `fields` added to `visible` where the table declares them (after the nearest column before them that is shown), not
+ * at the far end: a column's place in the table config is a design decision.
+ */
+function insertInDeclaredOrder(visible: string[], fields: string[], order: string[]): string[] {
+  const next = [...visible];
+  for (const field of [...fields].sort((a, b) => order.indexOf(a) - order.indexOf(b))) {
+    if (next.includes(field)) continue;
+    const at = order.indexOf(field);
+    let insertAfter = -1;
+    for (let i = at - 1; i >= 0; i--) {
+      const pos = next.indexOf(order[i]);
+      if (pos >= 0) { insertAfter = pos; break; }
+    }
+    next.splice(insertAfter + 1, 0, field);
+  }
+  return next;
+}
+
 // MAIN DYNAMIC TABLE COMPONENT
 // ============================================
 const DynamicTable: React.FC<DynamicTableProps> = ({
@@ -608,9 +629,41 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // NOTE: the `appearance` prop is a deprecated no-op — every table renders the
   // v2 design system. The prop is retained in the type only for Tier-3 BC.
 
+  // -------------------- THE PERSON'S OWN LAYOUT (no host views) --------------------
+  // A host that keeps views passes `savedPerspectives` / `activePerspectiveId` and writes the person's `__base__` row
+  // itself. Every other table with a `tableId` keeps that row on its own (`useOwnBaseView`): hidden, moved and pinned
+  // columns, sorting and the view mode come back on the next visit, and nothing is written until the person changes
+  // something. `uiConfig.rememberLayout: false` (or the app default) turns it off for a table.
+  const appDefaultsForLayout = useContext(DynamicTableDefaultsContext);
+  const hostOwnsViews =
+    propSavedPerspectives !== undefined
+    || deprecatedSavedFilters !== undefined
+    || controlledActivePerspectiveId !== undefined
+    || deprecatedActiveFilterId !== undefined;
+  const ownLayoutEnabled =
+    !hostOwnsViews
+    && !!tableId
+    && (uiConfig.rememberLayout ?? appDefaultsForLayout.rememberLayout ?? true);
+  const tOwn = useT();
+  const ownColumnKeys = useMemo(() => columns.map((c) => c.data), [columns]);
+  const ownDefaultHidden = useMemo(
+    () => [...new Set([...defaultHiddenColumns, ...deprecatedHiddenColumns])],
+    [defaultHiddenColumns, deprecatedHiddenColumns],
+  );
+  const ownBase = useOwnBaseView({
+    tableId,
+    enabled: ownLayoutEnabled,
+    allColumns: ownColumnKeys,
+    defaultHiddenColumns: ownDefaultHidden,
+    saveFailedMessage: tOwn('dynamicTable.views.saveFailed', 'Could not save the view'),
+  });
+
   // -------------------- BACKWARD COMPATIBILITY --------------------
   // Convert deprecated savedFilters to savedPerspectives format
   const savedPerspectives = useMemo<PerspectiveConfig[]>(() => {
+    if (ownLayoutEnabled) {
+      return ownBase.view ? [ownBase.view] : [];
+    }
     if (propSavedPerspectives) {
       return propSavedPerspectives;
     }
@@ -632,12 +685,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       }));
     }
     return [];
-  }, [propSavedPerspectives, deprecatedSavedFilters, columns]);
+  }, [ownLayoutEnabled, ownBase.view, propSavedPerspectives, deprecatedSavedFilters, columns]);
 
-  // Use new prop or deprecated prop
-  const controlledActiveId = controlledActivePerspectiveId !== undefined
-    ? controlledActivePerspectiveId
-    : deprecatedActiveFilterId;
+  // Use new prop or deprecated prop. A table that keeps the person's own layout controls its active view itself: the
+  // person's `__base__` row once it exists, the table's default (null) until then — never `undefined`, which is what
+  // tells the grid "nowhere to save".
+  const controlledActiveId = ownLayoutEnabled
+    ? (ownBase.view?.id ?? null)
+    : controlledActivePerspectiveId !== undefined
+      ? controlledActivePerspectiveId
+      : deprecatedActiveFilterId;
 
   // Merge hidden columns from deprecated prop and new prop
   const initialHiddenColumns = useMemo(() => {
@@ -715,10 +772,22 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     [densityLevel],
   );
 
-  // Auto-hide perspective tabs when no perspectives are configured
+  // The saved-view row ('Widok domyślny ··· + Dodaj widok') shows only where there is something to switch between:
+  // a named view of the person's, a template shared with their role, or a coded preset — or where the table or the
+  // app asks for it. The person's own default view (`__base__`) alone never brings it: remembering hidden columns is
+  // not a reason to show every table a views bar (owner, 15.11, GEPARD-283). The way back to a changed layout is the
+  // toolbar's "changed view" button instead (`ViewChangedButton`).
   const hasPerspectives = !!(propSavedPerspectives || deprecatedSavedFilters);
+  const hasNamedViews =
+    savedPerspectives.some((p) => !p.isBaseView)
+    || (sharedTemplates?.length ?? 0) > 0
+    || (presetViews?.items?.length ?? 0) > 0;
   const appTableDefaults = useContext(DynamicTableDefaultsContext);
-  const hidePerspectiveTabs = hidePerspectiveTabsExplicit ?? appTableDefaults.hidePerspectiveTabs ?? !hasPerspectives;
+  const hidePerspectiveTabs = hidePerspectiveTabsExplicit ?? appTableDefaults.hidePerspectiveTabs ?? !hasNamedViews;
+  // Where the page's chrome sits (the card, the lead row above the title) still follows what the page IS — a list page
+  // whose host keeps views — not whether this person happens to have named views, or every list page would change
+  // shape the day someone saves their first view.
+  const listPageChrome = !(hidePerspectiveTabsExplicit ?? appTableDefaults.hidePerspectiveTabs ?? !hasPerspectives);
 
   // Translator + locale are read HERE, above the column build, because the
   // formula column defs need `t` for their per-cell error tooltips and the
@@ -758,7 +827,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   ) : null;
   // The card wrapper renders unless this is an embedded sub-table with no
   // tabs. A host that hides the tabs row still wants the card.
-  const hasCard = !(hidePerspectiveTabs && !displayHost);
+  const hasCard = listPageChrome || !!displayHost;
 
   // -------------------- REFS --------------------
   const storeRef = useRef<CellStore | null>(null);
@@ -957,7 +1026,64 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     if (controlledActiveId !== undefined) {
       setInternalActivePerspectiveId(activePerspectiveId ?? null);
     }
-  }, [activePerspectiveId, controlledActiveId, savedPerspectives, baseColumns, initialHiddenColumns, defaultGrouping]);
+    // A table that keeps the person's own layout restores it without its host knowing — so tell the host, with the
+    // same event a sort click or a column filter sends: a host that sorts or filters the rows itself (in the browser,
+    // or through its route) then shows them the way the restored view says, not only the header arrow. Deferred one
+    // task: the host's listener attaches after the grid's first effects.
+    if (ownLayoutEnabled && perspective) {
+      const config = {
+        columns: { visible: next.visibleColumns, hidden: next.hiddenColumns },
+        filters: next.filters,
+        sorting: next.sortRules,
+        grouping: next.groupRules,
+      };
+      setTimeout(() => {
+        const node = tableRef.current;
+        if (node) dispatch<PerspectiveChangeEvent>(node, TableEvents.PERSPECTIVE_CHANGE, { config } as PerspectiveChangeEvent);
+      }, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePerspectiveId, controlledActiveId, savedPerspectives, baseColumns, initialHiddenColumns, defaultGrouping, ownLayoutEnabled]);
+
+  /**
+   * A COLUMN THAT ARRIVES AFTER THE FIRST RENDER.
+   *
+   * The effect above applies a view once per active id, so a column the page adds later — one that waits on a
+   * feature check ("Weryfikacja 2FA" in Back office › Role waits on `two_factor.admin`) — entered neither list and was
+   * simply not drawn, with a "changed view" button on a table nobody touched. The rule is the base view's own
+   * (`resolvePerspectiveState`): a column the view has no opinion about takes the table's default — shown, unless the
+   * table hides it by default — in its declared place; a column the person hid stays hidden; a named view keeps its
+   * columns. Only NEW keys are placed; what the person did to the others is left alone.
+   */
+  const knownColumnKeysRef = useRef<string[] | null>(null);
+  const columnKeysSignature = baseColumns.map((c) => c.data).join('\u0000');
+  useEffect(() => {
+    const keys = baseColumns.map((c) => c.data);
+    const known = knownColumnKeysRef.current;
+    knownColumnKeysRef.current = keys;
+    if (known === null) return;
+    const added = keys.filter((k) => !known.includes(k));
+    if (added.length === 0) return;
+    const perspective = activePerspectiveId ? savedPerspectives.find((p) => p.id === activePerspectiveId) ?? null : null;
+    const resolved = resolvePerspectiveState({
+      baseColumns,
+      perspective,
+      defaultHiddenColumns: initialHiddenColumns,
+      defaultGrouping,
+    });
+    const show = added.filter((k) => resolved.visibleColumns.includes(k));
+    const hide = added.filter((k) => !resolved.visibleColumns.includes(k));
+    setVisibleColumns((current) => {
+      const missing = show.filter((k) => !current.includes(k));
+      return missing.length ? insertInDeclaredOrder(current, missing, keys) : current;
+    });
+    setHiddenColumns((current) => {
+      const next = current.filter((k) => !show.includes(k));
+      for (const k of hide) if (!next.includes(k)) next.push(k);
+      return next.length === current.length && next.every((k, i) => k === current[i]) ? current : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnKeysSignature]);
 
   // Display name: use perspective name if selected (except for built-in perspectives starting with '_'), otherwise default tableName
   const displayTableName = useMemo(() => {
@@ -1556,11 +1682,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         setInternalActivePerspectiveId,
         defaultHiddenColumns: initialHiddenColumns,
         defaultGrouping,
+        // The grid already shows what it saves: mark the saved row as applied, or the active id moving onto the new
+        // row would apply it again over whatever the person did since.
+        persistPerspective: ownLayoutEnabled
+          ? (perspective: PerspectiveConfig) => { appliedPerspectiveRef.current = ownBase.view?.id ?? perspective.id; ownBase.save(perspective); }
+          : undefined,
       }),
     // The `set*` functions are React state setters (stable by contract) plus
-    // `setInternalActivePerspectiveId`; only the three data inputs can change.
+    // `setInternalActivePerspectiveId`; only the data inputs can change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tableRef, baseColumns, savedPerspectives, activePerspectiveId, initialHiddenColumns, defaultGrouping],
+    [tableRef, baseColumns, savedPerspectives, activePerspectiveId, initialHiddenColumns, defaultGrouping, ownLayoutEnabled, ownBase.save],
   );
 
   /**
@@ -1617,18 +1748,57 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     setDateFormat(next.dateFormat);
   }, [baseViewPerspective, handleSavePerspective, baseColumns, initialHiddenColumns, defaultGrouping]);
 
-  // Header click / column menu / Configure View drawer all land here.
+  /**
+   * A sort chosen on the DEFAULT tab (header click, column menu) is part of the person's own default view: written to
+   * their `__base__` row like a hidden or moved column, so the rows come back in that order next time (owner, 15.11:
+   * "nothing is saved until the person changes the sorting, hides a column…"). A named view keeps its saved sort —
+   * changing it there is an edit of the view, done in Configure view, as before. Silent, like every autosave here.
+   */
+  const persistBaseSort = useCallback((rules: SortRule[]) => {
+    if (controlledActiveId === undefined) return;
+    const onBase = !activePerspectiveId || activePerspectiveId === baseViewPerspective?.id;
+    if (!onBase) return;
+    if (baseViewPerspective) {
+      handleSavePerspective({ ...baseViewPerspective, sorting: rules }, true);
+      return;
+    }
+    if (activePerspectiveId) return;
+    handleSavePerspective(
+      {
+        id: generatePerspectiveId(),
+        name: BASE_VIEW_PERSPECTIVE_NAME,
+        isBaseView: true,
+        columns: { visible: visibleColumns, hidden: hiddenColumns },
+        filters,
+        sorting: rules,
+        grouping: groupRules,
+        aggregations,
+        lookupColumns,
+        rollupColumns,
+        formulas,
+        conditionalFormats,
+        frozenColumns: [...frozenColumns],
+        dateFormat,
+        viewMode,
+      },
+      true,
+    );
+  }, [controlledActiveId, activePerspectiveId, baseViewPerspective, handleSavePerspective, visibleColumns, hiddenColumns,
+    filters, groupRules, aggregations, lookupColumns, rollupColumns, formulas, conditionalFormats, frozenColumns,
+    dateFormat, viewMode]);
+
+  // Header click / column menu land here (the Configure View drawer edits `sortRules` itself and saves with the view).
   const handleSortDirectionChange = useCallback(
     (colIndex: number, direction: 'asc' | 'desc' | null) => {
       const col = cols[colIndex];
       if (!col) return;
-      handleSortRulesChange(
-        direction === null
-          ? []
-          : [{ id: generateSortRuleId(), field: col.data, direction }],
-      );
+      const rules: SortRule[] = direction === null
+        ? []
+        : [{ id: generateSortRuleId(), field: col.data, direction }];
+      handleSortRulesChange(rules);
+      persistBaseSort(rules);
     },
-    [cols, handleSortRulesChange],
+    [cols, handleSortRulesChange, persistBaseSort],
   );
 
   const { handleColumnSort, handleColumnHeaderDoubleClick, handleColumnHeaderMouseDown } = useMemo(
@@ -3819,8 +3989,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   const tableMenuApart = (tableMenuPlacement ?? tableDefaults.tableMenuPlacement) === 'pagination'
     && !hideToolbar && !expandToolbarActions && !displayHost
   const tableMenuInTabsRow = tableMenuApart && (!hidePerspectiveTabs || (!!pagination && !hidePagination))
+  // With no views bar, the table menu is where the views live: "Configure view…" for every table, "Add view…" where the
+  // host keeps named views (a list page) — a person who wants a second view still has a way to make one.
+  const viewMenuActions = hidePerspectiveTabs && !displayHost
   const tableMenu = (look: 'more' | 'settings') => (
     <ToolbarOverflow
+      onConfigureView={viewMenuActions ? openConfigureBaseView : undefined}
+      onAddView={viewMenuActions && hostOwnsViews && controlledActiveId !== undefined
+        ? () => { setEditingPerspectiveId(null); setConfigureBaseView(false); setConfigPanelInitialSection(null); setConfigPanelOpen(true); }
+        : undefined}
       onExport={hideExportButton ? undefined : handleExportAll}
       exportDisabled={isExportingAll}
       showDensity={!hideDensityControl && !displayHost}
@@ -3975,6 +4152,86 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // One structure everywhere (owner 03.11, second pass): title + search on the first row, views + pagination under
   // it — also in a widget or a pane. The one-row variant is switched off; kept as a flag for a later decision.
   const tabsInToolbar = false
+
+  // -------------------- "VIEW CHANGED" (no views bar) --------------------
+  // While the layout on screen differs from the table's default — a column hidden or moved, a sort, a pinned column,
+  // another view mode — a table without the views bar offers the way back in one small toolbar button. Header filters
+  // are not part of it: they are temporary by contract and have their own "Clear all filters" pill (A2/D6).
+  const onDefaultTab = !activePerspectiveId || activePerspectiveId === baseViewPerspective?.id;
+  const tableDefaultState = resolvePerspectiveState({
+    baseColumns,
+    perspective: null,
+    defaultHiddenColumns: initialHiddenColumns,
+    defaultGrouping,
+  });
+  const sortKey = (rules: Array<{ field: string; direction: string }>) => rules.map((r) => `${r.field}:${r.direction}`).join(',');
+  const tableColumnKeys = baseColumns.map((c) => c.data);
+  const layoutDiffers =
+    visibleColumns.filter((k) => tableColumnKeys.includes(k)).join('|') !== tableDefaultState.visibleColumns.join('|')
+    || sortKey(sortRules) !== sortKey(tableDefaultState.sortRules)
+    || sortKey(groupRules) !== sortKey(tableDefaultState.groupRules)
+    || [...frozenColumns].sort().join('|') !== [...tableDefaultState.frozenColumns].sort().join('|')
+    || (viewMode ?? 'table') !== (tableDefaultState.viewMode ?? 'table')
+    || aggregations.length !== tableDefaultState.aggregations.length
+    || lookupColumns.length > 0
+    || rollupColumns.length > 0
+    || formulas.length > 0
+    || conditionalFormats.length > 0;
+  const userHiddenColumns = baseColumns
+    .filter((c) => hiddenColumns.includes(c.data) && !tableDefaultState.hiddenColumns.includes(c.data))
+    .map((c) => ({ field: c.data, title: typeof c.title === 'string' && c.title ? c.title : c.data }));
+  const showViewChanged = hidePerspectiveTabs && layoutDiffers;
+  /** Bring hidden columns back where the table declares them, and keep that like any other column change. */
+  const showColumns = (fields: string[]) => {
+    const visible = insertInDeclaredOrder(visibleColumns, fields, baseColumns.map((c) => c.data));
+    const hidden = hiddenColumns.filter((c) => !fields.includes(c));
+    handleColumnVisibilityChange(visible, hidden);
+    persistColumnLayout(visible, hidden);
+  };
+  const openConfigureBaseView = () => {
+    setEditingPerspectiveId(onDefaultTab ? null : activePerspectiveId);
+    setConfigureBaseView(onDefaultTab);
+    setConfigPanelInitialSection(null);
+    setConfigPanelOpen(true);
+  };
+  /** Back to the table's default: the person's row emptied (never deleted — see `handleBaseViewReset`), the host told. */
+  const resetToTableDefault = () => {
+    if (baseViewPerspective) {
+      handleBaseViewReset();
+    } else {
+      setVisibleColumns(tableDefaultState.visibleColumns);
+      setHiddenColumns(tableDefaultState.hiddenColumns);
+      setSortRules(tableDefaultState.sortRules);
+      setGroupRules(tableDefaultState.groupRules);
+      setAggregations(tableDefaultState.aggregations);
+      setLookupColumns(tableDefaultState.lookupColumns);
+      setRollupColumns(tableDefaultState.rollupColumns);
+      setFormulas(tableDefaultState.formulas);
+      setConditionalFormats(tableDefaultState.conditionalFormats);
+      setFrozenColumns(new Set(tableDefaultState.frozenColumns));
+      setViewMode(tableDefaultState.viewMode ?? 'table');
+    }
+    const node = tableRef.current;
+    if (node) {
+      dispatch<PerspectiveChangeEvent>(node, TableEvents.PERSPECTIVE_CHANGE, {
+        config: {
+          columns: { visible: tableDefaultState.visibleColumns, hidden: tableDefaultState.hiddenColumns },
+          sorting: tableDefaultState.sortRules,
+          grouping: tableDefaultState.groupRules,
+          ...(baseViewPerspective ? { filters: tableDefaultState.filters } : {}),
+        },
+      } as PerspectiveChangeEvent);
+    }
+  };
+  const viewChangedButton = showViewChanged ? (
+    <ViewChangedButton
+      hiddenColumns={userHiddenColumns}
+      onShow={showColumns}
+      onConfigure={openConfigureBaseView}
+      onReset={onDefaultTab ? resetToTableDefault : undefined}
+    />
+  ) : null;
+
   const perspectiveTabsNode = (
     <PerspectiveTabs
       savedPerspectives={savedPerspectives}
@@ -4053,7 +4310,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           ABOVE the title on full list pages (those with perspective tabs), so
           the title + search + buttons row stays uncluttered. Embedded sub-tables
           (no perspective tabs) keep topBarStart inline in the toolbar below. */}
-      {!hideToolbar && topBarStart && !hidePerspectiveTabs && (
+      {!hideToolbar && topBarStart && listPageChrome && (
         <div className="hot-toolbar-lead-row">{topBarStart}</div>
       )}
 
@@ -4079,7 +4336,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       {!hideToolbar && (
         <div className="hot-toolbar" data-tabs-inline={tabsInToolbar ? 'true' : undefined}>
           {/* Custom slot: top bar start (inline only for embedded tables) */}
-          {hidePerspectiveTabs && topBarStart}
+          {!listPageChrome && topBarStart}
 
           {!hideTitle && (
             <h3 className="hot-toolbar-title">{displayTableName}</h3>
@@ -4169,6 +4426,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 onChange={handleViewModeChange}
               />
             )}
+            {viewChangedButton}
             {expandToolbarActions ? (
               <>
                 {customizeViewButton}
@@ -4665,6 +4923,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           editingPerspective={savedPerspectives.find((p) => p.id === editingPerspectiveId) ?? null}
           baseViewPerspective={baseViewPerspective}
           isBaseViewMode={configureBaseView}
+          allowNamedViews={!ownLayoutEnabled}
           loadFilterSuggestions={loadFilterSuggestions}
           loadLookupSources={loadLookupSources}
           loadRollupSources={loadRollupSources}
