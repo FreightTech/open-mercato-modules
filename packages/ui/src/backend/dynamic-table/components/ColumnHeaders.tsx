@@ -883,7 +883,13 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
             }
             onFilterByField={minimalColumnMenu ? undefined : () => onFilterByField?.(headerMenu.colIndex)}
             onFreezeToggle={minimalColumnMenu ? undefined : () => onFreezeToggle?.(headerMenu.colIndex)}
-            onHideField={() => onHideField?.(headerMenu.colIndex)}
+            /* 0.14.37 — never the last column with a title: hiding it emptied the table and stored a row the next load
+               ignored (GEPARD-283 sweep, pc2 w1:pB, B8). */
+            onHideField={
+              columns.filter((c) => String(c.title ?? '').trim()).length > 1
+                ? () => onHideField?.(headerMenu.colIndex)
+                : undefined
+            }
             hiddenColumns={hiddenColumnsToShow}
             onShowColumns={onShowColumns}
             onResetLayout={onResetLayout}

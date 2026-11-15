@@ -683,3 +683,17 @@ describe('0.14.37 — the minimal ⋮ is visible on narrow columns, and absent o
     expect(grip.querySelector('.hot-col-kebab')).toBeNull()
   })
 })
+
+describe('0.14.37 — the last column with a title cannot be hidden', () => {
+  it('offers "Hide field" while another titled column is visible, and not on the last one', async () => {
+    const two: ColumnDef[] = [{ data: 'grip', title: '' }, { data: 'leg', title: 'Odcinek' }, { data: 'from', title: 'Z' }]
+    const { container } = mount({ tableId: 'last-column', uiConfig: { hideToolbar: true }, columns: two })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    hide(container, 'Odcinek')
+    expect(headerText(container)).not.toContain('Odcinek')
+    openColumnMenu(container, 'Z')
+    const labels = [...document.querySelectorAll<HTMLElement>('.hot-col-menu-item')].map((b) => (b.textContent ?? '').trim())
+    expect(labels.some((l) => /hide field/i.test(l))).toBe(false)
+    expect(labels.some((l) => /show hidden columns/i.test(l))).toBe(true)
+  })
+})
