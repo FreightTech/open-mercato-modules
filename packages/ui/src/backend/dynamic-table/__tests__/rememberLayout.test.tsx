@@ -534,3 +534,63 @@ describe('a table in a split-view pane', () => {
     expect(paneHideViews({ viewsBar: true })).toBe(false)
   })
 })
+
+describe('0.14.36 — a table with the built-in column menu off can still hide, remember and give back a column', () => {
+  // Small edit grids (folder lines, cost/revenue lines, flight paste, bundle editor…) set disableBuiltinColumnMenu to
+  // keep their headers plain. Owner 15.11 (GEPARD-283): every DynamicTable has the layout options.
+  const ui = { hideToolbar: true, disableBuiltinColumnMenu: true }
+  const items = () => [...document.querySelectorAll<HTMLElement>('.hot-col-menu-item')].map((b) => (b.textContent ?? '').trim())
+
+  it('keeps the classic header (⇅ button, no funnel) and adds a ⋮ with sort, hide — no filter, freeze or move', async () => {
+    const { container } = mount({ tableId: 'folders-edit-grid', uiConfig: ui })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    const th = [...container.querySelectorAll<HTMLElement>('th.hot-col-header')].find((h) => (h.textContent ?? '').includes('Przewoźnik'))!
+    expect(th.querySelector('.hot-col-sort-btn')).not.toBeNull()
+    expect(th.querySelector('.hot-col-funnel')).toBeNull()
+    expect(th.classList.contains('hot-col-header-modern')).toBe(false)
+    openColumnMenu(container, 'Przewoźnik')
+    const labels = items()
+    expect(labels.some((l) => /^sort/i.test(l))).toBe(true)
+    expect(labels.some((l) => /hide field/i.test(l))).toBe(true)
+    expect(labels.some((l) => /filter/i.test(l))).toBe(false)
+    expect(labels.some((l) => /freeze/i.test(l))).toBe(false)
+    expect(labels.some((l) => /move (left|right)/i.test(l))).toBe(false)
+  })
+
+  it('hides a column, remembers it, shows the changed-view button, and gives the column back from the menu', async () => {
+    const { container, unmount } = mount({ tableId: 'folders-edit-grid', uiConfig: ui })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    expect(writes()).toHaveLength(0)
+    hide(container, 'Przewoźnik')
+    expect(headerText(container)).not.toContain('Przewoźnik')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0].body.settings.columnVisibility.carrier).toBe(false)
+    await waitFor(() => expect(changedButton()).not.toBeNull())
+    unmount()
+
+    // Next visit: the person's row comes back with the column hidden.
+    serverRows = [{ id: 'srv-1', name: BASE_VIEW_PERSPECTIVE_NAME, settings: writes()[0].body.settings }]
+    __resetOwnBaseViewCache()
+    const again = mount({ tableId: 'folders-edit-grid', uiConfig: ui })
+    await waitFor(() => expect(headerText(again.container)).not.toContain('Przewoźnik'))
+    openColumnMenu(again.container, 'Z')
+    const entry = document.querySelector<HTMLElement>('[data-col-menu-show-hidden]')
+    expect(entry!.textContent).toContain('(1)')
+    act(() => { entry!.click() })
+    act(() => { document.querySelector<HTMLElement>('[data-col-menu-show="carrier"]')!.click() })
+    expect(headerText(again.container)).toContain('Przewoźnik')
+  })
+
+  it('a double-click on the header still opens the host\'s own column actions, not the menu', async () => {
+    const { container } = mount({
+      tableId: 'folders-edit-grid',
+      uiConfig: ui,
+      columnActions: () => [{ id: 'host-x', label: 'Host action' }],
+    })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    const th = [...container.querySelectorAll<HTMLElement>('th.hot-col-header')].find((h) => (h.textContent ?? '').includes('Z'))!
+    act(() => { fireEvent.doubleClick(th) })
+    // The host's context menu, as before the change — not the ⋮ layout menu.
+    expect(items()).toEqual(['Host action'])
+  })
+})

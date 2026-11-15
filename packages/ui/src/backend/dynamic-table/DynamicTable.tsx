@@ -4676,6 +4676,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 onMouseDown={(e) => handleColumnHeaderMouseDown(e, dragHandlers.handleDragStart)}
                 onMouseMove={handleMouseMove}
                 modernLayout={!disableBuiltinColumnMenu}
+                minimalColumnMenu={disableBuiltinColumnMenu}
                 onSortAsc={handleModernSortAsc}
                 onSortDesc={handleModernSortDesc}
                 onSortClear={handleModernSortClear}

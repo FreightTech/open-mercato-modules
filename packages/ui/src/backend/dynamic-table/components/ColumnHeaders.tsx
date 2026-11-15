@@ -46,6 +46,13 @@ export interface ColumnHeadersProps {
   onMouseMove: (e: React.MouseEvent) => void;
   /** Modern layout: enable built-in column header click menu */
   modernLayout?: boolean;
+  /**
+   * 0.14.36 (owner 15.11, GEPARD-283: every DynamicTable can hide a column, remembers it and offers it back). A table
+   * with `uiConfig.disableBuiltinColumnMenu` keeps its classic header (⇅ sort button, double-click → the host's column
+   * actions) and gets only a ⋮ with the layout essentials: sort, hide, "Pokaż ukryte kolumny", "Przywróć domyślny…" and
+   * the host's own column actions. No funnel, freeze or move — those are what the flag turns off.
+   */
+  minimalColumnMenu?: boolean;
   /** Modern layout: callback for sort ascending */
   onSortAsc?: (colIndex: number) => void;
   /** Modern layout: callback for sort descending */
@@ -175,6 +182,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
     onMouseDown,
     onMouseMove,
     modernLayout = false,
+    minimalColumnMenu = false,
     onSortAsc,
     onSortDesc,
     onSortClear,
@@ -498,7 +506,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
       // BOTH controls", which is exactly when the kebab should get out of the
       // way. Halving the chrome is what returns the label. See density.css.
       const NARROW_HEADER_PX = 104;
-      const isNarrow = (showFunnel || modernLayout) && colWidth < NARROW_HEADER_PX;
+      const isNarrow = (showFunnel || modernLayout || minimalColumnMenu) && colWidth < NARROW_HEADER_PX;
 
       // ── The floor below which the funnel cannot be shown either ──────────
       //
@@ -705,7 +713,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
               </button>
             )}
             {/* v2: visible per-column options trigger (opens the modern column menu) */}
-            {modernLayout && (
+            {(modernLayout || minimalColumnMenu) && (
               <button
                 type="button"
                 className="hot-col-kebab"
@@ -839,7 +847,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
         </table>
 
         {/* Modern layout: Column Header Menu */}
-        {headerMenu && modernLayout && (
+        {headerMenu && (modernLayout || minimalColumnMenu) && (
           <ColumnHeaderMenu
             column={columns[headerMenu.colIndex]}
             colIndex={headerMenu.colIndex}
@@ -856,7 +864,7 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                workshop complaint was precisely that it opened the Configure
                View drawer instead. The drawer stays reachable one item below. */
             onQuickFilter={
-              quickFilterEnabled && isQuickFilterable(columns[headerMenu.colIndex])
+              !minimalColumnMenu && quickFilterEnabled && isQuickFilterable(columns[headerMenu.colIndex])
                 ? () => {
                     const colIndex = headerMenu.colIndex;
                     const th = document.querySelector<HTMLElement>(
@@ -867,8 +875,8 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
                   }
                 : undefined
             }
-            onFilterByField={() => onFilterByField?.(headerMenu.colIndex)}
-            onFreezeToggle={() => onFreezeToggle?.(headerMenu.colIndex)}
+            onFilterByField={minimalColumnMenu ? undefined : () => onFilterByField?.(headerMenu.colIndex)}
+            onFreezeToggle={minimalColumnMenu ? undefined : () => onFreezeToggle?.(headerMenu.colIndex)}
             onHideField={() => onHideField?.(headerMenu.colIndex)}
             hiddenColumns={hiddenColumnsToShow}
             onShowColumns={onShowColumns}
@@ -876,12 +884,12 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
             /* A16 keyboard route. Disabled at the ends of the pinned run the
                column belongs to, for the same reason the drag refuses there. */
             onMoveLeft={
-              onColumnMove && headerMenu.colIndex > pinRunOf(headerMenu.colIndex).start
+              !minimalColumnMenu && onColumnMove && headerMenu.colIndex > pinRunOf(headerMenu.colIndex).start
                 ? () => onColumnMove(headerMenu.colIndex, -1)
                 : undefined
             }
             onMoveRight={
-              onColumnMove && headerMenu.colIndex < pinRunOf(headerMenu.colIndex).end
+              !minimalColumnMenu && onColumnMove && headerMenu.colIndex < pinRunOf(headerMenu.colIndex).end
                 ? () => onColumnMove(headerMenu.colIndex, 1)
                 : undefined
             }
