@@ -218,7 +218,9 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
   // Dropdown / multiselect columns render as a bordered "select" control at
   // rest in v2 (Figma "Wybierz…" + chevron). Harmless in legacy — only the v2
   // theme styles `.cell-select`.
-  const selectClass = (colConfig.type === 'dropdown' || colConfig.type === 'multiselect') ? 'cell-select' : '';
+  // A read-only cell (the whole column, or this row — 0.14.35) is not a select: no chevron, no pointer.
+  const cellReadOnly = isCellReadOnly(colConfig, rowData, row);
+  const selectClass = (colConfig.type === 'dropdown' || colConfig.type === 'multiselect') && !cellReadOnly ? 'cell-select' : '';
 
   // The fill-handle nub sits on the bottom-right corner of the selection —
   // whatever its size. `isFillOrigin` is computed in the STORE, which is the
@@ -247,7 +249,7 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
 
   return (
     <td
-      className={`hot-cell ${isCellReadOnly(colConfig, rowData, row) ? 'read-only' : ''} ${conditionalClassName} ${annotationColor ? `cell-color-${annotationColor}` : ''} ${alignClass} ${monoClass} ${selectClass}`.replace(/\s+/g, ' ').trim()}
+      className={`hot-cell ${cellReadOnly ? 'read-only' : ''} ${conditionalClassName} ${annotationColor ? `cell-color-${annotationColor}` : ''} ${alignClass} ${monoClass} ${selectClass}`.replace(/\s+/g, ' ').trim()}
       style={style}
       data-row={row}
       data-col={col}

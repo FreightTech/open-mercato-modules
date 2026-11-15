@@ -154,6 +154,28 @@ describe('a cell read-only for its row', () => {
   })
 })
 
+describe('a read-only dropdown cell is not drawn as a select', () => {
+  const statuses = ['W toku', 'Zrobione']
+  const withDropdown = (readOnly: ColumnDef['readOnly']): ColumnDef[] => [
+    { data: 'name', title: 'Name' },
+    { data: 'status', title: 'Status', type: 'dropdown', source: statuses, readOnly },
+    { data: 'note', title: 'Note' },
+  ]
+
+  it('no cell-select (chevron, pointer) on the read-only row; still there on the editable row', () => {
+    render(React.createElement(Harness, { columns: withDropdown(locked) }))
+    expect(cellAt(0, 1).classList.contains('cell-select')).toBe(false)
+    expect(cellAt(0, 1).classList.contains('read-only')).toBe(true)
+    expect(cellAt(1, 1).classList.contains('cell-select')).toBe(true)
+  })
+
+  it('…and none on any row of a whole read-only dropdown column', () => {
+    render(React.createElement(Harness, { columns: withDropdown(true) }))
+    expect(cellAt(0, 1).classList.contains('cell-select')).toBe(false)
+    expect(cellAt(1, 1).classList.contains('cell-select')).toBe(false)
+  })
+})
+
 describe('readOnly: true is unchanged', () => {
   it('the coercer still refuses a whole read-only column, and leaves a per-row column to the row check', () => {
     expect(coerceCellValue('x', { data: 's', readOnly: true })).toEqual({ ok: false, reason: 'readOnly' })
