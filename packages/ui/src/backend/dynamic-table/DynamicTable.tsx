@@ -104,6 +104,7 @@ import { useGrouping, computeAggregates } from './hooks/useGrouping';
 // Import components
 import PerspectiveTabs from './components/PerspectiveTabs';
 import ConfigureViewPanel from './components/ConfigureViewPanel';
+import PerspectiveDeleteDialog from './components/PerspectiveDeleteDialog';
 import SearchBar from './components/SearchBar';
 import ActiveFilterChips from './components/ActiveFilterChips';
 import EmptyState from './components/EmptyState';
@@ -1111,6 +1112,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
    * a name for the new view.
    */
   const [configureBaseView, setConfigureBaseView] = useState(false);
+  /** "Przywróć domyślny…" from the column menu asks first, like the views bar and the "changed view" button. */
+  const [confirmLayoutReset, setConfirmLayoutReset] = useState(false);
   /** This user's saved personalization of the base tab, if any. */
   const baseViewPerspective = useMemo(
     () => savedPerspectives.find((p) => p.isBaseView) ?? null,
@@ -4327,9 +4330,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           hover, or hiding the toolbar would hide the way to bring it back. */}
       {hideToolbar && displayHost && (
         <div className="hot-pane-float-actions" data-pane-float-actions="">
+          {viewChangedButton}
           {customizeViewButton}
           <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
           <ToolbarOverflow showDensity={false} extras={toolbarOverflowExtras} />
+        </div>
+      )}
+      {/* 0.14.33 — a table without a toolbar (a drawer, a widget, a local list) still remembers what the person hid, so
+          it needs the way back too: the same "changed view" button, small, in the header's corner, while the layout
+          differs. Not on hover only: a column that is gone has to say so. */}
+      {hideToolbar && !displayHost && viewChangedButton && (
+        <div className="hot-pane-float-actions hot-pane-float-actions--persistent" data-view-changed-float="">
+          {viewChangedButton}
         </div>
       )}
 
@@ -4661,6 +4673,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 loadFilterSuggestions={loadFilterSuggestions}
                 onFreezeToggle={handleModernFreezeToggle}
                 onHideField={handleModernHideField}
+                hiddenColumnsToShow={userHiddenColumns}
+                onShowColumns={showColumns}
+                onResetLayout={onDefaultTab && layoutDiffers ? () => setConfirmLayoutReset(true) : undefined}
                 /* A16 — reorder from the header itself, not only from the
                    Configure View drawer. Per-user, like every other view
                    preference. */
@@ -4879,6 +4894,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       </div>
 
       </div>{/* /hot-card */}
+
+      <PerspectiveDeleteDialog
+        variant="baseReset"
+        name={confirmLayoutReset ? 'base' : null}
+        onCancel={() => setConfirmLayoutReset(false)}
+        onConfirm={() => { setConfirmLayoutReset(false); resetToTableDefault(); }}
+      />
 
       {/* Configure View Side Panel */}
       {(

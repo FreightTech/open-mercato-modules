@@ -2722,6 +2722,12 @@
   opacity: 1;
 }
 
+/* 0.14.33 — the "changed view" button of a table without a toolbar: always shown while the layout differs (a hidden
+   column has to say it is hidden), not only on hover. */
+.hot-appearance-v2 .hot-pane-float-actions.hot-pane-float-actions--persistent {
+  opacity: 1;
+}
+
 /* The floating actions sit over the top-right corner, which with the toolbar
    gone is where the tabs row's pagination lives. Reserve the corner on that
    row (the prototype's `.noToolbar .views { padding-right }`), so the page-size

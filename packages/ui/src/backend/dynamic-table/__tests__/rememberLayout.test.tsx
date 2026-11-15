@@ -354,6 +354,53 @@ describe('review 15.11 (pc2 w1:p6)', () => {
   })
 })
 
+describe('0.14.33 — a table without a toolbar has its way back too', () => {
+  const ui = { hideToolbar: true }
+
+  it('the column menu offers hidden columns back, and "Show" shows and keeps the column', async () => {
+    const { container } = mount({ tableId: 'folders-teczka-activity', uiConfig: ui })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    openColumnMenu(container, 'Z')
+    expect(document.querySelector('[data-col-menu-show-hidden]')).toBeNull()
+    act(() => { fireEvent.mouseDown(document.body) }) // close it: nothing to offer yet
+    hide(container, 'Przewoźnik')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    openColumnMenu(container, 'Z')
+    const entry = document.querySelector<HTMLElement>('[data-col-menu-show-hidden]')
+    expect(entry).not.toBeNull()
+    expect(entry!.textContent).toContain('(1)')
+    act(() => { entry!.click() })
+    act(() => { document.querySelector<HTMLElement>('[data-col-menu-show="carrier"]')!.click() })
+    expect(headerText(container)).toContain('Przewoźnik')
+    await waitFor(() => expect(writes().at(-1)!.body.settings.columnVisibility.carrier).toBe(true))
+  })
+
+  it('shows the "changed view" button in the header corner while the layout differs', async () => {
+    const { container } = mount({ tableId: 'folders-teczka-activity', uiConfig: ui })
+    await waitFor(() => expect(calls.length).toBeGreaterThan(0))
+    expect(document.querySelector('.hot-toolbar')).toBeNull()
+    expect(changedButton()).toBeNull()
+    hide(container, 'Przewoźnik')
+    await waitFor(() => expect(document.querySelector('[data-view-changed-float] [data-view-changed]')).not.toBeNull())
+    expect(changedButton()!.getAttribute('data-view-changed-hidden')).toBe('1')
+  })
+
+  it('"Restore default…" in the column menu asks, then empties the person\'s row', async () => {
+    serverRows = [{ id: 'row-9', name: BASE_VIEW_PERSPECTIVE_NAME, settings: { columnOrder: ['leg', 'from', 'etd'], columnVisibility: { carrier: false }, filters: { _baseView: true } } }]
+    const { container } = mount({ tableId: 'folders-teczka-activity', uiConfig: ui })
+    await waitFor(() => expect(headerText(container)).not.toContain('Przewoźnik'))
+    openColumnMenu(container, 'Z')
+    act(() => { document.querySelector<HTMLElement>('[data-col-menu-reset-layout]')!.click() })
+    const confirm = [...document.querySelectorAll<HTMLElement>('[role="dialog"] button')].find((b) => /reset view|przywróć widok/i.test(b.textContent ?? ''))
+    expect(confirm).toBeTruthy()
+    act(() => { fireEvent.click(confirm!) })
+    await waitFor(() => expect(headerText(container)).toContain('Przewoźnik'))
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0].body.perspectiveId).toBe('row-9')
+    expect(writes()[0].body.settings.columnOrder ?? []).toEqual([])
+  })
+})
+
 describe('a table whose host keeps views', () => {
   const base: PerspectiveConfig = {
     id: 'base-1',

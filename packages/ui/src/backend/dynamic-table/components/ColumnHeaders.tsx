@@ -70,6 +70,14 @@ export interface ColumnHeadersProps {
   /** Modern layout: callback for hiding a column */
   onHideField?: (colIndex: number) => void;
   /**
+   * 0.14.33 — the columns the person hid (beyond the table's defaults), offered back in every column's menu: a table
+   * without a toolbar has no other way to show them again.
+   */
+  hiddenColumnsToShow?: Array<{ field: string; title: string }>;
+  onShowColumns?: (fields: string[]) => void;
+  /** Back to the table's default layout (asks first); omitted when there is nothing to reset. */
+  onResetLayout?: () => void;
+  /**
    * A16 — move a column by dragging its header.
    *
    * Both arguments are ABSOLUTE indices into the full `columns` array, never
@@ -169,6 +177,9 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
     loadFilterSuggestions,
     onFreezeToggle,
     onHideField,
+    hiddenColumnsToShow,
+    onShowColumns,
+    onResetLayout,
     onColumnReorder,
     onColumnMove,
     frozenColumns,
@@ -832,6 +843,9 @@ const ColumnHeaders: React.FC<ColumnHeadersProps> = memo(
             onFilterByField={() => onFilterByField?.(headerMenu.colIndex)}
             onFreezeToggle={() => onFreezeToggle?.(headerMenu.colIndex)}
             onHideField={() => onHideField?.(headerMenu.colIndex)}
+            hiddenColumns={hiddenColumnsToShow}
+            onShowColumns={onShowColumns}
+            onResetLayout={onResetLayout}
             /* A16 keyboard route. Disabled at the ends of the pinned run the
                column belongs to, for the same reason the drag refuses there. */
             onMoveLeft={

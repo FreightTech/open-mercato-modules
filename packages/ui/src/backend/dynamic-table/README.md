@@ -371,6 +371,9 @@ from the header or the column menu, the view mode — and opens that way next ti
   button (`ViewChangedButton`): the hidden columns with "Show" / "Show all", Configure view, and Restore default (the
   row is emptied, never deleted — see `handleBaseViewReset`). With no views bar, the table menu also offers
   "Configure view…" and, where the host keeps named views, "Add view…".
+- **No toolbar (0.14.33).** A table with `uiConfig.hideToolbar` shows the same button, small, in the header's corner
+  while the layout differs. And every column's menu offers "Show hidden columns (n)" (each with Show, plus Show all)
+  and "Restore default…" whenever the person hid columns beyond the table's defaults — in every table.
 - **Header filters stay temporary** (A2/D6): they are not part of the "changed view" check.
 - **Opt out:** `uiConfig.rememberLayout: false`, or `DynamicTableDefaults.rememberLayout: false` for a whole app.
 
