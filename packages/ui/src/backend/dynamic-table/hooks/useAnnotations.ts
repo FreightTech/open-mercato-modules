@@ -12,6 +12,36 @@ export interface AnnotationComment {
   createdAt?: string;
   /** `carrier` = printed on the waybill; `internal` = a note between colleagues. */
   audience?: CellCommentAudience;
+  /** GEPARD-310 — `where_added`: shown only in the table and on the grid row it was written on. */
+  visibility?: CellCommentVisibility;
+  originTableId?: string | null;
+  originRowId?: string | null;
+}
+
+/** Where a comment shows (gt-fms annotations, GEPARD-310): everywhere its information shows, or only where written. */
+export type CellCommentVisibility = 'everywhere' | 'where_added';
+
+/** A comment kept to the grid row it was written on — it belongs to that row's entry, not the cell's shared one. */
+export function isRowBoundComment(c: Pick<AnnotationComment, 'visibility' | 'originRowId'>): boolean {
+  return c.visibility === 'where_added' && !!c.originRowId;
+}
+
+/**
+ * The map key of one grid row's own view of a cell (GEPARD-310). Present only where the row has comments kept to it;
+ * a cell reads it first and falls back to the shared `annotationKey`. `\u0002` never occurs in an id.
+ */
+export function rowAnnotationKey(key: string, rowKey: string): string {
+  return `${key}\u0002${rowKey}`;
+}
+
+/** The annotation one grid row shows for a cell: its own entry when it has comments kept to it, else the shared one. */
+export function annotationForRow<T>(map: Map<string, T>, key: string | null, rowKey: string | null | undefined): T | undefined {
+  if (!key) return undefined;
+  if (rowKey) {
+    const own = map.get(rowAnnotationKey(key, rowKey));
+    if (own) return own;
+  }
+  return map.get(key);
 }
 
 export interface CellAnnotationInfo {
@@ -62,6 +92,11 @@ export function annotationKey(target: AnnotationTarget, columnKey: string): stri
 interface UseAnnotationsOptions {
   enabled: boolean;
   /**
+   * GEPARD-310 — the table asking (the grid's view context). The server sends it no comment kept to another table; a
+   * comment kept to THIS table lands in its row's own entry (`rowAnnotationKey`). Without it, kept comments are left out.
+   */
+  tableId?: string;
+  /**
    * Every (entityType, rowId) pair on screen, already de-duplicated by the
    * caller. One request per distinct `entityType`.
    */
@@ -83,6 +118,7 @@ const NO_TARGETS: AnnotationTarget[] = [];
 
 export function useAnnotations({
   enabled,
+  tableId,
   targets,
   entityType,
   data,
@@ -167,6 +203,7 @@ export function useAnnotations({
             entityType,
             rowIds: part.join(','),
           });
+          if (tableId) params.set('tableId', tableId);
           const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`, { signal });
           if (!ok || !result) return [] as any[];
           const items: any[] = result.items || result.data || result || [];
@@ -195,14 +232,27 @@ export function useAnnotations({
           userId: c.userId ?? c.user_id ?? undefined,
           createdAt: c.createdAt ?? c.created_at ?? undefined,
           audience: (c.audience as CellCommentAudience) ?? 'internal',
+          visibility: c.visibility === 'where_added' ? 'where_added' : 'everywhere',
+          originTableId: c.originTableId ?? null,
+          originRowId: c.originRowId ?? null,
         }));
-        map.set(key, {
+        const assignees = (annotation.assignees || []).map((a: any) => ({ userId: a.userId || a.user_id }));
+        const entry = (list: AnnotationComment[]): CellAnnotationInfo => ({
           id: annotation.id,
           color: annotation.color || null,
-          commentCount: comments.length || annotation.commentCount || 0,
-          comments,
-          assignees: (annotation.assignees || []).map((a: any) => ({ userId: a.userId || a.user_id })),
+          commentCount: list.length,
+          comments: list,
+          assignees,
         });
+        // GEPARD-310 — the cell's shared entry holds the comments that show everywhere; a row with comments kept to it
+        // gets its own entry with those added. A kept comment of another table (a server that did not filter) shows nowhere.
+        const shared = comments.filter((c) => !isRowBoundComment(c));
+        const rowBound = comments.filter((c) => isRowBoundComment(c) && !!tableId && c.originTableId === tableId);
+        // An older response may carry a count without the thread; it is the shared entry's count then.
+        map.set(key, { ...entry(shared), commentCount: comments.length ? shared.length : annotation.commentCount || 0 });
+        for (const rowKey of new Set(rowBound.map((c) => String(c.originRowId)))) {
+          map.set(rowAnnotationKey(key, rowKey), entry(comments.filter((c) => !isRowBoundComment(c) || (rowBound.includes(c) && String(c.originRowId) === rowKey))));
+        }
       }
       setAnnotations(map);
     } catch (error) {
@@ -214,7 +264,7 @@ export function useAnnotations({
     }
     // `targetsKey` is the real dependency — see the note on the memo above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, targetsKey]);
+  }, [enabled, targetsKey, tableId]);
 
   // Fetch when the target set changes
   useEffect(() => {
