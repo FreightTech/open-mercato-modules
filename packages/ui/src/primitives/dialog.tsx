@@ -30,22 +30,29 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+/**
+ * After a dialog closes, free the page's scroll unless another dialog is still open — once the close has settled, so in
+ * a timer. The page may be gone by the time it runs: a test environment torn down after its last test (vitest removes
+ * jsdom's `document` before pending timers fire — "document is not defined", FMS CI invoicing 17.11). Then there is
+ * nothing to free. Internal: exported for its test.
+ */
+export function releaseScrollLockSoon(win: Pick<Window, 'setTimeout'> | undefined = typeof window === 'undefined' ? undefined : window) {
+  if (!win) return
+  win.setTimeout(() => {
+    if (typeof document === 'undefined') return
+    if (document.querySelector('[data-dialog-content][data-state="open"]')) return
+    document.body.style.removeProperty('overflow')
+    document.body.style.removeProperty('pointer-events')
+  }, 0)
+}
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   const t = useT()
 
-  React.useEffect(() => {
-    return () => {
-      if (typeof window === 'undefined') return
-      window.setTimeout(() => {
-        if (document.querySelector('[data-dialog-content][data-state="open"]')) return
-        document.body.style.removeProperty('overflow')
-        document.body.style.removeProperty('pointer-events')
-      }, 0)
-    }
-  }, [])
+  React.useEffect(() => () => releaseScrollLockSoon(), [])
 
   return (
     <DialogPortal>
