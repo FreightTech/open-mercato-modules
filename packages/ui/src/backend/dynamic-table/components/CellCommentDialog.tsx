@@ -626,10 +626,17 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
   }, [comments, annotationId, onAnnotationChange, t]);
 
   // GEPARD-319 — a task in a comment ("- [ ] …") is ticked in place; the server flips that one mark. Shown at once,
-  // put back if the server refuses.
+  // put back if the server refuses. GEPARD-308 (CHECK #3238): ticks in quick succession queue on the server's row lock
+  // and every answer carries the text after its own tick — only the NEWEST tick's answer is applied, so an earlier
+  // answer arriving late cannot untick what a later click ticked.
+  const tickSeq = useRef(new Map<string, number>());
   const handleToggleTask = useCallback(async (comment: Comment, index: number, done: boolean) => {
     const annId = comment.annotationId || annotationId;
     if (!annId) return;
+    const seq = (tickSeq.current.get(comment.id) ?? 0) + 1;
+    tickSeq.current.set(comment.id, seq);
+    const latest = () => tickSeq.current.get(comment.id) === seq;
+    // A click is a discrete event: the thread re-renders between two clicks, so `comment` already holds the last tick.
     const before = comment.content;
     const setContent = (content: string) => setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, content } : c)));
     setContent(toggleTaskInContent(before, index, done));
@@ -639,15 +646,15 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
         { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-om-forbidden-redirect': '0' }, body: JSON.stringify({ task: index, done }) },
       );
       if (!ok) {
-        setContent(before);
+        if (latest()) setContent(before);
         flash(result?.error || t('annotations.dialog.taskFailed', 'The task was not saved'), 'error');
         return;
       }
-      if (typeof result?.content === 'string') setContent(result.content);
-      onAnnotationChange?.();
+      if (latest() && typeof result?.content === 'string') setContent(result.content);
+      if (latest()) onAnnotationChange?.();
     } catch (error) {
       console.error('Failed to tick a task:', error);
-      setContent(before);
+      if (latest()) setContent(before);
       flash(t('annotations.dialog.taskFailed', 'The task was not saved'), 'error');
     }
   }, [annotationId, onAnnotationChange, t]);

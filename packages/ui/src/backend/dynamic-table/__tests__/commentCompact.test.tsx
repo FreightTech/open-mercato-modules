@@ -17,6 +17,8 @@ import { flash } from '../../FlashMessages'
 type Call = { url: string; init?: { method?: string; body?: string; headers?: Record<string, string> } }
 const calls: Call[] = []
 let patchReply: { ok: boolean; status: number; result: unknown } = { ok: true, status: 200, result: {} }
+let deferPatch = false
+const deferred: Array<(reply: unknown) => void> = []
 
 jest.mock('../../FlashMessages', () => ({ flash: jest.fn() }))
 jest.mock('../../utils/apiCall', () => ({
@@ -34,7 +36,7 @@ jest.mock('../../utils/apiCall', () => ({
         },
       }
     }
-    if (init?.method === 'PATCH') return patchReply
+    if (init?.method === 'PATCH') return deferPatch ? new Promise((resolve) => deferred.push(resolve)) : patchReply
     return { ok: true, status: 201, result: { id: 'new' } }
   }),
 }))
@@ -48,6 +50,8 @@ beforeEach(() => {
   calls.length = 0
   patchReply = { ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [x] wysłać zlecenie' } }
   ;(flash as jest.Mock).mockClear()
+  deferPatch = false
+  deferred.length = 0
 })
 
 describe('GEPARD-319 — the markdown of a comment', () => {
@@ -131,5 +135,22 @@ describe('GEPARD-319 — the bubble', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Task 1' }))
     await waitFor(() => expect(flash).toHaveBeenCalledWith('Brak uprawnień', 'error'))
     expect((screen.getByRole('checkbox', { name: 'Task 1' }) as HTMLInputElement).checked).toBe(false)
+  })
+
+  it('keeps two quick ticks when the first answer comes back last (GEPARD-308, CHECK #3238)', async () => {
+    deferPatch = true
+    dialog()
+    await screen.findByText('zamówić auto')
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Task 1' }))
+    await waitFor(() => expect(deferred).toHaveLength(1))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Task 2' }))
+    await waitFor(() => expect(deferred).toHaveLength(2))
+    // The server queued them on the row: the second answer carries both ticks, the first only its own — and arrives last.
+    deferred[1]({ ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [ ] wysłać zlecenie' } })
+    await waitFor(() => expect((screen.getByRole('checkbox', { name: 'Task 2' }) as HTMLInputElement).checked).toBe(false))
+    deferred[0]({ ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [x] wysłać zlecenie' } })
+    await new Promise((r) => setTimeout(r, 20))
+    expect((screen.getByRole('checkbox', { name: 'Task 1' }) as HTMLInputElement).checked).toBe(true)
+    expect((screen.getByRole('checkbox', { name: 'Task 2' }) as HTMLInputElement).checked).toBe(false)
   })
 })
