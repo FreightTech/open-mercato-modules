@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Truck } from 'lucide-react';
+import { Lock, MapPin, Truck } from 'lucide-react';
 import ReactDOM from 'react-dom';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { apiCall } from '../../utils/apiCall';
@@ -54,7 +54,23 @@ interface Comment {
   /** The server's word on whether this person may delete it (its author, or annotations.delete — GEPARD-307).
       Absent from a server that predates it: the bin shows, as it always did. */
   canDelete?: boolean;
+  /** GEPARD-310 — `where_added`: shown only in the table and on the grid row it was written on. */
+  visibility?: 'everywhere' | 'where_added';
+  originTableId?: string | null;
+  originRowId?: string | null;
 }
+
+/** GEPARD-310 — a comment kept to its table and grid row shows only there; every other comment shows on every row. */
+function showsHere(c: Pick<Comment, 'visibility' | 'originTableId' | 'originRowId'>, tableId: string | undefined, rowKeys: ReadonlySet<string>): boolean {
+  if (c.visibility !== 'where_added' || !c.originRowId) return true;
+  return !!tableId && c.originTableId === tableId && rowKeys.has(c.originRowId);
+}
+
+const commentPlace = (c: any) => ({
+  visibility: c.visibility === 'where_added' ? ('where_added' as const) : ('everywhere' as const),
+  originTableId: c.originTableId ?? null,
+  originRowId: c.originRowId ?? null,
+});
 
 /** A delete is refused with a message, never by a trip to the login page (GEPARD-307). */
 const DELETE_INIT = { method: 'DELETE', headers: { 'x-om-forbidden-redirect': '0' } } as const;
@@ -71,6 +87,8 @@ interface BulkCell {
   entityType: string;
   rowId: string;
   columnKey: string;
+  /** GEPARD-310 — the grid row this cell of the range is on. */
+  originRowId?: string;
 }
 
 interface PendingMention {
@@ -100,6 +118,11 @@ interface CellCommentDialogProps {
   anchorRect?: DOMRect | null;
   /** When provided, dialog operates in bulk mode — color picker only, no comments */
   bulkCells?: BulkCell[];
+  /**
+   * GEPARD-310 — the grid row the dialog was opened on (the row's own key). A comment written here records it, with
+   * the table (`viewContext`), so that one kept to where it was added shows on this row only.
+   */
+  originRowId?: string;
 }
 
 function renderCommentContent(content: string): React.ReactNode {
@@ -149,6 +172,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
   onAnnotationChange,
   anchorRect,
   bulkCells,
+  originRowId,
 }) => {
   const t = useT();
   const isBulkMode = bulkCells && bulkCells.length > 1;
@@ -219,6 +243,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
       setLoading(true);
       try {
         const params = new URLSearchParams({ entityType, rowIds: rowId });
+        if (viewContext) params.set('tableId', viewContext);
         const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`);
         if (ok && result) {
           const items: any[] = result.items || result.data || result || [];
@@ -226,7 +251,8 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
             (a.columnKey || a.column_key) === columnKey
           );
           if (annotation?.comments) {
-            setComments(annotation.comments.map((c: any) => ({
+            const here = new Set(originRowId ? [originRowId] : []);
+            setComments(annotation.comments.filter((c: any) => showsHere(commentPlace(c), viewContext, here)).map((c: any) => ({
               id: c.id,
               userId: c.userId || c.user_id,
               userName: c.userName || c.user_name || 'User',
@@ -234,6 +260,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
               audience: (c.audience as CommentAudience) ?? 'internal',
               createdAt: c.createdAt || c.created_at,
               canDelete: typeof c.canDelete === 'boolean' ? c.canDelete : undefined,
+              ...commentPlace(c),
             })));
           }
         }
@@ -245,7 +272,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     };
 
     fetchComments();
-  }, [isOpen, isBulkMode, annotationId, entityType, rowId, columnKey]);
+  }, [isOpen, isBulkMode, annotationId, entityType, rowId, columnKey, viewContext, originRowId]);
 
   // Fetch comments for all selected cells (bulk mode)
   const fetchBulkComments = useCallback(async () => {
@@ -267,6 +294,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
           // A range over many rows: its ids in parts, as useAnnotations reads them (CR13).
           annotationIdBatches(rowIds).map(async (part) => {
             const params = new URLSearchParams({ entityType: type, rowIds: part.join(',') });
+            if (viewContext) params.set('tableId', viewContext);
             const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`);
             if (!ok || !result) return [] as any[];
             const items: any[] = result.items || result.data || result || [];
@@ -277,6 +305,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
       {
         const items = responses.flat();
         const allComments: Comment[] = [];
+        const rangeRows = new Set(bulkCells.map((c) => c.originRowId).filter((k): k is string => !!k));
         for (const annotation of items) {
           const aType = annotation.entityType || annotation.entity_type || '';
           const aRowId = annotation.rowId || annotation.row_id;
@@ -284,6 +313,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
           if (!cellKeySet.has(`${aType}:${aRowId}:${aColKey}`)) continue;
           const cellLabel = aColKey;
           for (const c of (annotation.comments || [])) {
+            if (!showsHere(commentPlace(c), viewContext, rangeRows)) continue;
             allComments.push({
               id: c.id,
               userId: c.userId || c.user_id,
@@ -294,6 +324,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
               cellLabel,
               annotationId: annotation.id || annotation.annotationId,
               canDelete: typeof c.canDelete === 'boolean' ? c.canDelete : undefined,
+              ...commentPlace(c),
             });
           }
         }
@@ -305,7 +336,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [bulkCells]);
+  }, [bulkCells, viewContext]);
 
   useEffect(() => {
     if (!isOpen || !isBulkMode) return;
@@ -425,6 +456,9 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
           body: JSON.stringify({
             content: wireContent,
             audience,
+            // GEPARD-310 — where it is written: the table's (or the system's) setting decides whether it shows only here.
+            ...(viewContext ? { originTableId: viewContext } : {}),
+            ...(originRowId ? { originRowId } : {}),
             // FMS messaging 1.4: the column's title and the row's name, so the mention says where it was written.
             ...(mentionedUserIds.length > 0 ? { mentionedUserIds, columnTitle: columnTitle || null, rowLabel: rowLabel || null } : {}),
           }),
@@ -439,6 +473,10 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
           content: wireContent,
           audience,
           createdAt: new Date().toISOString(),
+          canDelete: true,
+          visibility: commentResult.visibility === 'where_added' ? 'where_added' : 'everywhere',
+          originTableId: viewContext ?? null,
+          originRowId: originRowId ?? null,
         };
         setComments(prev => [...prev, newCommentObj]);
         setNewComment('');
@@ -450,7 +488,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     } finally {
       setSubmitting(false);
     }
-  }, [newComment, submitting, annotationId, entityType, viewContext, rowId, columnKey, selectedColor, onAnnotationChange, pendingMentions, buildWireContent, audience]);
+  }, [newComment, submitting, annotationId, entityType, viewContext, rowId, columnKey, selectedColor, onAnnotationChange, pendingMentions, buildWireContent, audience, originRowId]);
 
   // Bulk color change — calls PUT batch endpoint
   const handleBulkColorChange = useCallback(async (color: string | null) => {
@@ -508,9 +546,10 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
             body: JSON.stringify({
               entityType: type,
               tableId: viewContext,
-              cells: cells.map((c) => ({ rowId: c.rowId, columnKey: c.columnKey })),
+              cells: cells.map((c) => ({ rowId: c.rowId, columnKey: c.columnKey, ...(c.originRowId ? { originRowId: c.originRowId } : {}) })),
               comment: wireContent,
               audience,
+              ...(viewContext ? { originTableId: viewContext } : {}),
               ...(mentionedUserIds.length > 0 ? { mentionedUserIds } : {}),
             }),
           }),
@@ -704,6 +743,16 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
                       <span className="hot-comment-audience-tag" title={t('annotations.dialog.audienceCarrierHint', 'Printed on the carrier document')}>
                         <Truck size={10} />
                         {t('annotations.dialog.audienceCarrierShort', 'carrier')}
+                      </span>
+                    )}
+                    {comment.visibility === 'where_added' && (
+                      <span
+                        className="hot-comment-audience-tag"
+                        data-comment-where-added=""
+                        title={t('annotations.dialog.whereAddedHint', 'Shown only in this table, on this row')}
+                      >
+                        <MapPin size={10} />
+                        {t('annotations.dialog.whereAddedShort', 'only here')}
                       </span>
                     )}
                     <span className="hot-comment-time">{formatTimeAgo(comment.createdAt)}</span>

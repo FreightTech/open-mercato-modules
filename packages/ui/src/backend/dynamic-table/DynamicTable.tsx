@@ -133,7 +133,7 @@ import Debugger from './components/Debugger';
 import FullscreenOverlay from './components/FullscreenOverlay';
 import { Maximize2, FunnelX, LayoutGrid, Replace } from 'lucide-react';
 import { generateSortRuleId, generatePerspectiveId, BASE_VIEW_PERSPECTIVE_NAME } from './types/perspective';
-import { useAnnotations, annotationKey } from './hooks/useAnnotations';
+import { useAnnotations, annotationKey, annotationForRow, rowAnnotationKey } from './hooks/useAnnotations';
 import type { AnnotationComment } from './hooks/useAnnotations';
 import CellCommentDialog from './components/CellCommentDialog';
 import CellCommentHoverPopup from './components/CellCommentHoverPopup';
@@ -1176,8 +1176,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     annotationId?: string | null;
     currentColor?: string | null;
     anchorRect?: DOMRect | null;
+    /** GEPARD-310 — the grid row it was opened on (the row's own key), where a comment written now is kept. */
+    originRowId?: string;
     /** Bulk cells carry their own scope — one range can span two entity types. */
-    bulkCells?: { entityType: string; rowId: string; columnKey: string }[];
+    bulkCells?: { entityType: string; rowId: string; columnKey: string; originRowId?: string }[];
   } | null>(null);
 
   // Read-only hover preview of a commented cell's thread (shown on hovering the
@@ -1252,8 +1254,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
 
   const { annotations, refresh: refreshAnnotations } = useAnnotations({
     enabled: enableComments && annotationTargets.length > 0,
+    // GEPARD-310 — the table asking, so a comment kept to another table stays there.
+    tableId: commentsViewContext,
     targets: annotationTargets,
   });
+
+  // GEPARD-310 — the grid row a comment is written on: the row's own key (`rowKeyColumn`), which tells apart the rows of
+  // a table that repeats a record (RFS, Transporty: one row per leg of a container).
+  const commentRowKeyColumn = rowKeyColumn ?? idColumnName;
+  const commentRowKey = useCallback((rowData: Record<string, any> | undefined): string | undefined => {
+    const value = rowData?.[commentRowKeyColumn];
+    return value == null || value === '' ? undefined : String(value);
+  }, [commentRowKeyColumn]);
 
   /**
    * The annotation map key for one cell, handed to every row. Stable identity
@@ -1265,9 +1277,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     (rowData: Record<string, any>, column: ColumnDef): string | null => {
       const target = resolveCommentTarget(rowData, column);
       if (!target.entityType || !target.rowId) return null;
-      return annotationKey(target, target.columnKey);
+      const key = annotationKey(target, target.columnKey);
+      // A row with comments kept to it (GEPARD-310) reads its own entry; every other row the cell's shared one.
+      const rowKey = commentRowKey(rowData);
+      if (rowKey && annotations.has(rowAnnotationKey(key, rowKey))) return rowAnnotationKey(key, rowKey);
+      return key;
     },
-    [resolveCommentTarget],
+    [resolveCommentTarget, commentRowKey, annotations],
   );
 
   // Compile the highlighting rule set ONCE per change. `Cell` must never
@@ -2573,7 +2589,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
    */
   const collectBulkCells = useCallback(
     (bounds: { startRow: number; endRow: number; startCol: number; endCol: number }) => {
-      const cells: { entityType: string; rowId: string; columnKey: string }[] = [];
+      const cells: { entityType: string; rowId: string; columnKey: string; originRowId?: string }[] = [];
       const seen = new Set<string>();
       for (let r = bounds.startRow; r <= bounds.endRow; r++) {
         const rData = store.getRowData(r);
@@ -2586,12 +2602,12 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           const key = annotationKey(target, target.columnKey);
           if (seen.has(key)) continue;
           seen.add(key);
-          cells.push({ entityType: target.entityType, rowId: target.rowId, columnKey: target.columnKey });
+          cells.push({ entityType: target.entityType, rowId: target.rowId, columnKey: target.columnKey, originRowId: commentRowKey(rData) });
         }
       }
       return cells;
     },
-    [store, cols, resolveCommentTarget],
+    [store, cols, resolveCommentTarget, commentRowKey],
   );
 
   // Resolve a comment-indicator (or any element inside a cell) to its cell
@@ -2619,10 +2635,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       entityType: target.entityType,
       rowId: target.rowId,
       columnKey: target.columnKey,
-      annotation: annotations.get(annotationKey(target, target.columnKey)),
+      annotation: annotationForRow(annotations, annotationKey(target, target.columnKey), commentRowKey(rowData)),
+      originRowId: commentRowKey(rowData),
       cell,
     };
-  }, [store, cols, resolveCommentTarget, annotations]);
+  }, [store, cols, resolveCommentTarget, annotations, commentRowKey]);
 
   // Track the cell under the pointer so it can offer the comment affordance
   // (ledger 8.1 — hover used to paint a selection box and nothing else).
@@ -2688,6 +2705,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           annotationId: info.annotation?.id || null,
           currentColor: info.annotation?.color || null,
           anchorRect: (info.cell as HTMLElement).getBoundingClientRect(),
+          originRowId: info.originRowId,
         });
         return true;
       }
@@ -2734,7 +2752,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
-    const annotation = annotations.get(annotationKey(cellTarget, cellTarget.columnKey));
+    const annotation = annotationForRow(annotations, annotationKey(cellTarget, cellTarget.columnKey), commentRowKey(rowData));
 
     setCommentDialog({
       entityType: cellTarget.entityType,
@@ -2745,9 +2763,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       annotationId: annotation?.id || null,
       currentColor: annotation?.color || null,
       anchorRect: (cell as HTMLElement).getBoundingClientRect(),
+      originRowId: commentRowKey(rowData),
     });
     return true;
-  }, [enableComments, commentsEntityType, store, cols, resolveCommentTarget, collectBulkCells, annotations]);
+  }, [enableComments, commentsEntityType, store, cols, resolveCommentTarget, collectBulkCells, annotations, commentRowKey]);
 
   // ── Cell-range selection: committed dotted outline + drag-end context menu ──
   // The dotted outline and the Copy/Comment menu appear ONLY when a drag finishes
@@ -2956,7 +2975,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         return;
       }
     }
-    const annotation = annotations.get(annotationKey(firstTarget, firstTarget.columnKey));
+    const annotation = annotationForRow(annotations, annotationKey(firstTarget, firstTarget.columnKey), commentRowKey(firstRowData));
     setCommentDialog({
       entityType: firstTarget.entityType,
       rowId: firstTarget.rowId,
@@ -2966,8 +2985,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       annotationId: annotation?.id || null,
       currentColor: annotation?.color || null,
       anchorRect,
+      originRowId: commentRowKey(firstRowData),
     });
-  }, [enableComments, commentsEntityType, store, cols, resolveCommentTarget, collectBulkCells, annotations, columnVirtualizer, dataRowHeight]);
+  }, [enableComments, commentsEntityType, store, cols, resolveCommentTarget, collectBulkCells, annotations, columnVirtualizer, dataRowHeight, commentRowKey]);
 
   // After a drag finishes on a multi-cell range, commit the outline.
   //
@@ -4074,6 +4094,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       onFullscreen={enableFullscreen && !isFullscreen ? handleEnterFullscreen : undefined}
       extras={toolbarOverflowExtras}
       look={look}
+      commentVisibilityTableId={enableComments && commentsEntityType ? commentsViewContext : undefined}
     />
   )
 
@@ -5043,6 +5064,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           onAnnotationChange={() => { refreshAnnotations(); onAnnotationChange?.(); }}
           anchorRect={commentDialog.anchorRect}
           bulkCells={commentDialog.bulkCells}
+          originRowId={commentDialog.originRowId}
         />
       )}
 

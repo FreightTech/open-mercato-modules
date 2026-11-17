@@ -21,6 +21,7 @@ import { DENSITY_LEVELS, type DensityLevel } from '../types/density'
 import { setDensityPreference, useDensityPreference } from '../hooks/useDensityPreference'
 import type { ExportFormat } from '../utils/exportTable'
 import { computeAnchoredPosition } from '../utils/anchoredPosition'
+import { CommentVisibilityMenu } from './CommentVisibilityMenu'
 
 /**
  * Lets an injected row close the menu it lives in.
@@ -56,6 +57,11 @@ export interface ToolbarOverflowProps {
    * "Table settings", for the menu placed after the pagination (`tableMenuPlacement: 'pagination'`).
    */
   look?: 'more' | 'settings'
+  /**
+   * GEPARD-310 — the table's comment view context. When set, the menu offers "Comments": where a comment written in
+   * this table shows (as the settings say / everywhere / only in this table and row).
+   */
+  commentVisibilityTableId?: string
 }
 
 const MENU_WIDTH = 216
@@ -84,6 +90,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
   look = 'more',
   onConfigureView,
   onAddView,
+  commentVisibilityTableId,
 }) => {
   const t = useT()
   const [open, setOpen] = React.useState(false)
@@ -155,7 +162,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
     }
   }, [open])
 
-  if (!onExport && !showDensity && !onFullscreen && !extras && !onConfigureView && !onAddView) return null
+  if (!onExport && !showDensity && !onFullscreen && !extras && !onConfigureView && !onAddView && !commentVisibilityTableId) return null
 
   // One M3 menu row: the concentric 8px corner the overlay sheet gives every
   // other menu item, a translucent hover state layer, and the 12/16 body token
@@ -299,6 +306,10 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
                 {t('dynamicTable.toolbar.fullscreen', 'Fullscreen')}
               </button>
             </div>
+          )}
+
+          {commentVisibilityTableId && (
+            <CommentVisibilityMenu tableId={commentVisibilityTableId} rowClassName={row} gutterClassName={gutter} />
           )}
 
           {extras && (
