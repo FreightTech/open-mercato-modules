@@ -217,53 +217,58 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [newComment]);
 
+  // Read the cell's thread (single-cell mode). `quiet`: no loading state — a re-read after ticking a task (GEPARD-308).
+  // Resolves true when the server answered.
+  const loadThread = useCallback(async (quiet = false): Promise<boolean> => {
+    if (isBulkMode || !annotationId) return false;
+    if (!quiet) setLoading(true);
+    try {
+      const params = new URLSearchParams({ entityType, rowIds: rowId });
+      if (viewContext) params.set('tableId', viewContext);
+      const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`);
+      if (ok && result) {
+        const items: any[] = result.items || result.data || result || [];
+        const annotation = items.find((a: any) =>
+          (a.columnKey || a.column_key) === columnKey
+        );
+        if (annotation?.comments) {
+          const here = new Set(originRowId ? [originRowId] : []);
+          setComments(annotation.comments.filter((c: any) => showsHere(commentPlace(c), viewContext, here)).map((c: any) => ({
+            id: c.id,
+            userId: c.userId || c.user_id,
+            userName: c.userName || c.user_name || 'User',
+            content: c.content,
+            audience: (c.audience as CommentAudience) ?? 'internal',
+            createdAt: c.createdAt || c.created_at,
+            canDelete: typeof c.canDelete === 'boolean' ? c.canDelete : undefined,
+            ...commentPlace(c),
+          })));
+        }
+        return ok;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+      return false;
+    } finally {
+      if (!quiet) setLoading(false);
+    }
+  }, [isBulkMode, annotationId, entityType, rowId, columnKey, viewContext, originRowId]);
+
   // Fetch comments when dialog opens (single-cell mode)
   useEffect(() => {
     if (!isOpen || isBulkMode || !annotationId) {
       if (!isBulkMode) setComments([]);
       return;
     }
-
-    const fetchComments = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({ entityType, rowIds: rowId });
-        if (viewContext) params.set('tableId', viewContext);
-        const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`);
-        if (ok && result) {
-          const items: any[] = result.items || result.data || result || [];
-          const annotation = items.find((a: any) =>
-            (a.columnKey || a.column_key) === columnKey
-          );
-          if (annotation?.comments) {
-            const here = new Set(originRowId ? [originRowId] : []);
-            setComments(annotation.comments.filter((c: any) => showsHere(commentPlace(c), viewContext, here)).map((c: any) => ({
-              id: c.id,
-              userId: c.userId || c.user_id,
-              userName: c.userName || c.user_name || 'User',
-              content: c.content,
-              audience: (c.audience as CommentAudience) ?? 'internal',
-              createdAt: c.createdAt || c.created_at,
-              canDelete: typeof c.canDelete === 'boolean' ? c.canDelete : undefined,
-              ...commentPlace(c),
-            })));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch comments:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchComments();
-  }, [isOpen, isBulkMode, annotationId, entityType, rowId, columnKey, viewContext, originRowId]);
+    void loadThread();
+  }, [isOpen, isBulkMode, annotationId, loadThread]);
 
   // Fetch comments for all selected cells (bulk mode)
-  const fetchBulkComments = useCallback(async () => {
+  const fetchBulkComments = useCallback(async (quiet = false) => {
     if (!bulkCells || bulkCells.length === 0) return;
 
-    setLoading(true);
+    if (!quiet) setLoading(true);
     try {
       // One request per SCOPE — a range may cover container-scoped and
       // leg-scoped columns at once (B8a).
@@ -319,7 +324,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     } catch (error) {
       console.error('Failed to fetch bulk comments:', error);
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, [bulkCells, viewContext]);
 
@@ -625,39 +630,46 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     onAnnotationChange?.();
   }, [comments, annotationId, onAnnotationChange, t]);
 
-  // GEPARD-319 — a task in a comment ("- [ ] …") is ticked in place; the server flips that one mark. Shown at once,
-  // put back if the server refuses. GEPARD-308 (CHECK #3238): ticks in quick succession queue on the server's row lock
-  // and every answer carries the text after its own tick — only the NEWEST tick's answer is applied, so an earlier
-  // answer arriving late cannot untick what a later click ticked.
-  const tickSeq = useRef(new Map<string, number>());
+  // GEPARD-319 — a task in a comment ("- [ ] …") is ticked in place; the server flips that one mark, shown at once.
+  // GEPARD-308 (CHECK #3238, p2B's re-check): ticks in quick succession queue on the server's row lock in an order the
+  // bubble cannot know — the newer click may get the lock first — so no single answer is the stored text. While a tick
+  // of the comment is still out, answers are held (the optimistic marks stay); when the last one settles, the thread is
+  // read again from the server (its stored text), the grid refreshed once. Should that read fail: the answer that came
+  // last, or — all refused — the text before the ticks.
+  const ticks = useRef(new Map<string, { pending: number; last: string | null; before: string }>());
   const handleToggleTask = useCallback(async (comment: Comment, index: number, done: boolean) => {
     const annId = comment.annotationId || annotationId;
     if (!annId) return;
-    const seq = (tickSeq.current.get(comment.id) ?? 0) + 1;
-    tickSeq.current.set(comment.id, seq);
-    const latest = () => tickSeq.current.get(comment.id) === seq;
-    // A click is a discrete event: the thread re-renders between two clicks, so `comment` already holds the last tick.
-    const before = comment.content;
+    let burst = ticks.current.get(comment.id);
+    if (!burst) {
+      burst = { pending: 0, last: null, before: comment.content };
+      ticks.current.set(comment.id, burst);
+    }
+    burst.pending += 1;
     const setContent = (content: string) => setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, content } : c)));
-    setContent(toggleTaskInContent(before, index, done));
+    // A click is a discrete event: the thread re-renders between two clicks, so `comment` already holds the last tick.
+    setContent(toggleTaskInContent(comment.content, index, done));
     try {
       const { ok, result } = await apiCall<{ content?: string; error?: string }>(
         `/api/annotations/annotations/${annId}/comments?commentId=${comment.id}`,
         { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-om-forbidden-redirect': '0' }, body: JSON.stringify({ task: index, done }) },
       );
-      if (!ok) {
-        if (latest()) setContent(before);
-        flash(result?.error || t('annotations.dialog.taskFailed', 'The task was not saved'), 'error');
-        return;
-      }
-      if (latest() && typeof result?.content === 'string') setContent(result.content);
-      if (latest()) onAnnotationChange?.();
+      if (!ok) flash(result?.error || t('annotations.dialog.taskFailed', 'The task was not saved'), 'error');
+      else if (typeof result?.content === 'string') burst.last = result.content;
     } catch (error) {
       console.error('Failed to tick a task:', error);
-      if (latest()) setContent(before);
       flash(t('annotations.dialog.taskFailed', 'The task was not saved'), 'error');
+    } finally {
+      burst.pending -= 1;
+      if (burst.pending === 0) {
+        ticks.current.delete(comment.id);
+        const read = isBulkMode ? (fetchBulkComments(true).then(() => true)) : loadThread(true);
+        const stored = await read.catch(() => false);
+        if (!stored) setContent(burst.last ?? burst.before);
+        if (burst.last !== null) onAnnotationChange?.();
+      }
     }
-  }, [annotationId, onAnnotationChange, t]);
+  }, [annotationId, onAnnotationChange, t, isBulkMode, fetchBulkComments, loadThread]);
 
   // GEPARD-319 — "- [ ] " at the start of the line the caret is on (a new line when that one has text).
   const insertTask = useCallback(() => {

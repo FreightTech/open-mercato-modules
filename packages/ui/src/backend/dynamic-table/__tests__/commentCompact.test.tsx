@@ -19,6 +19,9 @@ const calls: Call[] = []
 let patchReply: { ok: boolean; status: number; result: unknown } = { ok: true, status: 200, result: {} }
 let deferPatch = false
 const deferred: Array<(reply: unknown) => void> = []
+const START = 'Do zrobienia:\n- [ ] zamówić auto\n- [x] wysłać zlecenie'
+/** What the row holds — the thread read returns it; an immediate PATCH stores its answer. */
+let stored = START
 
 jest.mock('../../FlashMessages', () => ({ flash: jest.fn() }))
 jest.mock('../../utils/apiCall', () => ({
@@ -31,12 +34,17 @@ jest.mock('../../utils/apiCall', () => ({
         result: {
           items: [{
             id: 'ann-1', entityType: 'folder_unit', rowId: 'u1', columnKey: 'rate', color: null, assignees: [],
-            comments: [{ id: 'c1', userId: 'u', userName: 'Dawid Lass', content: 'Do zrobienia:\n- [ ] zamówić auto\n- [x] wysłać zlecenie', audience: 'internal', createdAt: '2026-11-17T10:00:00.000Z', canDelete: true }],
+            comments: [{ id: 'c1', userId: 'u', userName: 'Dawid Lass', content: stored, audience: 'internal', createdAt: '2026-11-17T10:00:00.000Z', canDelete: true }],
           }],
         },
       }
     }
-    if (init?.method === 'PATCH') return deferPatch ? new Promise((resolve) => deferred.push(resolve)) : patchReply
+    if (init?.method === 'PATCH') {
+      if (deferPatch) return new Promise((resolve) => deferred.push(resolve))
+      const reply = patchReply as { ok: boolean; result: { content?: string } }
+      if (reply.ok && typeof reply.result?.content === 'string') stored = reply.result.content
+      return patchReply
+    }
     return { ok: true, status: 201, result: { id: 'new' } }
   }),
 }))
@@ -52,6 +60,7 @@ beforeEach(() => {
   ;(flash as jest.Mock).mockClear()
   deferPatch = false
   deferred.length = 0
+  stored = START
 })
 
 describe('GEPARD-319 — the markdown of a comment', () => {
@@ -137,20 +146,57 @@ describe('GEPARD-319 — the bubble', () => {
     expect((screen.getByRole('checkbox', { name: 'Task 1' }) as HTMLInputElement).checked).toBe(false)
   })
 
-  it('keeps two quick ticks when the first answer comes back last (GEPARD-308, CHECK #3238)', async () => {
+  const box = (n: number) => screen.getByRole('checkbox', { name: `Task ${n}` }) as HTMLInputElement
+  const twoQuickTicks = async () => {
     deferPatch = true
     dialog()
     await screen.findByText('zamówić auto')
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Task 1' }))
+    fireEvent.click(box(1)) // tick task 1
     await waitFor(() => expect(deferred).toHaveLength(1))
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Task 2' }))
+    fireEvent.click(box(2)) // untick task 2
     await waitFor(() => expect(deferred).toHaveLength(2))
-    // The server queued them on the row: the second answer carries both ticks, the first only its own — and arrives last.
-    deferred[1]({ ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [ ] wysłać zlecenie' } })
-    await waitFor(() => expect((screen.getByRole('checkbox', { name: 'Task 2' }) as HTMLInputElement).checked).toBe(false))
-    deferred[0]({ ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [x] wysłać zlecenie' } })
+  }
+  const BOTH = 'Do zrobienia:\n- [x] zamówić auto\n- [ ] wysłać zlecenie'
+
+  it('two quick ticks: the server ran them in click order, the first answer comes back last (GEPARD-308, CHECK #3238)', async () => {
+    await twoQuickTicks()
+    stored = BOTH
+    deferred[1]({ ok: true, status: 200, result: { content: BOTH } })
     await new Promise((r) => setTimeout(r, 20))
-    expect((screen.getByRole('checkbox', { name: 'Task 1' }) as HTMLInputElement).checked).toBe(true)
-    expect((screen.getByRole('checkbox', { name: 'Task 2' }) as HTMLInputElement).checked).toBe(false)
+    // The first tick is still out: nothing is applied — the marks stay as clicked.
+    expect([box(1).checked, box(2).checked]).toEqual([true, false])
+    deferred[0]({ ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [x] wysłać zlecenie' } })
+    await waitFor(() => expect(calls.filter((c) => c.url.startsWith('/api/annotations/annotations?')).length).toBe(2))
+    await new Promise((r) => setTimeout(r, 20))
+    expect([box(1).checked, box(2).checked]).toEqual([true, false])
+  })
+
+  it('two quick ticks: the newer click got the row lock first — the stored text wins, not the newest answer (p2B probe)', async () => {
+    await twoQuickTicks()
+    // Server: click 2 first (its answer lacks tick 1), then click 1 (its answer is what the row holds).
+    deferred[1]({ ok: true, status: 200, result: { content: 'Do zrobienia:\n- [ ] zamówić auto\n- [ ] wysłać zlecenie' } })
+    await new Promise((r) => setTimeout(r, 20))
+    expect([box(1).checked, box(2).checked]).toEqual([true, false])
+    stored = BOTH
+    deferred[0]({ ok: true, status: 200, result: { content: BOTH } })
+    await new Promise((r) => setTimeout(r, 30))
+    expect([box(1).checked, box(2).checked]).toEqual([true, false])
+  })
+
+  it('reads the thread again once, and refreshes the grid once, after a burst of ticks', async () => {
+    const onAnnotationChange = jest.fn()
+    deferPatch = true
+    render(withI18n(React.createElement(CellCommentDialog as any, {
+      isOpen: true, onClose: () => {}, entityType: 'folder_unit', rowId: 'u1', columnKey: 'rate', columnTitle: 'Stawka', annotationId: 'ann-1', onAnnotationChange,
+    })))
+    await screen.findByText('zamówić auto')
+    fireEvent.click(box(1))
+    fireEvent.click(box(2))
+    await waitFor(() => expect(deferred).toHaveLength(2))
+    stored = BOTH
+    deferred[0]({ ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [x] wysłać zlecenie' } })
+    deferred[1]({ ok: true, status: 200, result: { content: BOTH } })
+    await waitFor(() => expect(onAnnotationChange).toHaveBeenCalledTimes(1))
+    expect(calls.filter((c) => c.url.startsWith('/api/annotations/annotations?'))).toHaveLength(2) // open + one re-read
   })
 })
