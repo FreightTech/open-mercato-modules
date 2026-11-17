@@ -126,6 +126,8 @@ export function useAnnotations({
 }: UseAnnotationsOptions) {
   const [annotations, setAnnotations] = useState<AnnotationMap>(new Map());
   const [loading, setLoading] = useState(false);
+  /** How many reads have finished (GEPARD-309: a link to a cell waits for the first before it opens the comments). */
+  const [settled, setSettled] = useState(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   /**
@@ -261,6 +263,7 @@ export function useAnnotations({
       setAnnotations(new Map());
     } finally {
       setLoading(false);
+      if (!signal.aborted) setSettled((n) => n + 1);
     }
     // `targetsKey` is the real dependency — see the note on the memo above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -277,6 +280,7 @@ export function useAnnotations({
   return {
     annotations,
     loading,
+    settled,
     refresh: fetchAnnotations,
   };
 }
