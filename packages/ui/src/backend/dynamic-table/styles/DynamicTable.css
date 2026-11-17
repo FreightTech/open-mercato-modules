@@ -2814,33 +2814,23 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 
 .hot-comment-popover-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    padding: 14px 16px;
+    gap: 8px;
+    padding: 6px 8px 6px 12px;
     border-bottom: 1px solid var(--m3-outline-faint);
 }
 
-.hot-comment-popover-title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow: hidden;
-    min-width: 0;
-}
-
-.hot-comment-popover-subtitle {
-    font-size: 12px;
-    color: var(--m3-on-surface-variant);
-    font-weight: 400;
-}
-
+/* GEPARD-319 — one line: the cell's place. "Comments on" is what the bubble is; it does not need saying. */
 .hot-comment-popover-title {
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 20px;
     font-weight: 600;
     color: var(--m3-on-surface);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
 }
 
 .hot-comment-popover-close {
@@ -2848,14 +2838,13 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     border: none;
     color: var(--m3-on-surface-variant);
     cursor: pointer;
-    padding: 4px;
+    padding: 3px;
     line-height: 1;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--m3-shape-full);
-    margin-top: 2px;
 }
 
 .hot-comment-popover-close:hover {
@@ -2863,85 +2852,35 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     background-color: var(--m3-state-layer-hover);
 }
 
+/* GEPARD-319 — the palette opens from one dot, in the controls row, at a third of its old size. */
 .hot-comment-colors {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0;
-    margin-top: 10px;
-}
-
-/* B8c — audience picker. A two-segment control, sized and spaced off the colour
-   row directly below it so the input area reads as one stack of choices.
-   Deliberately not a <select>: which of the two a note is has to be legible
-   while it is being typed. */
-.hot-comment-audience {
-    display: flex;
-    align-items: center;
     gap: 4px;
-    margin-top: 10px;
-    padding: 2px;
-    border: 1px solid var(--m3-outline-variant);
-    border-radius: var(--m3-shape-full);
-    width: fit-content;
+    padding: 0 2px;
 }
 
-.hot-comment-audience-option {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 26px;
-    padding: 0 10px;
-    border: none;
-    border-radius: var(--m3-shape-full);
-    background: transparent;
-    font-size: 12px;
-    font-family: inherit;
-    color: var(--m3-on-surface-variant);
-    cursor: pointer;
-    transition: var(--m3-transition-state);
-}
-
-.hot-comment-audience-option:hover {
-    color: var(--m3-on-surface);
-}
-
-.hot-comment-audience-option[data-selected] {
-    background: var(--m3-secondary-container);
-    color: var(--m3-on-secondary-container);
-    font-weight: 600;
-}
-
-/* The badge on an existing carrier-facing comment in the thread. */
+/* A small mark on a comment: carrier-facing (B8c), kept to where it was added (GEPARD-310). */
 .hot-comment-audience-tag {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 1px 6px;
+    padding: 0 5px;
     border-radius: var(--m3-shape-full);
-    background: var(--m3-surface-container);
-    border: 1px solid var(--m3-outline-faint);
+    background: var(--m3-surface-container-high);
     font-size: 11px;
+    line-height: 16px;
     color: var(--m3-on-surface-variant);
-}
-
-.hot-comment-colors-label {
-    font-size: 13px;
-    color: var(--m3-on-surface-variant);
-    margin-right: 4px;
 }
 
 .hot-comment-color-btn {
-    width: 28px;
-    height: 28px;
+    width: 18px;
+    height: 18px;
     border-radius: var(--m3-shape-full);
-    border: 2px solid var(--m3-outline-variant);
+    border: 1.5px solid var(--m3-outline-variant);
     cursor: pointer;
     transition: transform var(--m3-duration-short2) var(--m3-ease-standard), border-color var(--m3-duration-short3) var(--m3-ease-standard);
     padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .hot-comment-color-btn:hover {
@@ -2950,7 +2889,7 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 
 .hot-comment-color-btn.selected {
     border-color: var(--m3-on-surface);
-    border-width: 2.5px;
+    border-width: 2px;
 }
 
 /* Dark-mode annotation swatches — the buttons carry the light fill as an inline
@@ -2959,24 +2898,14 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
    reads on the dark popover. The "none" swatch keeps its inline dashed border. */
 
 .hot-comment-thread {
-    max-height: 240px;
+    max-height: 320px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 8px 16px;
-    min-height: 40px;
+    padding: 2px 12px;
     border-bottom: 1px solid var(--m3-outline-faint);
 }
 
-/* Bulk-mode "delete all comments" action (between the thread and the input). */
-.hot-comment-bulk-actions {
-    display: flex;
-    justify-content: flex-end;
-    padding: 6px 16px;
-    border-bottom: 1px solid var(--m3-outline-faint);
-    flex-shrink: 0;
-}
 .hot-comment-delete-all {
     background: none;
     border: none;
@@ -2984,7 +2913,7 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    padding: 3px 8px;
+    padding: 3px 6px;
     border-radius: var(--m3-shape-full);
 }
 .hot-comment-delete-all:hover {
@@ -2995,65 +2924,39 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 .hot-comment-empty {
     text-align: center;
     color: var(--m3-on-surface-variant);
-    font-size: 13px;
-    padding: 24px 0;
+    font-size: 12px;
+    padding: 10px 0;
 }
 
 .hot-comment-item {
-    padding: 10px 0;
+    padding: 6px 0;
 }
 
 .hot-comment-item + .hot-comment-item {
     border-top: 1px solid var(--m3-outline-faint);
 }
 
-.hot-comment-item-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-}
-
-.hot-comment-item-body {
-    flex: 1;
-    min-width: 0;
-}
-
 .hot-comment-item-header {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    margin-bottom: 2px;
-}
-
-.hot-comment-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: var(--m3-shape-full);
-    background: var(--m3-primary-container);
-    color: var(--m3-on-primary-container);
-    display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-    flex-shrink: 0;
-    margin-top: 1px;
+    gap: 6px;
+    min-height: 20px;
 }
 
 .hot-comment-author {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--m3-on-surface);
 }
 
 .hot-comment-action {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--m3-on-surface-variant);
     font-weight: 400;
 }
 
 .hot-comment-time {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--m3-on-surface-variant);
     font-weight: 400;
 }
@@ -3063,19 +2966,20 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     border: none;
     color: var(--m3-on-surface-variant);
     cursor: pointer;
-    padding: 4px;
+    padding: 2px;
+    margin-left: auto;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     border-radius: var(--m3-shape-full);
-    margin-top: 2px;
     opacity: 0;
     transition: opacity var(--m3-duration-short3) var(--m3-ease-standard), color var(--m3-duration-short3) var(--m3-ease-standard);
 }
 
-.hot-comment-item:hover .hot-comment-delete {
+.hot-comment-item:hover .hot-comment-delete,
+.hot-comment-delete:focus-visible {
     opacity: 1;
 }
 
@@ -3087,12 +2991,48 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
 .hot-comment-content {
     font-size: 13px;
     color: var(--m3-on-surface);
-    line-height: 1.5;
+    line-height: 1.4;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* GEPARD-319 — the comment's little markdown: tasks, bullets. */
+.hot-comment-md-task {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.hot-comment-md-task input {
+    margin: 3px 0 0;
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    accent-color: var(--m3-primary);
+    cursor: pointer;
+}
+
+.hot-comment-md-task input:disabled {
+    cursor: default;
+}
+
+.hot-comment-md-task[data-done] > span {
+    text-decoration: line-through;
+    color: var(--m3-on-surface-variant);
+}
+
+.hot-comment-md-bullet {
+    display: flex;
+    gap: 6px;
+}
+
+.hot-comment-md-gap {
+    height: 6px;
 }
 
 .hot-comment-input-area {
-    padding: 12px 16px 14px;
+    padding: 8px 10px;
 }
 
 .hot-comment-textarea {
@@ -3100,12 +3040,14 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     resize: none;
     border: 1px solid var(--m3-outline-faint);
     border-radius: var(--m3-shape-md);
-    padding: 10px 12px;
+    padding: 6px 8px;
     font-size: 13px;
+    line-height: 20px;
     font-family: inherit;
     background: var(--m3-surface-container);
     color: var(--m3-on-surface);
     outline: none;
+    max-height: 160px;
     transition: border-color var(--m3-duration-short3) var(--m3-ease-standard);
 }
 
@@ -3119,32 +3061,56 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     box-shadow: var(--m3-focus-halo);
 }
 
+/* GEPARD-319 — one row under the field: task · colour · (delete all) · send. */
 .hot-comment-input-footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 10px;
+    gap: 4px;
+    margin-top: 6px;
 }
 
-.hot-comment-hint {
-    font-size: 12px;
-    color: var(--m3-on-surface-variant);
+.hot-comment-footer-spacer {
+    flex: 1;
 }
 
-.hot-comment-hint kbd {
-    display: inline-block;
-    padding: 1px 5px;
-    font-size: 11px;
-    font-family: inherit;
-    background: var(--m3-surface-container);
-    border: 1px solid var(--m3-outline-faint);
-    border-radius: var(--m3-shape-xs);
+.hot-comment-tool-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: var(--m3-shape-full);
+    background: transparent;
     color: var(--m3-on-surface-variant);
+    cursor: pointer;
+}
+
+.hot-comment-tool-btn:hover,
+.hot-comment-tool-btn[aria-expanded="true"] {
+    background: var(--m3-state-layer-hover);
+    color: var(--m3-on-surface);
+}
+
+.hot-comment-color-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: var(--m3-shape-full);
+    border: 1.5px solid var(--m3-outline-variant);
+}
+
+.hot-comment-color-dot[data-color="none"] {
+    border-style: dashed;
 }
 
 .hot-comment-send-btn {
-    padding: 6px 16px;
-    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
     font-weight: 500;
     background: var(--m3-primary);
     color: var(--m3-on-primary);

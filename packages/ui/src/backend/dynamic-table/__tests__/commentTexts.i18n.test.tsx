@@ -4,7 +4,7 @@
  * They go through `t()` now, with the English as the fallback; a comment count takes its Polish plural form.
  */
 import * as React from 'react'
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
 import Cell, { commentCountForm } from '../components/Cell'
 import CellCommentDialog from '../components/CellCommentDialog'
@@ -52,6 +52,8 @@ describe('D2.05 — the comment texts in the screen language', () => {
         />
       </Provider>,
     )
+    // GEPARD-319 — the palette opens from the colour dot.
+    fireEvent.click(document.body.querySelector('[data-comment-colour]')!)
     const titles = [...document.body.querySelectorAll('[title]')].map((e) => e.getAttribute('title'))
     expect(titles).toEqual(expect.arrayContaining(['Brak', 'Różowy', 'Pomarańczowy']))
     expect(titles).not.toContain('Pink')

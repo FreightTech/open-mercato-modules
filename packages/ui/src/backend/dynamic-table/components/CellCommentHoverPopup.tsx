@@ -2,23 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
 import type { AnnotationComment } from '../hooks/useAnnotations';
-
-const MENTION_PATTERN = /@\[([^\]]+)\]\(([^)]+)\)/g;
-
-/** Render a comment body, turning `@[Name](id)` mentions into highlighted chips. */
-function renderCommentContent(content: string): React.ReactNode {
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  const regex = new RegExp(MENTION_PATTERN.source, 'g');
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(content)) !== null) {
-    if (match.index > lastIndex) parts.push(content.slice(lastIndex, match.index));
-    parts.push(<span key={match.index} className="hot-comment-mention">@{match[1]}</span>);
-    lastIndex = regex.lastIndex;
-  }
-  if (lastIndex < content.length) parts.push(content.slice(lastIndex));
-  return parts.length > 0 ? parts : content;
-}
+import { CommentMarkdown } from './commentMarkdown';
 
 function formatTimeAgo(iso?: string): string {
   if (!iso) return '';
@@ -80,7 +64,7 @@ const CellCommentHoverPopup: React.FC<CellCommentHoverPopupProps> = ({ comments,
               <span className="hot-comment-hover-author">{c.userName || t('dynamicTable.comments.someone', 'Someone')}</span>
               {c.createdAt && <span className="hot-comment-hover-time">{formatTimeAgo(c.createdAt)}</span>}
             </div>
-            <div className="hot-comment-hover-body">{renderCommentContent(c.content)}</div>
+            <div className="hot-comment-hover-body"><CommentMarkdown content={c.content} /></div>
           </div>
         ))}
       </div>

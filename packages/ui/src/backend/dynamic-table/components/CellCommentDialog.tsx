@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, MapPin, Truck } from 'lucide-react';
+import { ListChecks, MapPin, Send, Truck } from 'lucide-react';
 import ReactDOM from 'react-dom';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { apiCall } from '../../utils/apiCall';
 import { flash } from '../../FlashMessages';
 import { annotationIdBatches } from '../hooks/useAnnotations';
 import MentionPopup from './MentionPopup';
+import { CommentMarkdown, toggleTaskInContent } from './commentMarkdown';
 import type { MentionPopupHandle } from './MentionPopup';
 
 /**
@@ -125,29 +126,6 @@ interface CellCommentDialogProps {
   originRowId?: string;
 }
 
-function renderCommentContent(content: string): React.ReactNode {
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  const regex = new RegExp(MENTION_PATTERN.source, 'g');
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(content.slice(lastIndex, match.index));
-    }
-    parts.push(
-      <span key={match.index} className="hot-comment-mention">@{match[1]}</span>
-    );
-    lastIndex = regex.lastIndex;
-  }
-
-  if (lastIndex < content.length) {
-    parts.push(content.slice(lastIndex));
-  }
-
-  return parts.length > 0 ? parts : content;
-}
-
 function extractMentionIds(text: string): string[] {
   const ids: string[] = [];
   const regex = new RegExp(MENTION_PATTERN.source, 'g');
@@ -182,9 +160,8 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
   const [annotationId, setAnnotationId] = useState<string | null>(initialAnnotationId || null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  // B8c — who this note is for. Resets to `internal` on every open: the safe
-  // default is "stays inside", never "goes to the carrier".
-  const [audience, setAudience] = useState<CommentAudience>('internal');
+  // GEPARD-319 — the colour row opens from one dot instead of standing in the bubble.
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [mentionState, setMentionState] = useState<MentionState | null>(null);
   const [pendingMentions, setPendingMentions] = useState<PendingMention[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -228,9 +205,17 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     if (!isOpen) {
       setMentionState(null);
       setPendingMentions([]);
-      setAudience('internal');
+      setPaletteOpen(false);
     }
   }, [isOpen]);
+
+  // GEPARD-319 — the field grows with what is written (2 lines to 8), so the bubble stays small until it is needed.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [newComment]);
 
   // Fetch comments when dialog opens (single-cell mode)
   useEffect(() => {
@@ -455,7 +440,6 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             content: wireContent,
-            audience,
             // GEPARD-310 — where it is written: the table's (or the system's) setting decides whether it shows only here.
             ...(viewContext ? { originTableId: viewContext } : {}),
             ...(originRowId ? { originRowId } : {}),
@@ -471,7 +455,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
           userId: commentResult.userId || commentResult.user_id || '',
           userName: commentResult.userName || commentResult.user_name || 'You',
           content: wireContent,
-          audience,
+          audience: 'internal',
           createdAt: new Date().toISOString(),
           canDelete: true,
           visibility: commentResult.visibility === 'where_added' ? 'where_added' : 'everywhere',
@@ -488,7 +472,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     } finally {
       setSubmitting(false);
     }
-  }, [newComment, submitting, annotationId, entityType, viewContext, rowId, columnKey, selectedColor, onAnnotationChange, pendingMentions, buildWireContent, audience, originRowId]);
+  }, [newComment, submitting, annotationId, entityType, viewContext, rowId, columnKey, selectedColor, onAnnotationChange, pendingMentions, buildWireContent, originRowId]);
 
   // Bulk color change — calls PUT batch endpoint
   const handleBulkColorChange = useCallback(async (color: string | null) => {
@@ -548,7 +532,6 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
               tableId: viewContext,
               cells: cells.map((c) => ({ rowId: c.rowId, columnKey: c.columnKey, ...(c.originRowId ? { originRowId: c.originRowId } : {}) })),
               comment: wireContent,
-              audience,
               ...(viewContext ? { originTableId: viewContext } : {}),
               ...(mentionedUserIds.length > 0 ? { mentionedUserIds } : {}),
             }),
@@ -564,7 +547,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     } finally {
       setSubmitting(false);
     }
-  }, [bulkCells, viewContext, newComment, submitting, onAnnotationChange, fetchBulkComments, pendingMentions, buildWireContent, audience]);
+  }, [bulkCells, viewContext, newComment, submitting, onAnnotationChange, fetchBulkComments, pendingMentions, buildWireContent]);
 
   // Update color
   const handleColorChange = useCallback(async (color: string | null) => {
@@ -642,17 +625,60 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     onAnnotationChange?.();
   }, [comments, annotationId, onAnnotationChange, t]);
 
+  // GEPARD-319 — a task in a comment ("- [ ] …") is ticked in place; the server flips that one mark. Shown at once,
+  // put back if the server refuses.
+  const handleToggleTask = useCallback(async (comment: Comment, index: number, done: boolean) => {
+    const annId = comment.annotationId || annotationId;
+    if (!annId) return;
+    const before = comment.content;
+    const setContent = (content: string) => setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, content } : c)));
+    setContent(toggleTaskInContent(before, index, done));
+    try {
+      const { ok, result } = await apiCall<{ content?: string; error?: string }>(
+        `/api/annotations/annotations/${annId}/comments?commentId=${comment.id}`,
+        { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-om-forbidden-redirect': '0' }, body: JSON.stringify({ task: index, done }) },
+      );
+      if (!ok) {
+        setContent(before);
+        flash(result?.error || t('annotations.dialog.taskFailed', 'The task was not saved'), 'error');
+        return;
+      }
+      if (typeof result?.content === 'string') setContent(result.content);
+      onAnnotationChange?.();
+    } catch (error) {
+      console.error('Failed to tick a task:', error);
+      setContent(before);
+      flash(t('annotations.dialog.taskFailed', 'The task was not saved'), 'error');
+    }
+  }, [annotationId, onAnnotationChange, t]);
+
+  // GEPARD-319 — "- [ ] " at the start of the line the caret is on (a new line when that one has text).
+  const insertTask = useCallback(() => {
+    const el = textareaRef.current;
+    const value = newComment;
+    const at = el ? el.selectionStart ?? value.length : value.length;
+    const lineStart = value.lastIndexOf('\n', at - 1) + 1;
+    const lineEnd = value.indexOf('\n', at) === -1 ? value.length : value.indexOf('\n', at);
+    const line = value.slice(lineStart, lineEnd);
+    const next = line.trim()
+      ? `${value.slice(0, lineEnd)}\n- [ ] ${value.slice(lineEnd)}`
+      : `${value.slice(0, lineStart)}- [ ] ${value.slice(lineStart)}`;
+    const caret = line.trim() ? lineEnd + 7 : lineStart + 6;
+    setNewComment(next);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(caret, caret);
+    });
+  }, [newComment]);
+
   const formatTimeAgo = (dateStr: string) => {
     const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return 'just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (!Number.isFinite(diffMin) || diffMin < 1) return t('annotations.dialog.justNow', 'just now');
+    if (diffMin < 60) return t('annotations.dialog.minutesAgo', '{count} min', { count: diffMin });
     const diffHour = Math.floor(diffMin / 60);
-    if (diffHour < 24) return `${diffHour}h ago`;
-    const diffDay = Math.floor(diffHour / 24);
-    return `${diffDay}d ago`;
+    if (diffHour < 24) return t('annotations.dialog.hoursAgo', '{count} h', { count: diffHour });
+    return t('annotations.dialog.daysAgo', '{count} d', { count: Math.floor(diffHour / 24) });
   };
 
   if (!isOpen) return null;
@@ -666,7 +692,8 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
   // Position: below the anchor when there's more room there, else above. Cap the
   // panel height to the available space so a long comment thread scrolls INSIDE
   // the panel instead of running off the bottom of the viewport.
-  const panelWidth = 420;
+  // GEPARD-319 — narrower: the thread is what the bubble is for.
+  const panelWidth = 360;
   let top: number | undefined;
   let bottomPx: number | undefined;
   let left = 0;
@@ -712,18 +739,15 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
       }}
     >
       <div className="hot-comment-popover-header">
-        <div className="hot-comment-popover-title-group">
-          <span className="hot-comment-popover-subtitle">{isBulkMode ? t('annotations.dialog.setColorFor', 'Set color for') : t('annotations.dialog.commentsOn', 'Comments on')}</span>
-          <span className="hot-comment-popover-title">{title}</span>
-        </div>
-        <button className="hot-comment-popover-close" onClick={onClose}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <span className="hot-comment-popover-title" title={title}>{title}</span>
+        <button type="button" className="hot-comment-popover-close" onClick={onClose} aria-label={t('annotations.dialog.close', 'Close')}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M4 4l8 8M12 4l-8 8" />
           </svg>
         </button>
       </div>
 
-      {/* Comments Thread */}
+      {/* Comments Thread — the bubble's content first (GEPARD-319). */}
       {(loading || comments.length > 0) && (
       <div className="hot-comment-thread">
         {loading ? (
@@ -731,45 +755,46 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
         ) : (
           comments.map(comment => (
             <div key={comment.id} className="hot-comment-item">
-              <div className="hot-comment-item-row">
-                <span className="hot-comment-avatar">
-                  {(comment.userName || 'U')[0].toUpperCase()}
-                </span>
-                <div className="hot-comment-item-body">
-                  <div className="hot-comment-item-header">
-                    <span className="hot-comment-author">{comment.userName || t('annotations.dialog.you', 'You')}</span>
-                    <span className="hot-comment-action">{t('annotations.dialog.commented', 'commented')}{comment.cellLabel ? ` ${t('annotations.dialog.on', 'on')} ${comment.cellLabel}` : ''}</span>
-                    {comment.audience === 'carrier' && (
-                      <span className="hot-comment-audience-tag" title={t('annotations.dialog.audienceCarrierHint', 'Printed on the carrier document')}>
-                        <Truck size={10} />
-                        {t('annotations.dialog.audienceCarrierShort', 'carrier')}
-                      </span>
-                    )}
-                    {comment.visibility === 'where_added' && (
-                      <span
-                        className="hot-comment-audience-tag"
-                        data-comment-where-added=""
-                        title={t('annotations.dialog.whereAddedHint', 'Shown only in this table, on this row')}
-                      >
-                        <MapPin size={10} />
-                        {t('annotations.dialog.whereAddedShort', 'only here')}
-                      </span>
-                    )}
-                    <span className="hot-comment-time">{formatTimeAgo(comment.createdAt)}</span>
-                  </div>
-                  <div className="hot-comment-content">{renderCommentContent(comment.content)}</div>
-                </div>
-                {deletable(comment) && (
-                <button
-                  className="hot-comment-delete"
-                  onClick={() => handleDeleteComment(comment.id, comment.annotationId)}
-                  title="Delete comment"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M2.5 4h11M5.5 4V2.5a1 1 0 011-1h3a1 1 0 011 1V4M6.5 7v4M9.5 7v4M3.5 4l.5 9a1.5 1.5 0 001.5 1.5h5a1.5 1.5 0 001.5-1.5l.5-9" />
-                  </svg>
-                </button>
+              <div className="hot-comment-item-header">
+                <span className="hot-comment-author">{comment.userName || t('annotations.dialog.you', 'You')}</span>
+                {comment.cellLabel ? <span className="hot-comment-action">{comment.cellLabel}</span> : null}
+                {comment.audience === 'carrier' && (
+                  <span className="hot-comment-audience-tag" title={t('annotations.dialog.audienceCarrierHint', 'Printed on the carrier document')}>
+                    <Truck size={10} />
+                    {t('annotations.dialog.audienceCarrierShort', 'carrier')}
+                  </span>
                 )}
+                {comment.visibility === 'where_added' && (
+                  <span
+                    className="hot-comment-audience-tag"
+                    data-comment-where-added=""
+                    title={t('annotations.dialog.whereAddedHint', 'Shown only in this table, on this row')}
+                  >
+                    <MapPin size={10} />
+                    {t('annotations.dialog.whereAddedShort', 'only here')}
+                  </span>
+                )}
+                <span className="hot-comment-time">{formatTimeAgo(comment.createdAt)}</span>
+                {deletable(comment) && (
+                  <button
+                    type="button"
+                    className="hot-comment-delete"
+                    onClick={() => handleDeleteComment(comment.id, comment.annotationId)}
+                    title={t('annotations.dialog.delete', 'Delete comment')}
+                    aria-label={t('annotations.dialog.delete', 'Delete comment')}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2.5 4h11M5.5 4V2.5a1 1 0 011-1h3a1 1 0 011 1V4M6.5 7v4M9.5 7v4M3.5 4l.5 9a1.5 1.5 0 001.5 1.5h5a1.5 1.5 0 001.5-1.5l.5-9" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <div className="hot-comment-content">
+                <CommentMarkdown
+                  content={comment.content}
+                  taskLabel={t('annotations.dialog.task', 'Task')}
+                  onToggleTask={(index, done) => void handleToggleTask(comment, index, done)}
+                />
               </div>
             </div>
           ))
@@ -777,186 +802,97 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
       </div>
       )}
 
-      {isBulkMode && comments.length > 0 && comments.every(deletable) && (
-        <div className="hot-comment-bulk-actions">
-          <button className="hot-comment-delete-all" onClick={handleDeleteAllComments}>
-            {t('annotations.dialog.deleteAll', 'Delete all comments')}
+      {/* One field, one row of controls under it (GEPARD-319): a task, the colour, send. */}
+      <div className="hot-comment-input-area">
+        <div style={{ position: 'relative' }}>
+          <textarea
+            ref={textareaRef}
+            value={newComment}
+            onChange={handleTextareaChange}
+            placeholder={isBulkMode
+              ? t('annotations.dialog.bulkPlaceholder', 'Leave a comment on all selected cells (type @ to mention)')
+              : t('annotations.dialog.placeholder', 'Leave a comment (type @ to mention)')}
+            className="hot-comment-textarea"
+            rows={2}
+            autoFocus
+            onKeyDown={(e) => textareaKeyDown(e, isBulkMode ? handleBulkSubmitComment : handleSubmitComment)}
+          />
+          {mentionState?.active && textareaRef.current && (
+            <MentionPopup
+              ref={mentionRef}
+              query={mentionState.query}
+              anchorEl={textareaRef.current}
+              onSelect={handleMentionSelect}
+              onClose={() => setMentionState(null)}
+              visible
+            />
+          )}
+        </div>
+        <div className="hot-comment-input-footer">
+          <button
+            type="button"
+            className="hot-comment-tool-btn"
+            onClick={insertTask}
+            title={t('annotations.dialog.addTask', 'Add a task (- [ ])')}
+            aria-label={t('annotations.dialog.addTask', 'Add a task (- [ ])')}
+            data-comment-add-task=""
+          >
+            <ListChecks size={14} />
+          </button>
+          <button
+            type="button"
+            className="hot-comment-tool-btn hot-comment-color-current"
+            onClick={() => setPaletteOpen((open) => !open)}
+            aria-expanded={paletteOpen}
+            title={t('annotations.dialog.colour', 'Cell colour')}
+            aria-label={t('annotations.dialog.colour', 'Cell colour')}
+            data-comment-colour=""
+          >
+            <span
+              className="hot-comment-color-dot"
+              data-color={selectedColor ?? 'none'}
+              style={{ background: ANNOTATION_COLORS.find((c) => c.value === selectedColor)?.bg ?? 'transparent' }}
+            />
+          </button>
+          {paletteOpen && (
+            <div className="hot-comment-colors" role="group" aria-label={t('annotations.dialog.colour', 'Cell colour')}>
+              {ANNOTATION_COLORS.map((item) => (
+                <button
+                  type="button"
+                  key={item.value ?? 'none'}
+                  onClick={() => { handleColorChange(item.value); setPaletteOpen(false); }}
+                  className={`hot-comment-color-btn ${selectedColor === item.value ? 'selected' : ''}`}
+                  data-color={item.value ?? 'none'}
+                  style={{
+                    background: item.bg,
+                    border: item.value === null ? '1px dashed var(--m3-outline-faint)' : undefined,
+                  }}
+                  title={paletteLabel(t, item)}
+                  aria-label={paletteLabel(t, item)}
+                />
+              ))}
+            </div>
+          )}
+          {isBulkMode && comments.length > 0 && comments.every(deletable) && (
+            <button type="button" className="hot-comment-delete-all" onClick={handleDeleteAllComments}>
+              {t('annotations.dialog.deleteAll', 'Delete all comments')}
+            </button>
+          )}
+          <span className="hot-comment-footer-spacer" />
+          <button
+            type="button"
+            onClick={isBulkMode ? handleBulkSubmitComment : handleSubmitComment}
+            disabled={!newComment.trim() || submitting}
+            className="hot-comment-send-btn"
+            title={isBulkMode
+              ? t('annotations.dialog.sendAllHint', 'Send to all cells (⌘/Ctrl+Enter)')
+              : t('annotations.dialog.sendHint', 'Send (⌘/Ctrl+Enter)')}
+          >
+            <Send size={12} />
+            {submitting ? t('annotations.dialog.sending', 'Sending...') : t('annotations.dialog.send', 'Send')}
           </button>
         </div>
-      )}
-
-      {/* Bulk mode: color picker + comment input */}
-      {isBulkMode ? (
-        <div className="hot-comment-input-area">
-          <div style={{ position: 'relative' }}>
-            <textarea
-              ref={textareaRef}
-              value={newComment}
-              onChange={handleTextareaChange}
-              placeholder={t('annotations.dialog.bulkPlaceholder', 'Leave a comment on all selected cells (type @ to mention)')}
-              className="hot-comment-textarea"
-              rows={3}
-              autoFocus
-              onKeyDown={(e) => textareaKeyDown(e, handleBulkSubmitComment)}
-            />
-            {mentionState?.active && textareaRef.current && (
-              <MentionPopup
-                ref={mentionRef}
-                query={mentionState.query}
-                anchorEl={textareaRef.current}
-                onSelect={handleMentionSelect}
-                onClose={() => setMentionState(null)}
-                visible
-              />
-            )}
-          </div>
-          {/* B8c — who this note is for. Two mutually exclusive choices, never a
-              native <select>: the distinction has to be visible while writing,
-              not hidden behind a closed control. `internal` is the default and
-              is what every note written before this flag existed was. */}
-          <div className="hot-comment-audience" role="radiogroup" aria-label={t('annotations.dialog.audienceLabel', 'Who is this note for?')}>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={audience === 'internal'}
-              className="hot-comment-audience-option"
-              data-selected={audience === 'internal' || undefined}
-              onClick={() => setAudience('internal')}
-            >
-              <Lock size={12} />
-              <span>{t('annotations.dialog.audienceInternal', 'Internal note')}</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={audience === 'carrier'}
-              className="hot-comment-audience-option"
-              data-selected={audience === 'carrier' || undefined}
-              onClick={() => setAudience('carrier')}
-            >
-              <Truck size={12} />
-              <span>{t('annotations.dialog.audienceCarrier', 'For the carrier')}</span>
-            </button>
-          </div>
-          <div className="hot-comment-colors">
-            {ANNOTATION_COLORS.map((item) => (
-              <button
-                key={item.value ?? 'none'}
-                onClick={() => handleColorChange(item.value)}
-                className={`hot-comment-color-btn ${selectedColor === item.value ? 'selected' : ''}`}
-                data-color={item.value ?? 'none'}
-                style={{
-                  background: item.bg,
-                  border: item.value === null ? '1px dashed var(--m3-outline-faint)' : undefined,
-                }}
-                title={paletteLabel(t, item)}
-              >
-                {item.value === null && selectedColor === null ? (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M2 2l8 8M10 2l-8 8" />
-                  </svg>
-                ) : null}
-              </button>
-            ))}
-          </div>
-          <div className="hot-comment-input-footer">
-            <span className="hot-comment-hint">{t('annotations.dialog.press', 'Press')} <kbd>⌘+Enter</kbd> {t('annotations.dialog.toSendAll', 'to send to all cells')}</span>
-            <button
-              onClick={handleBulkSubmitComment}
-              disabled={!newComment.trim() || submitting}
-              className="hot-comment-send-btn"
-            >
-              {submitting ? t('annotations.dialog.sending', 'Sending...') : t('annotations.dialog.send', 'Send')}
-            </button>
-          </div>
-        </div>
-      ) : (
-        /* Full comment input in single-cell mode */
-        <div className="hot-comment-input-area">
-          <div style={{ position: 'relative' }}>
-            <textarea
-              ref={textareaRef}
-              value={newComment}
-              onChange={handleTextareaChange}
-              placeholder={t('annotations.dialog.placeholder', 'Leave a comment (type @ to mention)')}
-              className="hot-comment-textarea"
-              rows={3}
-              autoFocus
-              onKeyDown={(e) => textareaKeyDown(e, handleSubmitComment)}
-            />
-            {mentionState?.active && textareaRef.current && (
-              <MentionPopup
-                ref={mentionRef}
-                query={mentionState.query}
-                anchorEl={textareaRef.current}
-                onSelect={handleMentionSelect}
-                onClose={() => setMentionState(null)}
-                visible
-              />
-            )}
-          </div>
-          {/* Color Picker */}
-          {/* B8c — who this note is for. Two mutually exclusive choices, never a
-              native <select>: the distinction has to be visible while writing,
-              not hidden behind a closed control. `internal` is the default and
-              is what every note written before this flag existed was. */}
-          <div className="hot-comment-audience" role="radiogroup" aria-label={t('annotations.dialog.audienceLabel', 'Who is this note for?')}>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={audience === 'internal'}
-              className="hot-comment-audience-option"
-              data-selected={audience === 'internal' || undefined}
-              onClick={() => setAudience('internal')}
-            >
-              <Lock size={12} />
-              <span>{t('annotations.dialog.audienceInternal', 'Internal note')}</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={audience === 'carrier'}
-              className="hot-comment-audience-option"
-              data-selected={audience === 'carrier' || undefined}
-              onClick={() => setAudience('carrier')}
-            >
-              <Truck size={12} />
-              <span>{t('annotations.dialog.audienceCarrier', 'For the carrier')}</span>
-            </button>
-          </div>
-          <div className="hot-comment-colors">
-            {ANNOTATION_COLORS.map((item) => (
-              <button
-                key={item.value ?? 'none'}
-                onClick={() => handleColorChange(item.value)}
-                className={`hot-comment-color-btn ${selectedColor === item.value ? 'selected' : ''}`}
-                data-color={item.value ?? 'none'}
-                style={{
-                  background: item.bg,
-                  border: item.value === null ? '1px dashed var(--m3-outline-faint)' : undefined,
-                }}
-                title={paletteLabel(t, item)}
-              >
-                {item.value === null && selectedColor === null ? (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M2 2l8 8M10 2l-8 8" />
-                  </svg>
-                ) : null}
-              </button>
-            ))}
-          </div>
-          <div className="hot-comment-input-footer">
-            <span className="hot-comment-hint">{t('annotations.dialog.press', 'Press')} <kbd>⌘+Enter</kbd> {t('annotations.dialog.toSend', 'to send')}</span>
-            <button
-              onClick={handleSubmitComment}
-              disabled={!newComment.trim() || submitting}
-              className="hot-comment-send-btn"
-            >
-              {submitting ? t('annotations.dialog.sending', 'Sending...') : t('annotations.dialog.send', 'Send')}
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 
