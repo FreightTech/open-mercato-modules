@@ -1181,6 +1181,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     originRowId?: string;
     /** Bulk cells carry their own scope — one range can span two entity types. */
     bulkCells?: { entityType: string; rowId: string; columnKey: string; originRowId?: string }[];
+    /** GEPARD-309 (V-MENTIONS 3) — opened by a link before the table read the cell's comments: the dialog finds them itself. */
+    findAnnotation?: boolean;
   } | null>(null);
 
   // Read-only hover preview of a commented cell's thread (shown on hovering the
@@ -3341,20 +3343,33 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
    * read of the comments are in: scroll to the row (the one the comment was written on, else the first row of that
    * record) and the column, mark the cell, blink it, open its comments. The link's parameters then leave the address,
    * so a reload does not open it again. A hidden column: the row, and the comments beside it.
+   *
+   * V-MENTIONS 3 (RFS 17.11: the comments opened seconds late, sometimes not at all): it does not wait for the table's
+   * own read of the comments. RFS reads them for four kinds of record at once (teczka, container, container leg, leg),
+   * each one request, and the link waited for all of them — after the rows, ~1.5 s on a quiet server, much longer on a
+   * busy one. Now it opens as soon as the commented row is among the rows: the dialog finds the cell's comments itself
+   * with one read (`findAnnotation`). Only "the row is not here" still waits for that read — the rows a page shows first
+   * may not yet resolve to their records (RFS re-renders them a moment later), and saying "not in this view" then would
+   * end the link for good.
    */
   const commentLinkDone = useRef<string | null>(null);
   // The link's timers (open the comments, end the blink) are cleared when the table goes away (CHECK #3223 P5) — not
   // when the effect re-runs, which it does as the comments load, and must not cancel the opening it scheduled.
   const commentLinkTimers = useRef<number[]>([]);
+  // The link has done its work in this table (the comments opened, or the row was said to be missing).
+  const commentLinkFinished = useRef(false);
   useEffect(() => () => {
     for (const id of commentLinkTimers.current) window.clearTimeout(id);
     commentLinkTimers.current = [];
+    // V-MENTIONS 3: an opening cancelled before it ran is taken up again by the next mount. The RFS page mounts its table
+    // with the rows already in, so the link is handled at mount — and React's development StrictMode unmounts and mounts
+    // it once more right away, clearing the opening while this ref still said "done": the comments never opened.
+    if (!commentLinkFinished.current) commentLinkDone.current = null;
   }, []);
   useEffect(() => {
     if (!enableComments || !commentsEntityType || !commentsViewContext || typeof window === 'undefined') return;
     const link = readCommentLink(window.location.search);
     if (!link || link.table !== commentsViewContext || commentLinkDone.current === link.signature) return;
-    if (annotationsSettled === 0) return;
     const total = store.getRowCount();
     if (total === 0) return; // the rows are not in yet
     const probe = { data: link.columnKey } as ColumnDef;
@@ -3366,13 +3381,22 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       if (rowIndex < 0) rowIndex = r;
       if (!link.at || commentRowKey(rowData) === link.at) { rowIndex = r; break; }
     }
+    // Not found: wait while the table's first read of the comments is out (the rows may not be final yet).
+    if (rowIndex < 0 && annotationsSettled === 0) return;
     commentLinkDone.current = link.signature;
-    try {
-      window.history.replaceState(window.history.state, '', withoutCommentLink(window.location.href));
-    } catch {
-      // An address that cannot be rewritten only means a reload opens the cell again.
-    }
+    // The link leaves the address only once it has done its work — the comments open, or the row is said to be missing.
+    // V-MENTIONS 3: the RFS page mounts its table again right after the first rows; a link taken out of the address by
+    // the first table, whose opening its unmount then cancelled (CHECK #3223 P5), left the second one nothing to open.
+    const leaveAddress = () => {
+      commentLinkFinished.current = true;
+      try {
+        window.history.replaceState(window.history.state, '', withoutCommentLink(window.location.href));
+      } catch {
+        // An address that cannot be rewritten only means a reload opens the cell again.
+      }
+    };
     if (rowIndex < 0) {
+      leaveAddress();
       // The rows and their comments are in, and the commented row is not among them: filtered out, on another page,
       // or gone (CHECK #3223 P2) — said once, instead of a link that silently does nothing.
       flash(t('dynamicTable.comments.linkRowMissing', 'The commented row is not in this view — it may be filtered out or on another page'), 'info');
@@ -3402,7 +3426,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         currentColor: annotation?.color || null,
         anchorRect: cell?.getBoundingClientRect() ?? null,
         originRowId: commentRowKey(rowData),
+        // Not read by the table yet (its read may still be on its way): the dialog finds the cell's comments itself.
+        findAnnotation: !annotation,
       });
+      leaveAddress();
     }, 120));
   }, [enableComments, commentsEntityType, commentsViewContext, annotationsSettled, annotations, store, cols, data, resolveCommentTarget, commentRowKey, scrollToCell, tableRef, t]);
 
@@ -5137,6 +5164,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           anchorRect={commentDialog.anchorRect}
           bulkCells={commentDialog.bulkCells}
           originRowId={commentDialog.originRowId}
+          findAnnotation={commentDialog.findAnnotation}
         />
       )}
 

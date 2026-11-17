@@ -2,6 +2,7 @@ import * as React from 'react'
 import { render, waitFor } from '@testing-library/react'
 import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
 import DynamicTable from '../DynamicTable'
+import CellCommentDialog from '../components/CellCommentDialog'
 import { readCommentLink, withoutCommentLink } from '../utils/commentLink'
 import type { ColumnDef } from '../types/index'
 
@@ -26,8 +27,11 @@ const rows = [
 jest.mock('../../FlashMessages', () => ({ flash: jest.fn() }))
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { flash } = require('../../FlashMessages') as { flash: jest.Mock }
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { apiCall } = require('../../utils/apiCall') as { apiCall: jest.Mock }
+const answers = apiCall.getMockImplementation()!
 jest.mock('../../utils/apiCall', () => ({
-  apiCall: jest.fn(async (url: string) => {
+  apiCall: jest.fn(async (url: string, _init?: { signal?: AbortSignal }) => {
     const parsed = new URL(url, 'http://localhost')
     if (parsed.pathname !== '/api/annotations/annotations') return { ok: false, status: 404, result: null }
     if (parsed.searchParams.get('entityType') !== 'folder_unit') return { ok: true, status: 200, result: { items: [] } }
@@ -118,5 +122,98 @@ describe('GEPARD-309 — the table the link names', () => {
       set.mockRestore()
       clear.mockRestore()
     }
+  })
+})
+
+/**
+ * V-MENTIONS 3 (RFS 17.11): the comments opened seconds after the table — sometimes not at all. The link waited for the
+ * table's own read of the comments; RFS reads four kinds of record at once and the link waited for every one. Now the
+ * rows are enough: the dialog finds the cell's comments itself, with one read.
+ */
+describe('GEPARD-309 — the link does not wait for the table\'s read of the comments', () => {
+  afterEach(() => apiCall.mockImplementation(answers))
+
+  it("opens the cell's comments while the table's own read has not answered", async () => {
+    // The table reads with an AbortSignal (useAnnotations) and that read never answers; the dialog's own read does.
+    apiCall.mockImplementation((url: string, init?: { signal?: AbortSignal }) => (init?.signal ? new Promise(() => {}) : answers(url, init)))
+    render(React.createElement(Grid, { table: 'rfs' }))
+    await waitFor(() => expect(document.querySelector('.hot-comment-popover')).not.toBeNull())
+    await waitFor(() => expect(document.body.textContent).toContain('sprzedać jak najtaniej'))
+    expect(document.querySelector('td.hot-cell-flash')?.getAttribute('data-row')).toBe('1')
+    expect(window.location.search).toBe('?fileId=f1')
+  })
+})
+
+describe('GEPARD-309 — rows that do not resolve yet', () => {
+  afterEach(() => apiCall.mockImplementation(answers))
+
+  it('the first rows do not name their record yet (RFS re-renders them): it waits, then opens — no "not in this view"', async () => {
+    apiCall.mockImplementation((url: string, init?: { signal?: AbortSignal }) => (init?.signal ? new Promise(() => {}) : answers(url, init)))
+    flash.mockClear()
+    // The page's first rows, before they carry the container they belong to.
+    const early = rows.map(({ unitId: _unitId, ...row }) => row)
+    function Changing({ data }: { data: Array<Record<string, unknown>> }) {
+      const tableRef = React.useRef<HTMLDivElement | null>(null)
+      return React.createElement(I18nProvider as any, { locale: 'en', dict: {} }, React.createElement(DynamicTable as any, {
+        data, columns, tableRef, rowHeaders: true, height: 400,
+        idColumnName: 'unitId', rowKeyColumn: 'id',
+        enableComments: true, commentsEntityType: 'folder_unit', commentsViewContext: 'rfs',
+      }))
+    }
+    const view = render(React.createElement(Changing, { data: early }))
+    await new Promise((r) => setTimeout(r, 200))
+    expect(document.querySelector('.hot-comment-popover')).toBeNull()
+    expect(flash).not.toHaveBeenCalled()
+    expect(window.location.search).toContain('commentTable=rfs')
+    view.rerender(React.createElement(Changing, { data: rows }))
+    await waitFor(() => expect(document.querySelector('.hot-comment-popover')).not.toBeNull())
+    await waitFor(() => expect(document.body.textContent).toContain('sprzedać jak najtaniej'))
+    expect(flash).not.toHaveBeenCalled()
+  })
+})
+
+describe('GEPARD-309 — a table mounted again before the comments open', () => {
+  it('V-MENTIONS 3: the page mounts its table again right after the first rows — the second table opens the comments', async () => {
+    const view = render(React.createElement(Grid, { table: 'rfs' }))
+    // The first table found the row and scheduled the opening; it goes away before the opening runs (P5 cancels it).
+    await waitFor(() => expect(document.querySelector('td.hot-cell')).not.toBeNull())
+    view.unmount()
+    expect(window.location.search).toContain('commentTable=rfs')
+    render(React.createElement(Grid, { table: 'rfs' }))
+    await waitFor(() => expect(document.querySelector('.hot-comment-popover')).not.toBeNull())
+    await waitFor(() => expect(document.body.textContent).toContain('sprzedać jak najtaniej'))
+    expect(window.location.search).toBe('?fileId=f1')
+  })
+})
+
+describe('GEPARD-309 — React StrictMode (development)', () => {
+  it('V-MENTIONS 3: a table mounted with its rows already in, unmounted and mounted again by StrictMode, opens the comments', async () => {
+    render(React.createElement(React.StrictMode, null, React.createElement(Grid, { table: 'rfs' })))
+    await waitFor(() => expect(document.querySelector('.hot-comment-popover')).not.toBeNull())
+    await waitFor(() => expect(document.body.textContent).toContain('sprzedać jak najtaniej'))
+    expect(window.location.search).toBe('?fileId=f1')
+  })
+})
+
+describe('CellCommentDialog — finding its own annotation', () => {
+  const dialog = (props: Record<string, unknown>) => React.createElement(I18nProvider as any, { locale: 'en', dict: {} }, React.createElement(CellCommentDialog as any, {
+    isOpen: true, onClose: () => {}, entityType: 'folder_unit', viewContext: 'rfs', rowId: 'unit-1', columnKey: 'rate', columnTitle: 'Stawka', originRowId: 'leg-road', ...props,
+  }))
+  const reads = () => apiCall.mock.calls.filter(([url]) => String(url).startsWith('/api/annotations/annotations?')).length
+
+  beforeEach(() => apiCall.mockClear())
+
+  it('asked to (findAnnotation), it reads the cell once and shows its thread', async () => {
+    render(dialog({ annotationId: null, findAnnotation: true }))
+    await waitFor(() => expect(document.body.textContent).toContain('sprzedać jak najtaniej'))
+    // Found, it does not read the same thread again.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(reads()).toBe(1)
+  })
+
+  it('not asked, a cell with no comments yet is not read (opening an empty cell costs no request)', async () => {
+    render(dialog({ annotationId: null }))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(reads()).toBe(0)
   })
 })
