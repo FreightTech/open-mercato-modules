@@ -127,6 +127,11 @@ interface CellCommentDialogProps {
    * the table (`viewContext`), so that one kept to where it was added shows on this row only.
    */
   originRowId?: string;
+  /**
+   * GEPARD-309 (V-MENTIONS 3) — the cell's comments are not known yet (a notification's link opened the dialog before
+   * the table read them): the dialog finds the cell's annotation itself, with one read of its row.
+   */
+  findAnnotation?: boolean;
 }
 
 function extractMentionIds(text: string): string[] {
@@ -154,6 +159,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
   anchorRect,
   bulkCells,
   originRowId,
+  findAnnotation = false,
 }) => {
   const t = useT();
   const isBulkMode = bulkCells && bulkCells.length > 1;
@@ -222,8 +228,10 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
 
   // Read the cell's thread (single-cell mode). `quiet`: no loading state — a re-read after ticking a task (GEPARD-308).
   // Resolves true when the server answered.
+  // The annotation the dialog found itself (`findAnnotation`): its thread is already read — not read again for it.
+  const foundAnnotation = useRef<string | null>(null);
   const loadThread = useCallback(async (quiet = false, signal?: AbortSignal): Promise<boolean> => {
-    if (isBulkMode || !annotationId) return false;
+    if (isBulkMode || (!annotationId && !findAnnotation)) return false;
     if (!quiet) setLoading(true);
     try {
       const params = new URLSearchParams({ entityType, rowIds: rowId });
@@ -234,6 +242,11 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
         const annotation = items.find((a: any) =>
           (a.columnKey || a.column_key) === columnKey
         );
+        if (!annotationId && annotation?.id) {
+          foundAnnotation.current = annotation.id;
+          setAnnotationId(annotation.id);
+          if (annotation.color) setSelectedColor((now) => now ?? annotation.color);
+        }
         if (annotation?.comments) {
           const here = new Set(originRowId ? [originRowId] : []);
           setComments(annotation.comments.filter((c: any) => showsHere(commentPlace(c), viewContext, here)).map((c: any) => ({
@@ -256,16 +269,20 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     } finally {
       if (!quiet) setLoading(false);
     }
-  }, [isBulkMode, annotationId, entityType, rowId, columnKey, viewContext, originRowId]);
+  }, [isBulkMode, annotationId, findAnnotation, entityType, rowId, columnKey, viewContext, originRowId]);
 
   // Fetch comments when dialog opens (single-cell mode)
   useEffect(() => {
-    if (!isOpen || isBulkMode || !annotationId) {
+    if (!isOpen || isBulkMode || (!annotationId && !findAnnotation)) {
       if (!isBulkMode) setComments([]);
       return;
     }
+    if (annotationId && foundAnnotation.current === annotationId) {
+      foundAnnotation.current = null;
+      return;
+    }
     void loadThread();
-  }, [isOpen, isBulkMode, annotationId, loadThread]);
+  }, [isOpen, isBulkMode, annotationId, findAnnotation, loadThread]);
 
   // Fetch comments for all selected cells (bulk mode). Resolves true when every part was read; a quiet re-read
   // (GEPARD-308) replaces the thread only then — a partial read would drop the comments of the part that failed.
