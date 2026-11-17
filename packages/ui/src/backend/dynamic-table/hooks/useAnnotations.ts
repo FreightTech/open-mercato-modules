@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiCall } from '../../utils/apiCall';
+import { taskCount } from '../components/commentMarkdown';
 
 /** Who a comment is written for — see `packages/annotations` (workshop B8c). */
 export type CellCommentAudience = 'internal' | 'carrier';
@@ -51,6 +52,12 @@ export interface CellAnnotationInfo {
   /** The comment thread for this cell — used by the hover preview popup. */
   comments: AnnotationComment[];
   assignees: Array<{ userId: string }>;
+  /**
+   * GEPARD-308 — the tasks ("- [ ] …" / "- [x] …") in this cell's comments, and how many are still open. A cell whose
+   * tasks are all done stops standing out; its comments stay.
+   */
+  tasks?: number;
+  openTasks?: number;
 }
 
 export type AnnotationMap = Map<string, CellAnnotationInfo>;
@@ -239,13 +246,24 @@ export function useAnnotations({
           originRowId: c.originRowId ?? null,
         }));
         const assignees = (annotation.assignees || []).map((a: any) => ({ userId: a.userId || a.user_id }));
-        const entry = (list: AnnotationComment[]): CellAnnotationInfo => ({
-          id: annotation.id,
-          color: annotation.color || null,
-          commentCount: list.length,
-          comments: list,
-          assignees,
-        });
+        const entry = (list: AnnotationComment[]): CellAnnotationInfo => {
+          let tasks = 0;
+          let done = 0;
+          for (const c of list) {
+            const n = taskCount(c.content);
+            tasks += n.total;
+            done += n.done;
+          }
+          return {
+            id: annotation.id,
+            color: annotation.color || null,
+            commentCount: list.length,
+            comments: list,
+            assignees,
+            tasks,
+            openTasks: tasks - done,
+          };
+        };
         // GEPARD-310 — the cell's shared entry holds the comments that show everywhere; a row with comments kept to it
         // gets its own entry with those added. A kept comment of another table (a server that did not filter) shows nowhere.
         const shared = comments.filter((c) => !isRowBoundComment(c));

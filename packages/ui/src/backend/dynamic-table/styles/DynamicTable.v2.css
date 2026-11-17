@@ -1022,6 +1022,24 @@
   background-color: var(--m3-state-layer-hover);
 }
 
+/* GEPARD-308 — a comment that is a to-do list. While a task is open the mark carries a dot (the cell still asks for
+   something); once every task is ticked it is muted to the secondary ink (by ink, not opacity — as the ghost mark) —
+   the comments stay, the cell stops calling. */
+.hot-appearance-v2 .cell-comment-indicator[data-tasks="open"]::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--m3-shape-full);
+  background: var(--m3-error);
+  box-shadow: 0 0 0 1.5px var(--m3-surface-container-lowest);
+}
+.hot-appearance-v2 .cell-comment-indicator[data-tasks="done"] {
+  color: var(--m3-on-surface-variant);
+}
+
 /* B9 — the ghost affordance on the focused cell. Muted enough to be ignorable
    while typing, solid enough to invite a click; it inherits every geometric
    property of the real indicator above, so discovering it teaches the real one. */

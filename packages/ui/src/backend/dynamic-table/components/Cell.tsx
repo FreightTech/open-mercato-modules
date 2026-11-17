@@ -27,6 +27,9 @@ export interface CellProps {
   onCellContextMenu?: (e: React.MouseEvent, row: number, col: number) => void;
   annotationColor?: string | null;
   commentCount?: number;
+  /** GEPARD-308 — tasks in the cell's comments, and how many are open: open ones keep the mark lit, all done mute it. */
+  commentTasks?: number;
+  commentOpenTasks?: number;
   /**
    * B9 — comments are switched on for this table, so the FOCUSED cell shows a
    * ghosted comment affordance even when it has no thread yet.
@@ -94,16 +97,25 @@ function CommentAddIndicator({ hoverOnly }: { hoverOnly: boolean }) {
   );
 }
 
-function CommentCountIndicator({ count }: { count: number }) {
+function CommentCountIndicator({ count, tasks = 0, openTasks = 0 }: { count: number; tasks?: number; openTasks?: number }) {
   const t = useT();
+  const comments = t(`dynamicTable.comment.count.${commentCountForm(count)}`, count === 1 ? '{count} comment' : '{count} comments', { count });
+  // GEPARD-308 — a comment that is a to-do list: lit while a task is open, muted once all are done (owner 17.11:
+  // "zaznaczone = komórka przestaje się wyróżniać, historia zostaje").
+  const state = tasks > 0 ? (openTasks > 0 ? 'open' : 'done') : undefined;
+  const title = state === 'open'
+    ? `${comments} · ${t('dynamicTable.comment.tasksOpen', '{open} of {total} tasks open', { open: openTasks, total: tasks })}`
+    : state === 'done'
+      ? `${comments} · ${t('dynamicTable.comment.tasksDone', 'all tasks done')}`
+      : comments;
   return (
-    <span className="cell-comment-indicator" data-no-row-click title={t(`dynamicTable.comment.count.${commentCountForm(count)}`, count === 1 ? '{count} comment' : '{count} comments', { count })}>
+    <span className="cell-comment-indicator" data-no-row-click data-tasks={state} title={title}>
       {COMMENT_ICON}
     </span>
   );
 }
 
-const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, stickyLeft, stickyRight, frozenRightEdge, onCellSave, onCellContextMenu, annotationColor, commentCount, commentsEnabled, colorAbove, colorBelow, colorLeft, colorRight, compiledFormats }) => {
+const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, stickyLeft, stickyRight, frozenRightEdge, onCellSave, onCellContextMenu, annotationColor, commentCount, commentTasks, commentOpenTasks, commentsEnabled, colorAbove, colorBelow, colorLeft, colorRight, compiledFormats }) => {
   const store = useCellStore();
   const state = useCellState(row, col);
   const inputRef = useRef<any>(null);
@@ -311,7 +323,7 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
         <CommentAddIndicator hoverOnly={!isSoleSelectedCell} />
       )}
       {commentCount != null && commentCount > 0 && (
-        <CommentCountIndicator count={commentCount} />
+        <CommentCountIndicator count={commentCount} tasks={commentTasks} openTasks={commentOpenTasks} />
       )}
       {/* MARCHING ANTS — the outline that says what is on the clipboard.
           A real element rather than a `::before`, because both of this cell's

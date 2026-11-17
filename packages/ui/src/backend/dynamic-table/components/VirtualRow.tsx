@@ -199,6 +199,8 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
           onCellContextMenu={onCellContextMenu}
           annotationColor={annotation?.color}
           commentCount={annotation?.commentCount}
+          commentTasks={annotation?.tasks}
+          commentOpenTasks={annotation?.openTasks}
           commentsEnabled={commentsEnabled}
           // Four primitives, not one object: `Cell` is memoised and a fresh
           // object per render would defeat it for exactly the cells that
