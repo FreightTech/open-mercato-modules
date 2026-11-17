@@ -1,7 +1,7 @@
 import * as React from 'react'
-import { render, fireEvent, screen, waitFor } from '@testing-library/react'
+import { render, fireEvent, screen, waitFor, act } from '@testing-library/react'
 import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
-import CellCommentDialog from '../components/CellCommentDialog'
+import CellCommentDialog, { COMMENT_REREAD_TIMEOUT_MS } from '../components/CellCommentDialog'
 import { CommentMarkdown, taskCount, toggleTaskInContent } from '../components/commentMarkdown'
 import { flash } from '../../FlashMessages'
 
@@ -14,7 +14,7 @@ import { flash } from '../../FlashMessages'
  *   • a task is ticked in place (PATCH, no login redirect); a refusal puts it back and says so.
  */
 
-type Call = { url: string; init?: { method?: string; body?: string; headers?: Record<string, string> } }
+type Call = { url: string; init?: { method?: string; body?: string; headers?: Record<string, string>; signal?: AbortSignal } }
 const calls: Call[] = []
 let patchReply: { ok: boolean; status: number; result: unknown } = { ok: true, status: 200, result: {} }
 let deferPatch = false
@@ -22,12 +22,22 @@ const deferred: Array<(reply: unknown) => void> = []
 const START = 'Do zrobienia:\n- [ ] zamówić auto\n- [x] wysłać zlecenie'
 /** What the row holds — the thread read returns it; an immediate PATCH stores its answer. */
 let stored = START
+/** The thread reads after the first (the re-reads after ticks): 'ok', 'fail' (an error answer) or 'hang' (no answer). */
+let reread: 'ok' | 'fail' | 'hang' = 'ok'
+let threadReads = 0
 
 jest.mock('../../FlashMessages', () => ({ flash: jest.fn() }))
 jest.mock('../../utils/apiCall', () => ({
   apiCall: jest.fn(async (url: string, init?: Call['init']) => {
     calls.push({ url, init })
     if (url.startsWith('/api/annotations/annotations?')) {
+      threadReads += 1
+      if (threadReads > 1 && reread === 'fail') return { ok: false, status: 500, result: { error: 'boom' } }
+      if (threadReads > 1 && reread === 'hang') {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+        })
+      }
       return {
         ok: true,
         status: 200,
@@ -61,6 +71,8 @@ beforeEach(() => {
   deferPatch = false
   deferred.length = 0
   stored = START
+  reread = 'ok'
+  threadReads = 0
 })
 
 describe('GEPARD-319 — the markdown of a comment', () => {
@@ -198,5 +210,47 @@ describe('GEPARD-319 — the bubble', () => {
     deferred[1]({ ok: true, status: 200, result: { content: BOTH } })
     await waitFor(() => expect(onAnnotationChange).toHaveBeenCalledTimes(1))
     expect(calls.filter((c) => c.url.startsWith('/api/annotations/annotations?'))).toHaveLength(2) // open + one re-read
+  })
+  it('a re-read that fails shows the last answer the server gave', async () => {
+    reread = 'fail'
+    // Meanwhile someone unticked task 2: the server's answer differs from what this bubble clicked.
+    patchReply = { ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [ ] wysłać zlecenie' } }
+    dialog()
+    await screen.findByText('zamówić auto')
+    fireEvent.click(box(1))
+    await waitFor(() => expect(threadReads).toBe(2))
+    await new Promise((r) => setTimeout(r, 20))
+    expect([box(1).checked, box(2).checked]).toEqual([true, false])
+  })
+
+  it('every tick refused and the re-read failing: the text before the ticks', async () => {
+    reread = 'fail'
+    patchReply = { ok: false, status: 403, result: { error: 'Brak uprawnień' } }
+    dialog()
+    await screen.findByText('zamówić auto')
+    fireEvent.click(box(1))
+    await waitFor(() => expect(threadReads).toBe(2))
+    await new Promise((r) => setTimeout(r, 20))
+    expect([box(1).checked, box(2).checked]).toEqual([false, true])
+  })
+
+  it('a re-read that hangs is cut at the time limit and falls back', async () => {
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask'] })
+    try {
+      reread = 'hang'
+      // Meanwhile someone unticked task 2: the server's answer differs from what this bubble clicked.
+      patchReply = { ok: true, status: 200, result: { content: 'Do zrobienia:\n- [x] zamówić auto\n- [ ] wysłać zlecenie' } }
+      dialog()
+      await act(async () => { await jest.advanceTimersByTimeAsync(50) })
+      fireEvent.click(box(1))
+      await act(async () => { await jest.advanceTimersByTimeAsync(50) })
+      expect(threadReads).toBe(2)
+      // Still waiting on the read: the marks as clicked.
+      expect([box(1).checked, box(2).checked]).toEqual([true, true])
+      await act(async () => { await jest.advanceTimersByTimeAsync(COMMENT_REREAD_TIMEOUT_MS + 100) })
+      expect([box(1).checked, box(2).checked]).toEqual([true, false])
+    } finally {
+      jest.useRealTimers()
+    }
   })
 })

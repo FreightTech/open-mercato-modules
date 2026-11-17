@@ -73,6 +73,9 @@ const commentPlace = (c: any) => ({
   originRowId: c.originRowId ?? null,
 });
 
+/** GEPARD-308 — how long the thread's re-read after a burst of ticks may take before the bubble falls back. */
+export const COMMENT_REREAD_TIMEOUT_MS = 10_000;
+
 /** A delete is refused with a message, never by a trip to the login page (GEPARD-307). */
 const DELETE_INIT = { method: 'DELETE', headers: { 'x-om-forbidden-redirect': '0' } } as const;
 
@@ -219,13 +222,13 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
 
   // Read the cell's thread (single-cell mode). `quiet`: no loading state — a re-read after ticking a task (GEPARD-308).
   // Resolves true when the server answered.
-  const loadThread = useCallback(async (quiet = false): Promise<boolean> => {
+  const loadThread = useCallback(async (quiet = false, signal?: AbortSignal): Promise<boolean> => {
     if (isBulkMode || !annotationId) return false;
     if (!quiet) setLoading(true);
     try {
       const params = new URLSearchParams({ entityType, rowIds: rowId });
       if (viewContext) params.set('tableId', viewContext);
-      const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`);
+      const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`, signal ? { signal } : undefined);
       if (ok && result) {
         const items: any[] = result.items || result.data || result || [];
         const annotation = items.find((a: any) =>
@@ -264,9 +267,10 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     void loadThread();
   }, [isOpen, isBulkMode, annotationId, loadThread]);
 
-  // Fetch comments for all selected cells (bulk mode)
-  const fetchBulkComments = useCallback(async (quiet = false) => {
-    if (!bulkCells || bulkCells.length === 0) return;
+  // Fetch comments for all selected cells (bulk mode). Resolves true when every part was read; a quiet re-read
+  // (GEPARD-308) replaces the thread only then — a partial read would drop the comments of the part that failed.
+  const fetchBulkComments = useCallback(async (quiet = false, signal?: AbortSignal): Promise<boolean> => {
+    if (!bulkCells || bulkCells.length === 0) return false;
 
     if (!quiet) setLoading(true);
     try {
@@ -279,14 +283,18 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
         else groups.set(cell.entityType, new Set([cell.rowId]));
       }
       const cellKeySet = new Set(bulkCells.map((c) => `${c.entityType}:${c.rowId}:${c.columnKey}`));
+      let complete = true;
       const responses = await Promise.all(
         Array.from(groups.entries()).flatMap(([type, rowIds]) =>
           // A range over many rows: its ids in parts, as useAnnotations reads them (CR13).
           annotationIdBatches(rowIds).map(async (part) => {
             const params = new URLSearchParams({ entityType: type, rowIds: part.join(',') });
             if (viewContext) params.set('tableId', viewContext);
-            const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`);
-            if (!ok || !result) return [] as any[];
+            const { ok, result } = await apiCall<any>(`/api/annotations/annotations?${params}`, signal ? { signal } : undefined);
+            if (!ok || !result) {
+              complete = false;
+              return [] as any[];
+            }
             const items: any[] = result.items || result.data || result || [];
             return items.map((item) => ({ ...item, entityType: item.entityType ?? type }));
           }),
@@ -319,10 +327,12 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
           }
         }
         allComments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-        setComments(allComments);
+        if (complete || !quiet) setComments(allComments);
       }
+      return complete;
     } catch (error) {
       console.error('Failed to fetch bulk comments:', error);
+      return false;
     } finally {
       if (!quiet) setLoading(false);
     }
@@ -663,8 +673,12 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
       burst.pending -= 1;
       if (burst.pending === 0) {
         ticks.current.delete(comment.id);
-        const read = isBulkMode ? (fetchBulkComments(true).then(() => true)) : loadThread(true);
+        // The re-read has 10 s; past that it counts as failed and the fallback below shows.
+        const limit = new AbortController();
+        const timer = setTimeout(() => limit.abort(), COMMENT_REREAD_TIMEOUT_MS);
+        const read = isBulkMode ? fetchBulkComments(true, limit.signal) : loadThread(true, limit.signal);
         const stored = await read.catch(() => false);
+        clearTimeout(timer);
         if (!stored) setContent(burst.last ?? burst.before);
         if (burst.last !== null) onAnnotationChange?.();
       }
