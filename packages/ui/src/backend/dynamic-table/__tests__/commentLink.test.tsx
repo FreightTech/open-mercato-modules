@@ -24,6 +24,8 @@ const rows = [
 ]
 
 jest.mock('../../FlashMessages', () => ({ flash: jest.fn() }))
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { flash } = require('../../FlashMessages') as { flash: jest.Mock }
 jest.mock('../../utils/apiCall', () => ({
   apiCall: jest.fn(async (url: string) => {
     const parsed = new URL(url, 'http://localhost')
@@ -91,5 +93,30 @@ describe('GEPARD-309 — the table the link names', () => {
     await new Promise((r) => setTimeout(r, 300))
     expect(document.querySelector('.hot-comment-popover')).toBeNull()
     expect(window.location.search).toContain('commentTable=rfs')
+  })
+
+  it("says so when the commented row is not in this view, and leaves the address clean (CHECK #3223 P2)", async () => {
+    window.history.replaceState(null, '', LINK.replace('commentRow=unit-1', 'commentRow=unit-gone'))
+    flash.mockClear()
+    render(React.createElement(Grid, { table: 'rfs' }))
+    await waitFor(() => expect(flash).toHaveBeenCalledWith(expect.stringMatching(/not in this view/), 'info'))
+    expect(window.location.search).toBe('?fileId=f1')
+    expect(document.querySelector('.hot-comment-popover')).toBeNull()
+  })
+
+  it('clears the opening timer when the table goes away before it fires (CHECK #3223 P5)', async () => {
+    const set = jest.spyOn(window, 'setTimeout')
+    const clear = jest.spyOn(window, 'clearTimeout')
+    try {
+      const view = render(React.createElement(Grid, { table: 'rfs' }))
+      await waitFor(() => expect(set.mock.calls.some((c) => c[1] === 120)).toBe(true))
+      const index = set.mock.calls.findIndex((c) => c[1] === 120)
+      const id = set.mock.results[index].value
+      view.unmount()
+      expect(clear).toHaveBeenCalledWith(id)
+    } finally {
+      set.mockRestore()
+      clear.mockRestore()
+    }
   })
 })
