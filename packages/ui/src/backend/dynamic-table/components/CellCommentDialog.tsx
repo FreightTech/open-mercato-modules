@@ -3,6 +3,7 @@ import { Lock, Truck } from 'lucide-react';
 import ReactDOM from 'react-dom';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { apiCall } from '../../utils/apiCall';
+import { flash } from '../../FlashMessages';
 import { annotationIdBatches } from '../hooks/useAnnotations';
 import MentionPopup from './MentionPopup';
 import type { MentionPopupHandle } from './MentionPopup';
@@ -50,7 +51,15 @@ interface Comment {
   /** Owning annotation id — needed to delete a comment in bulk mode (each
       bulk comment can belong to a different cell's annotation). */
   annotationId?: string;
+  /** The server's word on whether this person may delete it (its author, or annotations.delete — GEPARD-307).
+      Absent from a server that predates it: the bin shows, as it always did. */
+  canDelete?: boolean;
 }
+
+/** A delete is refused with a message, never by a trip to the login page (GEPARD-307). */
+const DELETE_INIT = { method: 'DELETE', headers: { 'x-om-forbidden-redirect': '0' } } as const;
+
+const deletable = (c: Comment) => c.canDelete !== false;
 
 interface BulkCell {
   /**
@@ -224,6 +233,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
               content: c.content,
               audience: (c.audience as CommentAudience) ?? 'internal',
               createdAt: c.createdAt || c.created_at,
+              canDelete: typeof c.canDelete === 'boolean' ? c.canDelete : undefined,
             })));
           }
         }
@@ -283,6 +293,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
               createdAt: c.createdAt || c.created_at,
               cellLabel,
               annotationId: annotation.id || annotation.annotationId,
+              canDelete: typeof c.canDelete === 'boolean' ? c.canDelete : undefined,
             });
           }
         }
@@ -555,33 +566,42 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
     if (!annId) return;
 
     try {
-      const { ok } = await apiCall(`/api/annotations/annotations/${annId}/comments?commentId=${commentId}`, {
-        method: 'DELETE',
-      });
+      const { ok, result } = await apiCall<{ error?: string }>(`/api/annotations/annotations/${annId}/comments?commentId=${commentId}`, DELETE_INIT);
       if (ok) {
         setComments(prev => prev.filter(c => c.id !== commentId));
         onAnnotationChange?.();
+      } else {
+        flash(result?.error || t('annotations.dialog.deleteFailed', 'The comment was not deleted'), 'error');
       }
     } catch (error) {
       console.error('Failed to delete comment:', error);
+      flash(t('annotations.dialog.deleteFailed', 'The comment was not deleted'), 'error');
     }
-  }, [annotationId, onAnnotationChange]);
+  }, [annotationId, onAnnotationChange, t]);
 
-  // Bulk: delete every comment shown across the selected cells.
+  // Bulk: delete every comment shown across the selected cells. A refused one stays in the list (GEPARD-307).
   const handleDeleteAllComments = useCallback(async () => {
     const toDelete = comments.slice();
+    const kept = new Set<string>();
+    let refusal: string | null = null;
     for (const c of toDelete) {
       const annId = c.annotationId || annotationId;
       if (!annId) continue;
       try {
-        await apiCall(`/api/annotations/annotations/${annId}/comments?commentId=${c.id}`, { method: 'DELETE' });
+        const { ok, result } = await apiCall<{ error?: string }>(`/api/annotations/annotations/${annId}/comments?commentId=${c.id}`, DELETE_INIT);
+        if (!ok) {
+          kept.add(c.id);
+          refusal = refusal ?? (result?.error || null);
+        }
       } catch (error) {
         console.error('Failed to delete comment:', error);
+        kept.add(c.id);
       }
     }
-    setComments([]);
+    setComments(prev => prev.filter(c => kept.has(c.id)));
+    if (kept.size) flash(refusal || t('annotations.dialog.deleteFailed', 'The comment was not deleted'), 'error');
     onAnnotationChange?.();
-  }, [comments, annotationId, onAnnotationChange]);
+  }, [comments, annotationId, onAnnotationChange, t]);
 
   const formatTimeAgo = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -690,7 +710,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
                   </div>
                   <div className="hot-comment-content">{renderCommentContent(comment.content)}</div>
                 </div>
-                {(
+                {deletable(comment) && (
                 <button
                   className="hot-comment-delete"
                   onClick={() => handleDeleteComment(comment.id, comment.annotationId)}
@@ -708,7 +728,7 @@ const CellCommentDialog: React.FC<CellCommentDialogProps> = ({
       </div>
       )}
 
-      {isBulkMode && comments.length > 0 && (
+      {isBulkMode && comments.length > 0 && comments.every(deletable) && (
         <div className="hot-comment-bulk-actions">
           <button className="hot-comment-delete-all" onClick={handleDeleteAllComments}>
             {t('annotations.dialog.deleteAll', 'Delete all comments')}
