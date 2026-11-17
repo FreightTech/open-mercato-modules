@@ -134,6 +134,7 @@ import FullscreenOverlay from './components/FullscreenOverlay';
 import { Maximize2, FunnelX, LayoutGrid, Replace } from 'lucide-react';
 import { generateSortRuleId, generatePerspectiveId, BASE_VIEW_PERSPECTIVE_NAME } from './types/perspective';
 import { useAnnotations, annotationKey, annotationForRow, rowAnnotationKey } from './hooks/useAnnotations';
+import { readCommentLink, withoutCommentLink } from './utils/commentLink';
 import type { AnnotationComment } from './hooks/useAnnotations';
 import CellCommentDialog from './components/CellCommentDialog';
 import CellCommentHoverPopup from './components/CellCommentHoverPopup';
@@ -1252,7 +1253,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     return out;
   }, [enableComments, data, cols, resolveCommentTarget]);
 
-  const { annotations, refresh: refreshAnnotations } = useAnnotations({
+  const { annotations, settled: annotationsSettled, refresh: refreshAnnotations } = useAnnotations({
     enabled: enableComments && annotationTargets.length > 0,
     // GEPARD-310 — the table asking, so a comment kept to another table stays there.
     tableId: commentsViewContext,
@@ -3333,6 +3334,77 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     rowVirtualizer.scrollToIndex(visualIndex, { align: 'center' });
     columnVirtualizerRef.current.scrollToColumn(col, { align: 'auto' });
   }, [groupingResult, rowVirtualizer]);
+
+  /**
+   * GEPARD-309 — a link that names a cell (a mention's notification: `commentTable`, `commentEntity`, `commentRow`,
+   * `commentColumn`, `commentAt`, `comment`) opens THIS table there, when it is that table. Once the rows and the first
+   * read of the comments are in: scroll to the row (the one the comment was written on, else the first row of that
+   * record) and the column, mark the cell, blink it, open its comments. The link's parameters then leave the address,
+   * so a reload does not open it again. A hidden column: the row, and the comments beside it.
+   */
+  const commentLinkDone = useRef<string | null>(null);
+  // The link's timers (open the comments, end the blink) are cleared when the table goes away (CHECK #3223 P5) — not
+  // when the effect re-runs, which it does as the comments load, and must not cancel the opening it scheduled.
+  const commentLinkTimers = useRef<number[]>([]);
+  useEffect(() => () => {
+    for (const id of commentLinkTimers.current) window.clearTimeout(id);
+    commentLinkTimers.current = [];
+  }, []);
+  useEffect(() => {
+    if (!enableComments || !commentsEntityType || !commentsViewContext || typeof window === 'undefined') return;
+    const link = readCommentLink(window.location.search);
+    if (!link || link.table !== commentsViewContext || commentLinkDone.current === link.signature) return;
+    if (annotationsSettled === 0) return;
+    const total = store.getRowCount();
+    if (total === 0) return; // the rows are not in yet
+    const probe = { data: link.columnKey } as ColumnDef;
+    let rowIndex = -1;
+    for (let r = 0; r < total; r++) {
+      const rowData = store.getRowData(r);
+      const target = resolveCommentTarget(rowData, cols.find((c) => c.data === link.columnKey) ?? probe);
+      if (target.entityType !== link.entityType || target.rowId !== link.rowId) continue;
+      if (rowIndex < 0) rowIndex = r;
+      if (!link.at || commentRowKey(rowData) === link.at) { rowIndex = r; break; }
+    }
+    commentLinkDone.current = link.signature;
+    try {
+      window.history.replaceState(window.history.state, '', withoutCommentLink(window.location.href));
+    } catch {
+      // An address that cannot be rewritten only means a reload opens the cell again.
+    }
+    if (rowIndex < 0) {
+      // The rows and their comments are in, and the commented row is not among them: filtered out, on another page,
+      // or gone (CHECK #3223 P2) — said once, instead of a link that silently does nothing.
+      flash(t('dynamicTable.comments.linkRowMissing', 'The commented row is not in this view — it may be filtered out or on another page'), 'info');
+      return;
+    }
+    const colIndex = cols.findIndex((c) => c.data === link.columnKey);
+    const rowData = store.getRowData(rowIndex);
+    const column = colIndex >= 0 ? cols[colIndex] : probe;
+    const target = resolveCommentTarget(rowData, column);
+    const annotation = annotationForRow(annotations, annotationKey(target, target.columnKey), commentRowKey(rowData));
+    scrollToCell(rowIndex, Math.max(colIndex, 0));
+    if (colIndex >= 0) store.setSelection({ type: 'range', anchor: { row: rowIndex, col: colIndex }, focus: { row: rowIndex, col: colIndex } });
+    // The cell mounts once the scroll lands: blink it and anchor the comments to it then.
+    commentLinkTimers.current.push(window.setTimeout(() => {
+      const cell = tableRef.current?.querySelector<HTMLElement>(`td[data-row="${rowIndex}"][data-col="${Math.max(colIndex, 0)}"]`) ?? null;
+      if (cell && colIndex >= 0) {
+        cell.classList.add('hot-cell-flash');
+        commentLinkTimers.current.push(window.setTimeout(() => cell.classList.remove('hot-cell-flash'), 2600));
+      }
+      setCommentDialog({
+        entityType: target.entityType,
+        rowId: target.rowId,
+        columnKey: target.columnKey,
+        columnTitle: column.title || column.data,
+        rowLabel: rowData?.name || rowData?.title || undefined,
+        annotationId: annotation?.id || null,
+        currentColor: annotation?.color || null,
+        anchorRect: cell?.getBoundingClientRect() ?? null,
+        originRowId: commentRowKey(rowData),
+      });
+    }, 120));
+  }, [enableComments, commentsEntityType, commentsViewContext, annotationsSettled, annotations, store, cols, data, resolveCommentTarget, commentRowKey, scrollToCell, tableRef, t]);
 
   /**
    * Drive the dataset-wide `SearchBar` from inside the grid, through the
