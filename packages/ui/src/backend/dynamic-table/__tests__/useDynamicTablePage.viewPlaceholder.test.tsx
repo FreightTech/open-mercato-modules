@@ -9,6 +9,8 @@ import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
 import { apiCall } from '../../utils/apiCall'
 import { useDynamicTablePage } from '../hooks/useDynamicTablePage'
 import DynamicTable from '../DynamicTable'
+import { dispatch } from '../events/events'
+import { TableEvents } from '../types/index'
 import type { ColumnDef, FilterRow } from '../types/index'
 
 /**
@@ -54,11 +56,12 @@ const ROWS_A = [{ id: 'a1', name: 'MSKU1234565', status: 'PLANNED' }]
 const ROWS_B = [{ id: 'b1', name: 'NLTU4829134', status: null }]
 const hasFilter = (rows: FilterRow[]) => (url: string) => decodeURIComponent(url).includes(`"id":"${rows[0]!.id}"`)
 
-function renderPage() {
+type PageProps = { filters: FilterRow[]; search?: string; scope?: string; views?: boolean }
+function renderPage(initial: PageProps = { filters: VIEW_A }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const wrapper = ({ children }: { children: React.ReactNode }) => React.createElement(QueryClientProvider, { client }, children)
   return renderHook(
-    ({ filters, search }: { filters: FilterRow[]; search?: string }) =>
+    ({ filters, search, scope, views }: PageProps) =>
       useDynamicTablePage({
         source: '/api/boxes',
         columns,
@@ -66,8 +69,12 @@ function renderPage() {
         defaultSort: { field: 'name', direction: 'asc' },
         sharedFilters: filters,
         ...(search !== undefined ? { sharedSearch: search } : {}),
+        // A host's scope (an organization / tenant switch): part of the question, as the organization scope is.
+        ...(scope !== undefined ? { queryKeyDeps: [scope] } : {}),
+        // A table with saved views: the grid's column changes (PERSPECTIVE_CHANGE) reach the hook only then.
+        ...(views ? { perspectives: 'boxes' } : {}),
       } as Parameters<typeof useDynamicTablePage>[0]),
-    { wrapper, initialProps: { filters: VIEW_A } as { filters: FilterRow[]; search?: string } },
+    { wrapper, initialProps: initial },
   )
 }
 
@@ -128,6 +135,61 @@ describe('the rows on screen answer the view asked for (P2)', () => {
     await waitFor(() => expect(shown(result)).toEqual(['b1']))
     rerender({ filters: VIEW_A })
     await waitFor(() => expect(shown(result)).toEqual(['a1']))
+    expect(result.current.props.rowsLoading).toBe(false)
+  })
+})
+
+/**
+ * CHECK-OMM52 (omm #52): two mutants of the question survived the tests above —
+ *   M5: the scope deps (`queryKeyDeps`, the organization) left out of it: another organization's rows stayed on screen
+ *       as this one's while its list loaded;
+ *   M6: lookups / rollups put into it: adding a column to the rows on screen blanked them.
+ */
+describe('the scope and the extra columns (CHECK-OMM52 M5, M6)', () => {
+  it('another scope (organization): its rows are another question — the previous scope\'s are not shown while it loads', async () => {
+    const { result, rerender } = renderPage({ filters: VIEW_A, scope: 'org-a' })
+    await waitFor(() => expect(pending).toHaveLength(1))
+    act(() => answer(() => true, ROWS_A))
+    await waitFor(() => expect(shown(result)).toEqual(['a1']))
+
+    rerender({ filters: VIEW_A, scope: 'org-b' })
+    await waitFor(() => expect(pending.length).toBeGreaterThan(0))
+    expect(shown(result)).toEqual([])
+    expect(result.current.props.rowsLoading).toBe(true)
+    act(() => answer(() => true, ROWS_B))
+    await waitFor(() => expect(shown(result)).toEqual(['b1']))
+    expect(result.current.props.rowsLoading).toBe(false)
+  })
+
+  it('a lookup or rollup column added: the same rows with one more column — kept until the answer, nothing loading', async () => {
+    const props: PageProps = { filters: VIEW_A, views: true }
+    const { result, rerender } = renderPage(props)
+    // The saved views first (the list waits for them), none.
+    await waitFor(() => expect(pending.some((p) => p.url.startsWith('/api/perspectives'))).toBe(true))
+    act(() => {
+      const i = pending.findIndex((p) => p.url.startsWith('/api/perspectives'))
+      pending.splice(i, 1)[0]!.resolve({ ok: true, result: { perspectives: [], defaultPerspectiveId: null } })
+    })
+    await waitFor(() => expect(pending.some((p) => p.url.startsWith('/api/boxes'))).toBe(true))
+    act(() => answer((u) => u.startsWith('/api/boxes'), ROWS_A))
+    await waitFor(() => expect(shown(result)).toEqual(['a1']))
+    // The grid announces its column changes as PERSPECTIVE_CHANGE on its element.
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    ;(result.current.props.tableRef as { current: HTMLElement | null }).current = el
+    await act(async () => { rerender(props) })
+    await act(async () => { rerender(props) })
+
+    act(() => { dispatch(el, TableEvents.PERSPECTIVE_CHANGE, { config: { rollupColumns: [{ source: 'lines', field: 'grossWeight', fn: 'sum', label: 'Lines · Sum of Gross weight' }] } } as never) })
+    await waitFor(() => expect(pending.some((p) => p.url.includes('rollups='))).toBe(true))
+    expect(shown(result)).toEqual(['a1'])
+    expect(result.current.props.rowsLoading).toBe(false)
+    act(() => answer((u) => u.includes('rollups='), ROWS_A))
+    await waitFor(() => expect(pending.some((p) => p.url.includes('rollups='))).toBe(false))
+
+    act(() => { dispatch(el, TableEvents.PERSPECTIVE_CHANGE, { config: { lookupColumns: [{ source: 'contractor', field: 'name', label: 'Contractor · Name' }] } } as never) })
+    await waitFor(() => expect(pending.some((p) => p.url.includes('lookups='))).toBe(true))
+    expect(shown(result)).toEqual(['a1'])
     expect(result.current.props.rowsLoading).toBe(false)
   })
 })
