@@ -292,6 +292,12 @@ export interface DynamicTablePageResult<TRow = any> {
    */
   isError: boolean
   isLoading: boolean
+  /**
+   * P2 — the list is loading the answer to another view or filter set, and the
+   * previous one's rows are not shown (`props.rowsLoading`). For hosts that
+   * render their own body (split views, card modes).
+   */
+  rowsLoading: boolean
   refresh: () => void
   state: {
     page: number
@@ -690,13 +696,35 @@ export function useDynamicTablePage<TRow = any>(
     placeholderData: (previousData) => previousData,
   })
 
+  // ── The rows on screen answer THIS question (P2, GT RFS board 17.11) ──
+  //
+  // `placeholderData` keeps the previous response on screen while the next one
+  // loads — right for a page or a sort (the same rows, another window onto
+  // them), wrong for another VIEW or filter set: switching the RFS board to
+  // "Bez planu dostawy" showed the previous view's boxes, with nothing loading,
+  // for as long as the request took — read as that view's answer. The question is
+  // the request minus its window (page, size, sort), its search (a keystroke keeps
+  // the rows until its answer, as before) and its extra columns (lookups,
+  // rollups); the scope deps are part of it. While the rows held answer another
+  // question, the grid gets none and `rowsLoading` (its body loads; the toolbar,
+  // tabs and filters stay). `isLoading` is untouched: hosts that swap the whole
+  // table for a skeleton on it keep doing so only on a first load.
+  const question = useMemo(() => {
+    const p = new URLSearchParams(queryParams)
+    for (const key of ['page', 'limit', 'pageSize', 'sortField', 'sortDir', 'q', 'search', 'lookups', 'rollups']) p.delete(key)
+    return JSON.stringify([p.toString(), ...queryKeyDeps])
+  }, [queryParams, queryKeyDeps])
+  const shownQuestion = useRef<string | null>(null)
+  if (dataQuery.data !== undefined && !dataQuery.isPlaceholderData) shownQuestion.current = question
+  const rowsPending = dataQuery.isPlaceholderData && shownQuestion.current !== question
+
   const tableData = useMemo(() => {
-    const items = dataQuery.data?.items ?? []
+    const items = rowsPending ? [] : dataQuery.data?.items ?? []
     if (config.mapApiItem) {
       return items.map(config.mapApiItem).filter(Boolean)
     }
     return items
-  }, [dataQuery.data?.items, config.mapApiItem])
+  }, [rowsPending, dataQuery.data?.items, config.mapApiItem])
 
   // ── Whole-table export ──
   // Powers the toolbar Export button: page through `source` collecting every
@@ -1571,6 +1599,8 @@ export function useDynamicTablePage<TRow = any>(
       // takes over the zero-row region, which is the case that lies.
       loadError: dataQuery.isError,
       onRetryLoad: () => { void dataQuery.refetch() },
+      // P2 — the rows held answer another view / filter set: none shown, the body loads.
+      rowsLoading: rowsPending,
       ...(perspectivesTableId
         ? {
             savedPerspectives,
@@ -1606,6 +1636,7 @@ export function useDynamicTablePage<TRow = any>(
     return baseProps
   }, [
     tableData,
+    rowsPending,
     columns,
     tableName,
     idColumn,
@@ -1692,6 +1723,7 @@ export function useDynamicTablePage<TRow = any>(
     // without this the host would drop its skeleton and paint an empty grid for
     // the one frame the list is waiting on the perspective.
     isLoading: (!perspectiveHydrated || dataQuery.isLoading) && !dataQuery.data,
+    rowsLoading: rowsPending,
     refresh: () => invalidateListNow(),
     state: { page, limit, search, filters, sortField, sortDir, grouping, viewMode },
   }

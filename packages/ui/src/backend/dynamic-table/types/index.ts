@@ -1161,6 +1161,13 @@ export interface DynamicTableProps {
   /** Re-runs the failed list request from the error state's retry button. */
   onRetryLoad?: () => void;
   /**
+   * P2 — the rows for the current view / filter set are loading and the
+   * previous ones are not shown (`useDynamicTablePage` sets it while
+   * `placeholderData` holds another question's answer). With no rows, the body
+   * shows loading rows under the headers instead of `EmptyState`. Defaults false.
+   */
+  rowsLoading?: boolean;
+  /**
    * Draw the table's BODY as something other than rows.
    *
    * THE POINT OF THIS PROP is that the alternative renderer cannot own state

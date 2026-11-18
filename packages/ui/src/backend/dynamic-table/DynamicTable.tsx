@@ -110,6 +110,7 @@ import SearchBar from './components/SearchBar';
 import ActiveFilterChips from './components/ActiveFilterChips';
 import EmptyState from './components/EmptyState';
 import LoadErrorState from './components/LoadErrorState';
+import TableSkeleton from './components/TableSkeleton';
 import StaleDataBar from './components/StaleDataBar';
 import ContextMenu from './components/ContextMenu';
 import VirtualRow from './components/VirtualRow';
@@ -252,6 +253,14 @@ export interface DynamicTableProps {
   loadError: boolean;
   /** Re-runs the failed list request, from the error state's retry button. */
   onRetryLoad?: () => void;
+  /**
+   * P2 — the rows for the current view / filter set are loading and the
+   * previous ones are not shown (`useDynamicTablePage` sets it while
+   * `placeholderData` holds another question's answer). With no rows, the body
+   * shows loading rows under the headers instead of `EmptyState`; the toolbar,
+   * tabs and filters stay. Defaults false.
+   */
+  rowsLoading?: boolean;
   /**
    * Stable identifier for this table, used to persist per-user column widths in
    * localStorage across reloads. Scoped to the signed-in user (falling back to
@@ -580,6 +589,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   tableName = 'Table Name',
   loadError,
   onRetryLoad,
+  rowsLoading = false,
   tableId,
   density,
   striped = false,
@@ -5010,7 +5020,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                 `rowCount === 0`: a rejected query leaves `data` undefined and
                 the grid holds zero rows either way. Deciding by row count
                 alone is what made a 500 read as "Nothing here yet". */}
-            {rowCount === 0 && (loadError
+            {rowCount === 0 && (rowsLoading
+              ? (
+                  <div className="hot-rows-loading" role="status" aria-busy="true" aria-label={t('dynamicTable.rowsLoading', 'Loading…')} data-rows-loading="">
+                    <TableSkeleton rows={6} toolbar={false} colHeaders={false} rowHeaders={false} actions={false} />
+                  </div>
+                )
+              : loadError
               ? <LoadErrorState tableName={tableName} onRetry={onRetryLoad} />
               : <EmptyState
                   emptyMessage={emptyMessage}
