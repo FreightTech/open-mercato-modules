@@ -263,6 +263,8 @@ export default function TrackingJobTable({
 
   const table = useDynamicTablePage<TrackingJobRow>({
     source: '/api/shipment_tracking/tracking-jobs',
+    // GEPARD-355: newest first. Without it the grid asks for sortField=id, and a UUID id is a random order.
+    defaultSort: { field: 'createdAt', direction: 'desc' },
     // Saved views. Without this the perspective tab strip auto-hides
     // (hidePerspectiveTabs ?? !hasPerspectives), so users cannot save or
     // switch a view on this list at all.

@@ -84,3 +84,19 @@ describe('webhooks/deliveries', () => {
     expect(where.webhook).toEqual({ tenantId: 'tenant-1', organizationId: { $in: ['org-1'] }, id: '6f1d3c1e-0000-4000-8000-000000000001' })
   })
 })
+
+describe('the grids ask for an order the server applies (review N1)', () => {
+  // useDynamicTablePage sends sortField=id when the page sets no defaultSort, and a UUID id is a random order: the
+  // routes' newest-first default would never be reached from the screen.
+  it.each([
+    ['shipments', '../../backend/shipment-tracking/page.tsx'],
+    ['tracking-jobs', '../../tables/tracking_job/table.client.tsx'],
+  ])('%s grid opens newest first, on a field its route sorts by', async (name, file) => {
+    const { readFileSync } = await import('node:fs')
+    const path = await import('node:path')
+    const source = readFileSync(path.resolve(__dirname, file), 'utf8')
+    const match = source.match(/defaultSort:\s*\{\s*field:\s*'(\w+)',\s*direction:\s*'(asc|desc)'\s*\}/)
+    expect(match?.slice(1)).toEqual(['createdAt', 'desc'])
+    expect(Object.keys(routes[name].list.sortFieldMap)).toContain(match?.[1])
+  })
+})
