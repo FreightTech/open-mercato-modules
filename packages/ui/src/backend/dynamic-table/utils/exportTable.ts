@@ -30,13 +30,15 @@ function cellToString(value: unknown): string {
 const PLAIN_DECIMAL = /^\s*-?\d+(?:\.\d+)?\s*$/;
 
 /**
- * The cell for a spreadsheet: a finite number is a number; so is a `numeric` column's plain-decimal string (an API
- * amount kept as text). Anything else — a formatted "1 234,56 PLN", a number-like reference in a text column — is
- * its text, as CSV writes it.
+ * The cell for a spreadsheet: in a `numeric` column (amounts, rollups, number formulas) a finite number is a number,
+ * and so is a plain-decimal string (an API amount kept as text). Anything else is its text, as CSV writes it — a
+ * formatted "1 234,56 PLN", and every value of a text column, a number too: an identifier held as a number
+ * ("7564321098") would otherwise show in Excel as "7,56E+09" (CHECK omm #55, N1).
  */
 function exportCell(col: ColumnDef, value: unknown, text: string): ExportCell {
+  if (col.type !== 'numeric') return text;
   if (typeof value === 'number') return Number.isFinite(value) ? value : text;
-  if (col.type === 'numeric' && typeof value === 'string' && PLAIN_DECIMAL.test(value)) return Number(value);
+  if (typeof value === 'string' && PLAIN_DECIMAL.test(value)) return Number(value);
   return text;
 }
 

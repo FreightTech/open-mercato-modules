@@ -66,13 +66,21 @@ describe('GEPARD-343 — the .xlsx export writes numbers as numbers', () => {
     expect(extractExportRowsFromData([{ ref: '00211' }], [{ data: 'ref', title: 'Wyciąg' }]).values).toEqual([['00211']])
   })
 
-  it('a column\'s exportValue that gives a number (rollups, formulas) is a number cell', async () => {
-    const cols: ColumnDef[] = [{ data: 'total', title: 'Razem', exportValue: (_v, row) => (row as { a: number; b: number }).a + (row as { a: number; b: number }).b }]
+  it('a numeric column\'s exportValue that gives a number (rollups, formulas) is a number cell', async () => {
+    const cols: ColumnDef[] = [{ data: 'total', title: 'Razem', type: 'numeric', exportValue: (_v, row) => (row as { a: number; b: number }).a + (row as { a: number; b: number }).b }]
     const sheet = await readBack(toXlsxBlob(extractExportRowsFromData([{ a: 0.1, b: 0.2 }], cols), XLSX))
     expect(sheet.A2).toMatchObject({ t: 'n' })
     expect(sheet.A2.v).toBeCloseTo(0.3)
     // No numericFormat: Excel's own General format.
     expect(sheet.A2.z === undefined || sheet.A2.z === 'General').toBe(true)
+  })
+
+  it('a text column\'s value stays text, a number too: an identifier is not shown as "7,56E+09" (CHECK omm #55, N1)', async () => {
+    const cols: ColumnDef[] = [{ data: 'ref', title: 'Nr referencyjny' }, { data: 'n', title: 'Liczba', exportValue: (v) => v as number }]
+    const out = extractExportRowsFromData([{ ref: 7564321098, n: 12 }], cols)
+    expect(out.values).toEqual([['7564321098', '12']])
+    const sheet = await readBack(toXlsxBlob(out, XLSX))
+    expect(sheet.A2).toMatchObject({ t: 's', v: '7564321098' })
   })
 
   it('the CSV is as it was: the same text cells, a dot as the decimal point', () => {
