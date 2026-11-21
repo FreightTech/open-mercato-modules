@@ -3,16 +3,57 @@ import type { CellStore } from '../store/index';
 
 export type ExportFormat = 'csv' | 'xlsx';
 
+/** A cell as a spreadsheet gets it: a number stays a number, everything else is its text. */
+export type ExportCell = string | number;
+
 export interface ExtractedTable {
   /** Column header labels, in view order. */
   headers: string[];
-  /** Body rows; each is an array of cell strings aligned to `headers`. */
+  /** Body rows; each is an array of cell strings aligned to `headers` (what CSV writes). */
   rows: string[][];
+  /**
+   * The same cells for an .xlsx file, a number kept a number (GEPARD-343: "kwoty mają kropki zamiast przecinków …
+   * formuła Suma nie działa" — "4556.52" written as text is not a number to a Polish Excel; a number cell is, and it
+   * prints with the reader's own decimal comma). Absent on a table built by hand: `rows` is written as it is.
+   */
+  values?: ExportCell[][];
+  /** Per column, the Excel number format of its number cells (`'#,##0.00'`), from the column's `numericFormat`. */
+  numberFormats?: Array<string | undefined>;
 }
 
 function cellToString(value: unknown): string {
   if (value === null || value === undefined) return '';
   return String(value);
+}
+
+/** A plain decimal as JavaScript writes it ("4556.52", "-588.8") — what a numeric column's string holds. */
+const PLAIN_DECIMAL = /^\s*-?\d+(?:\.\d+)?\s*$/;
+
+/**
+ * The cell for a spreadsheet: a finite number is a number; so is a `numeric` column's plain-decimal string (an API
+ * amount kept as text). Anything else — a formatted "1 234,56 PLN", a number-like reference in a text column — is
+ * its text, as CSV writes it.
+ */
+function exportCell(col: ColumnDef, value: unknown, text: string): ExportCell {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : text;
+  if (col.type === 'numeric' && typeof value === 'string' && PLAIN_DECIMAL.test(value)) return Number(value);
+  return text;
+}
+
+/**
+ * The Excel number format a `numeric` column's cells are written with, so the file shows what the grid shows
+ * ("155,20", not "155,2"): fixed decimals from `numericFormat.minimumFractionDigits`, grouping unless it is off.
+ * None (Excel's General) when the column has no fixed decimals or is not a plain decimal (percent, currency).
+ */
+export function xlsxNumberFormat(col: ColumnDef): string | undefined {
+  if (col.type !== 'numeric') return undefined;
+  const nf = col.numericFormat;
+  if (!nf || (nf.style !== undefined && nf.style !== 'decimal')) return undefined;
+  const min = Math.min(nf.minimumFractionDigits ?? 0, 20);
+  if (min <= 0) return undefined;
+  const max = Math.min(Math.max(nf.maximumFractionDigits ?? min, min), 20);
+  const whole = nf.useGrouping === false ? '0' : '#,##0';
+  return `${whole}.${'0'.repeat(min)}${'#'.repeat(max - min)}`;
 }
 
 /**
@@ -33,6 +74,7 @@ export function extractExportRows(
 ): ExtractedTable {
   const headers = cols.map((c) => c.title ?? c.data);
   const rows: string[][] = [];
+  const values: ExportCell[][] = [];
   const rowCount = store.getRowCount();
   const exportSelectionOnly = selectedRowIds.size > 0;
 
@@ -43,16 +85,17 @@ export function extractExportRows(
       const id = String(rowData[selectionColumnName] ?? '');
       if (!id || !selectedRowIds.has(id)) continue;
     }
-    rows.push(
-      cols.map((col, c) => {
-        const raw = store.getCellValue(r, c);
-        if (col.exportValue) return cellToString(col.exportValue(raw, rowData));
-        return cellToString(raw);
-      }),
-    );
+    const cells = cols.map((col, c) => {
+      const raw = store.getCellValue(r, c);
+      const value = col.exportValue ? col.exportValue(raw, rowData) : raw;
+      const text = cellToString(value);
+      return { text, cell: exportCell(col, value, text) };
+    });
+    rows.push(cells.map((x) => x.text));
+    values.push(cells.map((x) => x.cell));
   }
 
-  return { headers, rows };
+  return { headers, rows, values, numberFormats: cols.map(xlsxNumberFormat) };
 }
 
 /**
@@ -66,17 +109,22 @@ export function extractExportRowsFromData(
   cols: ColumnDef[],
 ): ExtractedTable {
   const headers = cols.map((c) => c.title ?? c.data);
-  const rows = data.map((row) =>
+  const extracted = data.map((row) =>
     cols.map((col) => {
       const raw = row?.[col.data];
-      if (col.exportValue) return cellToString(col.exportValue(raw, row));
+      const value = col.exportValue ? col.exportValue(raw, row) : raw;
       // Objects/arrays have no useful default string form — leave blank rather
       // than emit "[object Object]". Columns that store them must use exportValue.
-      if (raw !== null && typeof raw === 'object') return '';
-      return cellToString(raw);
+      const text = !col.exportValue && raw !== null && typeof raw === 'object' ? '' : cellToString(value);
+      return { text, cell: exportCell(col, value, text) };
     }),
   );
-  return { headers, rows };
+  return {
+    headers,
+    rows: extracted.map((cells) => cells.map((x) => x.text)),
+    values: extracted.map((cells) => cells.map((x) => x.cell)),
+    numberFormats: cols.map(xlsxNumberFormat),
+  };
 }
 
 function escapeCsvField(field: string): string {
@@ -105,8 +153,17 @@ export function toXlsxBlob(
   table: ExtractedTable,
   XLSX: typeof import('xlsx'),
 ): Blob {
-  const aoa = [table.headers, ...table.rows];
-  const sheet = XLSX.utils.aoa_to_sheet(aoa);
+  const body: ExportCell[][] = table.values ?? table.rows;
+  const sheet = XLSX.utils.aoa_to_sheet([table.headers, ...body]);
+  // A number cell shows as the column shows it in the grid; the header row is row 0.
+  table.numberFormats?.forEach((format, c) => {
+    if (!format) return;
+    body.forEach((cells, i) => {
+      if (typeof cells[c] !== 'number') return;
+      const cell = sheet[XLSX.utils.encode_cell({ r: i + 1, c })];
+      if (cell) cell.z = format;
+    });
+  });
   const book = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(book, sheet, 'Export');
   const out = XLSX.write(book, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;

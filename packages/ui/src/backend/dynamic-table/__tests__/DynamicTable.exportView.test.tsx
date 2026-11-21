@@ -81,7 +81,7 @@ describe('Eksportuj writes the view (G23.38)', () => {
     fireEvent.click(rowCheckboxes()[1])
     await clickExportCsv()
     await waitFor(() => expect(exported()).toBeDefined())
-    expect(exported()).toEqual({ headers: ['Invoice', 'Gross'], rows: [['FV/2026/002', '984.00']] })
+    expect(exported()).toMatchObject({ headers: ['Invoice', 'Gross'], rows: [['FV/2026/002', '984.00']] })
     expect(onExportView).not.toHaveBeenCalled()
   })
 
@@ -93,7 +93,7 @@ describe('Eksportuj writes the view (G23.38)', () => {
     await waitFor(() => expect(exported()).toBeDefined())
     expect(onExportView).toHaveBeenCalledTimes(1)
     expect(onExportAll).not.toHaveBeenCalled()
-    expect(exported()).toEqual({ headers: ['Invoice', 'Gross'], rows: [['FV/2026/001', '1230.00'], ['FV/2026/003', '50.00']] })
+    expect(exported()).toMatchObject({ headers: ['Invoice', 'Gross'], rows: [['FV/2026/001', '1230.00'], ['FV/2026/003', '50.00']] })
   })
 
   it('a table with no fetch exports the rows it holds, in the view\'s columns', async () => {
