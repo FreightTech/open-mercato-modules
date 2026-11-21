@@ -9,6 +9,7 @@ import {
 } from '../openapi'
 import { withScopedPayload } from '../utils'
 import { resolveTranslations } from '@open-mercato/shared/lib/i18n/server'
+import { pagedOrmList } from '../../lib/paged-list'
 
 const rawBodySchema = z.object({}).passthrough()
 
@@ -73,6 +74,25 @@ const buildFilters = (query: TrackingJobListQuery): Record<string, unknown> => {
   return filters
 }
 
+// GEPARD-355: page and sort on the server (lib/paged-list) — the CRUD fallback alone reads the whole table.
+const trackingJobSortFieldMap = {
+  id: 'id',
+  carrierCode: 'carrier_code',
+  status: 'status',
+  nextPollAt: 'next_poll_at',
+  lastPollAt: 'last_poll_at',
+  createdAt: 'created_at',
+}
+
+const trackingJobPages = pagedOrmList({
+  entity: TrackingJob,
+  sortFieldMap: trackingJobSortFieldMap,
+  defaultSort: { field: 'createdAt', dir: 'desc' },
+  orgField: 'organizationId',
+  tenantField: 'tenantId',
+  softDeleteField: 'deletedAt',
+})
+
 const crud = makeCrudRoute({
   metadata: routeMetadata,
   orm: {
@@ -84,15 +104,11 @@ const crud = makeCrudRoute({
   list: {
     schema: trackingJobListSchema,
     fields: listFields,
-    sortFieldMap: {
-      id: 'id',
-      carrierCode: 'carrier_code',
-      status: 'status',
-      nextPollAt: 'next_poll_at',
-      lastPollAt: 'last_poll_at',
-      createdAt: 'created_at',
-    },
-    buildFilters: async (query) => buildFilters(query),
+    sortFieldMap: trackingJobSortFieldMap,
+    buildFilters: async (query, ctx) => trackingJobPages.buildFilters(buildFilters(query), query, ctx),
+  },
+  hooks: {
+    afterList: trackingJobPages.afterList,
   },
   actions: {
     create: {

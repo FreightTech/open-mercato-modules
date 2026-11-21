@@ -10,6 +10,7 @@ import {
 } from '../openapi'
 import { withScopedPayload } from '../utils'
 import { resolveTranslations } from '@open-mercato/shared/lib/i18n/server'
+import { pagedOrmList } from '../../lib/paged-list'
 
 const rawBodySchema = z.object({}).passthrough()
 
@@ -101,6 +102,26 @@ const buildFilters = (query: ShipmentListQuery): Record<string, unknown> => {
   return filters
 }
 
+// GEPARD-355: page and sort on the server (lib/paged-list) — the CRUD fallback alone reads the whole table.
+const shipmentSortFieldMap = {
+  id: 'id',
+  status: 'status',
+  carrierCode: 'carrier_code',
+  containerNumber: 'container_number',
+  bookingNumber: 'booking_number',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+}
+
+const shipmentPages = pagedOrmList({
+  entity: Shipment,
+  sortFieldMap: shipmentSortFieldMap,
+  defaultSort: { field: 'createdAt', dir: 'desc' },
+  orgField: 'organizationId',
+  tenantField: 'tenantId',
+  softDeleteField: 'deletedAt',
+})
+
 const crud = makeCrudRoute({
   metadata: routeMetadata,
   orm: {
@@ -113,16 +134,11 @@ const crud = makeCrudRoute({
   list: {
     schema: shipmentListSchema,
     fields: listFields,
-    sortFieldMap: {
-      id: 'id',
-      status: 'status',
-      carrierCode: 'carrier_code',
-      containerNumber: 'container_number',
-      bookingNumber: 'booking_number',
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
-    },
-    buildFilters: async (query) => buildFilters(query),
+    sortFieldMap: shipmentSortFieldMap,
+    buildFilters: async (query, ctx) => shipmentPages.buildFilters(buildFilters(query), query, ctx),
+  },
+  hooks: {
+    afterList: shipmentPages.afterList,
   },
   actions: {
     create: {
