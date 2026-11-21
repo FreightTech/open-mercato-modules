@@ -272,6 +272,8 @@ export default function ShipmentListPage() {
     tableName: t('shipment_tracking.shipments.title', 'Shipments'),
     defaultPageSize: 20,
     mapApiItem: mapItem,
+    // GEPARD-355: newest first. Without it the grid asks for sortField=id, and a UUID id is a random order.
+    defaultSort: { field: 'createdAt', direction: 'desc' },
     cellEdit: false,
     tableProps: {
       height: 'fill',

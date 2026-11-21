@@ -2,6 +2,7 @@ import { makeCrudRoute } from '@open-mercato/shared/lib/crud/factory'
 import { z } from 'zod'
 import { TrackingEvent } from '../../data/entities'
 import { trackingEventListSchema } from '../../data/validators'
+import { pagedOrmList } from '../../lib/paged-list'
 import {
   createShipmentTrackingCrudOpenApi,
   createPagedListResponseSchema,
@@ -59,6 +60,24 @@ const buildFilters = (query: TrackingEventListQuery): Record<string, unknown> =>
   return filters
 }
 
+// GEPARD-355: page and sort on the server (lib/paged-list) — the CRUD fallback alone reads the whole table.
+const cargoEventSortFieldMap = {
+  id: 'id',
+  eventDateTime: 'event_date_time',
+  eventType: 'event_type',
+  eventCode: 'event_code',
+  createdAt: 'created_at',
+}
+
+const cargoEventPages = pagedOrmList({
+  entity: TrackingEvent,
+  sortFieldMap: cargoEventSortFieldMap,
+  defaultSort: { field: 'eventDateTime', dir: 'desc' },
+  orgField: 'organizationId',
+  tenantField: 'tenantId',
+  softDeleteField: null,
+})
+
 const crud = makeCrudRoute({
   metadata: routeMetadata,
   orm: {
@@ -71,14 +90,11 @@ const crud = makeCrudRoute({
   list: {
     schema: trackingEventListSchema,
     fields: listFields,
-    sortFieldMap: {
-      id: 'id',
-      eventDateTime: 'event_date_time',
-      eventType: 'event_type',
-      eventCode: 'event_code',
-      createdAt: 'created_at',
-    },
-    buildFilters: async (query) => buildFilters(query),
+    sortFieldMap: cargoEventSortFieldMap,
+    buildFilters: async (query, ctx) => cargoEventPages.buildFilters(buildFilters(query), query, ctx),
+  },
+  hooks: {
+    afterList: cargoEventPages.afterList,
   },
 })
 
