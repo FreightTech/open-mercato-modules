@@ -2,7 +2,7 @@ import React, { memo, useRef } from 'react';
 import { useT } from '@open-mercato/shared/lib/i18n/context';
 import { MoreHorizontal, X } from 'lucide-react';
 import { VirtualItem } from '@tanstack/react-virtual';
-import { useCellStore, useRowRangeState } from '../hooks/index';
+import { useCellStore, useRowEditing, useRowRangeState } from '../hooks/index';
 import { ColumnDef } from '../types/index';
 import { AnnotationMap } from '../hooks/useAnnotations';
 import Cell from './Cell';
@@ -79,6 +79,13 @@ export interface VirtualRowProps {
    * every pointer hit-test in `handlers/index.ts`.
    */
   columnWindow?: ColumnWindow;
+  /**
+   * `fitRowsToContent` — the virtualiser's measuring ref. Given, the row is as tall as its content (at least
+   * `minRowHeight`) and is measured, instead of the one fixed `virtualRow.size`; its `wrap` columns wrap.
+   */
+  measureRef?: (element: HTMLTableRowElement | null) => void;
+  /** With `measureRef`: the density's row height, the shortest a fitted row gets. */
+  minRowHeight?: number;
 }
 
 const VirtualRow: React.FC<VirtualRowProps> = memo(
@@ -114,6 +121,8 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
     onToggleRowSelect,
     compiledFormats,
     columnWindow,
+    measureRef,
+    minRowHeight = 0,
   }) => {
     const t = useT();
     const rowActionsLabel = t('dynamicTable.rowActions', 'Row actions');
@@ -125,6 +134,11 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
     const suppressSaveClickRef = useRef(false);
     const isNewRow = store.isNewRow(rowIndex);
     const rowData = store.getRowData(rowIndex);
+    // `fitRowsToContent`: a fitted row is measured; while one of its cells has the editor open it HOLDS the height it
+    // was measured at — the editor replaces the cell's text, and a row that shrank or grew under the typing would move
+    // every row below it. The edit ends, the hold lets go, and the row is measured once with its new text.
+    const fitted = measureRef !== undefined;
+    const isEditingRow = useRowEditing(rowIndex, fitted);
 
     // `Cell` is memoised, but it takes the column definition WITH the store's
     // current width folded in — building that object inline handed every cell a
@@ -194,6 +208,7 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
           ariaColIndex={colIndex + 1 + (rowHeaders ? 1 : 0)}
           stickyLeft={leftOffsets[colIndex]}
           stickyRight={rightOffsets[colIndex]}
+          wrap={fitted && !!col.wrap}
           frozenRightEdge={lastFrozenColumnKey != null && col.data === lastFrozenColumnKey}
           onCellSave={onCellSave}
           onCellContextMenu={onCellContextMenu}
@@ -214,7 +229,10 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
 
     return (
       <tr
+        ref={measureRef}
         data-row={rowIndex}
+        data-index={fitted ? virtualRow.index : undefined}
+        data-fit-row={fitted ? 'true' : undefined}
         data-is-new={isNewRow}
         data-row-even={rowIndex % 2 === 1 ? 'true' : undefined}
         data-row-highlighted={isHighlighted ? 'true' : undefined}
@@ -225,7 +243,9 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
           top: 0,
           left: 0,
           width: `${totalWidth}px`,
-          height: `${virtualRow.size}px`,
+          ...(fitted
+            ? { minHeight: `${isEditingRow ? Math.max(minRowHeight, virtualRow.size) : minRowHeight}px` }
+            : { height: `${virtualRow.size}px` }),
           transform: `translateY(${virtualRow.start}px)`,
         }}
       >

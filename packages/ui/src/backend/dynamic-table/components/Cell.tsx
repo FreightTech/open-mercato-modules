@@ -22,6 +22,11 @@ export interface CellProps {
   stickyRight?: number;
   /** True for the rightmost pinned column — carries the float-edge shadow. */
   frozenRightEdge?: boolean;
+  /**
+   * `fitRowsToContent` + `ColumnDef.wrap`: the text wraps onto as many lines as it needs (the row grows to it) instead
+   * of one line cut with „…”. VirtualRow decides it; a cell of an unfitted row never wraps.
+   */
+  wrap?: boolean;
   onCellSave: (row: number, col: number, newValue: any, clearEditing?: boolean) => void;
   onCellContextMenu?: (e: React.MouseEvent, row: number, col: number) => void;
   annotationColor?: string | null;
@@ -102,7 +107,7 @@ function CommentCountIndicator({ count }: { count: number }) {
   );
 }
 
-const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, stickyLeft, stickyRight, frozenRightEdge, onCellSave, onCellContextMenu, annotationColor, commentCount, commentsEnabled, colorAbove, colorBelow, colorLeft, colorRight, compiledFormats }) => {
+const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, stickyLeft, stickyRight, frozenRightEdge, wrap, onCellSave, onCellContextMenu, annotationColor, commentCount, commentsEnabled, colorAbove, colorBelow, colorLeft, colorRight, compiledFormats }) => {
   const store = useCellStore();
   const state = useCellState(row, col);
   const inputRef = useRef<any>(null);
@@ -246,7 +251,7 @@ const Cell: React.FC<CellProps> = memo(({ row, col, colConfig, ariaColIndex, sti
 
   return (
     <td
-      className={`hot-cell ${colConfig.readOnly ? 'read-only' : ''} ${conditionalClassName} ${annotationColor ? `cell-color-${annotationColor}` : ''} ${alignClass} ${monoClass} ${selectClass}`.replace(/\s+/g, ' ').trim()}
+      className={`hot-cell ${colConfig.readOnly ? 'read-only' : ''} ${conditionalClassName} ${annotationColor ? `cell-color-${annotationColor}` : ''} ${alignClass} ${monoClass} ${selectClass} ${wrap ? 'cell-wrap' : ''}`.replace(/\s+/g, ' ').trim()}
       style={style}
       data-row={row}
       data-col={col}

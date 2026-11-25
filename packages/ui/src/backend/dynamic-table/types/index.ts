@@ -210,6 +210,12 @@ export interface ColumnDef {
   /** Render the cell text in the monospace (Geist Mono) face — refs, codes, dates, amounts. v2 design. */
   mono?: boolean;
   /**
+   * With the table's `fitRowsToContent`: this column's text wraps onto as many lines as it needs and the row grows to
+   * show all of it, instead of one line cut with „…”. Without `fitRowsToContent` it changes nothing. A custom
+   * `renderer` wraps only where its own markup lets the text wrap (no `truncate` / `nowrap` of its own).
+   */
+  wrap?: boolean;
+  /**
    * Render the cell value as a status pill (v2 design). Presentation-only —
    * the column's `type` still governs sort/filter/edit behaviour, so a status
    * column stays `type: 'dropdown'`/`'text'` and just *displays* as a badge.
@@ -1096,6 +1102,12 @@ export interface DynamicTableProps {
   defaultHiddenColumns?: string[];
   /** Density of row padding (v2 design). */
   density?: 'sm' | 'md';
+  /**
+   * Rows grow to fit their content: each row is measured and is as tall as its tallest cell, never shorter than the
+   * density's row height, so a long text in a `wrap` column is shown whole. Off by default: every row keeps the one
+   * fixed height and every cell stays on one line, exactly as before.
+   */
+  fitRowsToContent?: boolean;
   /** Zebra-stripe alternate rows with the secondary surface (v2 design). */
   striped?: boolean;
   /** Called with the selected row IDs whenever the v2 checkbox-column
