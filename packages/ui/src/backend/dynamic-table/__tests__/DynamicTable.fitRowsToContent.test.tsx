@@ -186,6 +186,22 @@ describe('fitRowsToContent on — rows grow to their content', () => {
     expect(rowAt(0).style.minHeight).toBe(`${ROW}px`)
   })
 
+  it('measures a row that a sort brings into an element of the same height (never left at the estimate)', () => {
+    // 60 rows: only the first ~28 mount. r1 and r50 are both 220 px; r50 has never been mounted, so never measured.
+    // Swapping them puts r50 where r1 was. Keyed by slot, that element kept its 220 px box, nothing measured it, and r50
+    // sat at the 34 px estimate — the rows below overlapped it (Chrome, 268 invoice lines sorted by value).
+    contentHeightById = { r1: 220, r50: 220 }
+    const many = Array.from({ length: 60 }, (_, r) => ({ id: `r${r}`, code: `C${r}`, description: `d${r}`, note: '' }))
+    const { rerender } = render(React.createElement(Harness, { fitRowsToContent: true, data: many }))
+    expect(offsetOf(2)).toBe(`translateY(${ROW + 220}px)`)
+    const swapped = [...many]
+    ;[swapped[1], swapped[50]] = [swapped[50], swapped[1]]
+    rerender(React.createElement(Harness, { fitRowsToContent: true, data: swapped }))
+    expect(cellAt(1, 0).textContent).toBe('C50')
+    expect(offsetOf(2)).toBe(`translateY(${ROW + 220}px)`)
+    expect(offsetOf(3)).toBe(`translateY(${2 * ROW + 220}px)`)
+  })
+
   it('carries a row\'s height with the row when the rows are reordered (a sort), not with its position', () => {
     contentHeightById = { r0: 220 }
     const { rerender } = render(React.createElement(Harness, { fitRowsToContent: true }))

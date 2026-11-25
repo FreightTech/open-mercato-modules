@@ -4557,7 +4557,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                     // dataRow — use dataIndex for the store
                     return (
                       <VirtualRow
-                        key={`dr-${vr.dataIndex}`}
+                        // fitted rows: one element per ROW (the virtualiser's id key), so an element never shows another
+                        // row of the same height unmeasured after a sort — see the non-grouped rows below
+                        key={fitRows ? String(virtualItem.key) : `dr-${vr.dataIndex}`}
                         rowIndex={vr.dataIndex}
                         columns={cols}
                         virtualRow={virtualItem}
@@ -4599,7 +4601,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                   // Not grouped — standard rendering
                   return (
                     <VirtualRow
-                      key={virtualItem.index}
+                      // Fitted rows are keyed by the ROW (the virtualiser's id key), not by the slot. Keyed by slot, a sort
+                      // left an element showing another row of the same height: its box did not change, so nothing
+                      // measured it, and the new row sat at the estimate — rows overlapped (seen in Chrome on 268 lines).
+                      // Keyed by row, an element appears with its row and is measured as it mounts.
+                      key={fitRows ? String(virtualItem.key) : virtualItem.index}
                       rowIndex={virtualItem.index}
                       columns={cols}
                       virtualRow={virtualItem}
