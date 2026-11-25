@@ -13,7 +13,7 @@ import React, {
   useContext,
 } from 'react';
 import { flushSync } from 'react-dom';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer, measureElement as measureVirtualElement } from '@tanstack/react-virtual';
 import { CONTENT_MAX_HEIGHT, DynamicTableSizingContext, type DynamicTableHeight } from './sizing';
 import { DynamicTableDefaultsContext } from './defaults';
 
@@ -46,7 +46,7 @@ import { getPinnedColumnIndices } from './utils/columnWindow';
 import { computeColumnFill } from './utils/columnFill';
 import { columnOpensOnClick } from './utils/pickerColumn';
 import { isCellReadOnly, isColumnReadOnly } from './utils/readOnly';
-import { useDensityPreference } from './hooks/useDensityPreference';
+import { useDensityPreference, useRowFitPreference } from './hooks/useDensityPreference';
 import { useOwnBaseView } from './hooks/useOwnBaseView';
 import { ViewChangedButton } from './components/ViewChangedButton';
 import { DENSITY_ATTRIBUTE, resolveDensityRowHeight } from './types/density';
@@ -276,6 +276,19 @@ export interface DynamicTableProps {
   density?: 'sm' | 'md';
   /** Zebra-stripe alternate rows with the secondary surface (v2 design). */
   striped?: boolean;
+  /**
+   * The table OFFERS rows that fit their content, as a switch the person flips in the table's ⋯ menu beside density
+   * („Long text: One line / Fit to content”; remembered per person and table, like density). Fitting is the default
+   * until the person chooses otherwise. Fitted, each row is measured and is as tall as its tallest cell, never shorter
+   * than the density's row height, so a long text in a `wrap` column (`ColumnDef.wrap`) is shown whole. Off by default:
+   * no switch, every row keeps the one fixed height and every cell stays on one line, exactly as before.
+   *
+   * What holds with it on: rows are positioned by their measured heights (the virtualiser measures each mounted row
+   * and keys the height by the row's id, so a sort or a filter carries a row's height with it); a row whose cell
+   * editor is open keeps its height until the edit ends, so typing never moves the rows below; the column header and
+   * the footer are separate from the rows and do not change.
+   */
+  fitRowsToContent?: boolean;
   /** Called with the selected row IDs whenever the v2 checkbox-column selection changes. */
   onSelectionChange?: (selectedIds: string[]) => void;
   /**
@@ -593,6 +606,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   tableId,
   density,
   striped = false,
+  fitRowsToContent = false,
   onSelectionChange,
   onBulkDelete,
   onExportAll,
@@ -776,6 +790,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // `comfortable` is the default and matches today's rendering exactly, so a
   // user who never opens the picker sees no change at all.
   const { density: densityLevel } = useDensityPreference(densityLevelOverride, tableId);
+  // `fitRowsToContent` OFFERS the person a switch (the ⋯ menu, beside density): rows that fit their content, the
+  // default, or one line. `fitRows` is what the table does now. A table that does not offer it is always one line.
+  const { mode: rowFitMode } = useRowFitPreference(tableId, fitRowsToContent);
+  const fitRows = fitRowsToContent && rowFitMode === 'fit';
   // NOTE the distinct attribute name. `data-density` is the LEGACY developer
   // prop ('sm' | 'md'), and `DynamicTable.v2.css` carries rules keyed on
   // `:not([data-density])` that define part of today's DEFAULT rendering —
@@ -1650,6 +1668,34 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     }
   }, [onBulkDelete, selectedRowIds, clearSelection]);
 
+  // `fitRows` — a measured row's height is cached under the ROW'S ID, not its position, so a sort, a filter
+  // or a reload carries each row's height with it instead of handing row 3's height to whatever row is now third.
+  // Group header and summary rows are never measured (fixed height) and keep keys of their own. Off, the key stays
+  // the virtualiser's default (the index), exactly as before.
+  const getRowItemKey = useCallback(
+    (index: number): string | number => {
+      if (isGrouped) {
+        const vr = groupingResult.visualRows![index];
+        if (!vr) return index;
+        if (vr.type === 'groupHeader') return `gh:${vr.groupKey}`;
+        if (vr.type === 'groupSummary') return `gs:${vr.groupKey}`;
+        const id = data[vr.dataIndex]?.[selectionColumnName];
+        return id == null ? `di:${vr.dataIndex}` : `r:${String(id)}`;
+      }
+      const id = store.getRowData(index)?.[selectionColumnName];
+      return id == null ? index : `r:${String(id)}`;
+    },
+    // `storeRevision` — the store reorders rows in place (a sort), so the key at an index changes with it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isGrouped, groupingResult.visualRows, data, store, selectionColumnName, storeRevision],
+  );
+  // A row is never shorter than the density's row height, whatever the measurement says — a row caught detached or
+  // mid-layout reads 0 px, and stacking the next rows on a 0 px row would overlap them.
+  const measureRowElement = useCallback(
+    (element: Element, entry: ResizeObserverEntry | undefined, instance: Parameters<typeof measureVirtualElement>[2]) =>
+      Math.max(dataRowHeight, measureVirtualElement(element, entry, instance)),
+    [dataRowHeight],
+  );
   const rowVirtualizer = useVirtualizer({
     count: virtualizerCount,
     getScrollElement: () => tableRef?.current,
@@ -1657,7 +1703,23 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     // with the rest of the rows (same pill height + inter-row gap).
     estimateSize: () => dataRowHeight,
     overscan: 10,
+    ...(fitRows ? { getItemKey: getRowItemKey, measureElement: measureRowElement } : {}),
   });
+
+  // `measure()` empties the virtualiser's size cache. With fitted rows that alone would put every MOUNTED row back
+  // at the estimate until it happened to resize (a mounted row is measured when it mounts and when its box changes,
+  // not when the cache is emptied), so the mounted rows are measured again at once.
+  // `getVirtualItems()` first: `measure()` only empties the cache and the virtualiser recomputes the rows' places
+  // lazily, so a row measured straight after it is compared with its OLD place's size, reads as unchanged and is
+  // dropped — and the next recompute then falls back to the estimate (seen in Chrome: 301 px rows stacked 34 px apart).
+  const remeasureRows = useCallback(() => {
+    rowVirtualizer.measure();
+    if (!fitRows) return;
+    rowVirtualizer.getVirtualItems();
+    tableRef?.current
+      ?.querySelectorAll<HTMLElement>('tbody > tr[data-fit-row][data-index]')
+      .forEach((el) => rowVirtualizer.measureElement(el));
+  }, [rowVirtualizer, fitRows, tableRef]);
 
   // Row height is the one density value CSS cannot own (rows are absolutely
   // positioned by the virtualiser, which caches item sizes), so a density
@@ -1665,18 +1727,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   // timer below is for the fullscreen re-parent, which genuinely needs the DOM
   // to settle; using it here would paint one frame of overlapping rows.
   useLayoutEffect(() => {
-    rowVirtualizer.measure();
+    remeasureRows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataRowHeight]);
+  }, [dataRowHeight, fitRows]);
 
   // Re-measure when fullscreen state or row density changes
   useEffect(() => {
     // Small delay to ensure DOM is ready after fullscreen transition
     const timer = setTimeout(() => {
-      rowVirtualizer.measure();
+      remeasureRows();
     }, 50);
     return () => clearTimeout(timer);
-  }, [isFullscreen, dataRowHeight, rowVirtualizer]);
+  }, [isFullscreen, dataRowHeight, remeasureRows]);
 
   const virtualRows = rowVirtualizer.getVirtualItems();
 
@@ -2963,9 +3025,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       const box = el.getBoundingClientRect();
       const geo = columnVirtualizer.geometry;
       const x = box.left + (geo.starts[bounds.endCol] ?? 0) - el.scrollLeft;
-      const y = box.top + bounds.endRow * dataRowHeight - el.scrollTop;
+      // Fitted rows have heights of their own: the row's measured place, not index × row height.
+      const fitted = fitRows ? rowVirtualizer.measurementsCache[bounds.endRow] : undefined;
+      const y = box.top + (fitted ? fitted.start : bounds.endRow * dataRowHeight) - el.scrollTop;
       const width = store.getColumnWidth(bounds.endCol);
-      return new DOMRect(x, y, width, dataRowHeight);
+      return new DOMRect(x, y, width, fitted ? fitted.size : dataRowHeight);
     })();
     const firstRowData = store.getRowData(bounds.startRow);
     const firstCol = cols[bounds.startCol];
@@ -3000,7 +3064,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       anchorRect,
       originRowId: commentRowKey(firstRowData),
     });
-  }, [enableComments, commentsEntityType, store, cols, resolveCommentTarget, collectBulkCells, annotations, columnVirtualizer, dataRowHeight, commentRowKey]);
+  }, [enableComments, commentsEntityType, store, cols, resolveCommentTarget, collectBulkCells, annotations, columnVirtualizer, dataRowHeight, commentRowKey, fitRows, rowVirtualizer]);
 
   // After a drag finishes on a multi-cell range, commit the outline.
   //
@@ -4199,6 +4263,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       onExport={hideExportButton ? undefined : handleExportAll}
       exportDisabled={isExportingAll}
       showDensity={!hideDensityControl && !displayHost}
+      showRowFit={fitRowsToContent && !displayHost}
       densityTableKey={tableId}
       onFullscreen={enableFullscreen && !isFullscreen ? handleEnterFullscreen : undefined}
       extras={toolbarOverflowExtras}
@@ -4454,6 +4519,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       data-readonly-style={readOnlyStyle}
       data-density={density || undefined}
       {...densityAttribute}
+      data-fit-rows={fitRows ? 'true' : undefined}
       data-striped={effectiveStriped ? 'true' : undefined}
       // What the container holds, as attributes — NOT discovered by CSS
       // `:has(.hot-toolbar)` / `:has(.hot-card)`. A container-level `:has()`
@@ -4503,7 +4569,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       {hideToolbar && displayHost && (
         <div className="hot-pane-float-actions" data-pane-float-actions="">
           {customizeViewButton}
-          <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
+          <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} showRowFit={fitRowsToContent} />
           <ToolbarOverflow showDensity={false} extras={toolbarOverflowExtras} />
         </div>
       )}
@@ -4619,7 +4685,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
               <>
               {customizeViewButton}
               {displayHost && (
-                <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} />
+                <TableSettingsMenu densityTableKey={tableId} toggles={displayToggles} showDensity={!hideDensityControl} showRowFit={fitRowsToContent} />
               )}
               {!tableMenuApart && tableMenu('more')}
               </>
@@ -4930,7 +4996,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                     // dataRow — use dataIndex for the store
                     return (
                       <VirtualRow
-                        key={`dr-${vr.dataIndex}`}
+                        // fitted rows: one element per ROW (the virtualiser's id key), so an element never shows another
+                        // row of the same height unmeasured after a sort — see the non-grouped rows below
+                        key={fitRows ? String(virtualItem.key) : `dr-${vr.dataIndex}`}
                         rowIndex={vr.dataIndex}
                         columns={cols}
                         virtualRow={virtualItem}
@@ -4962,6 +5030,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                         onToggleRowSelect={handleToggleRowSelect}
                         compiledFormats={compiledFormats}
                         columnWindow={columnVirtualizer}
+                        measureRef={fitRows ? rowVirtualizer.measureElement : undefined}
+                        minRowHeight={dataRowHeight}
+                        fitOffered={fitRowsToContent}
                       />
                     );
                   }
@@ -4969,7 +5040,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                   // Not grouped — standard rendering
                   return (
                     <VirtualRow
-                      key={virtualItem.index}
+                      // Fitted rows are keyed by the ROW (the virtualiser's id key), not by the slot. Keyed by slot, a sort
+                      // left an element showing another row of the same height: its box did not change, so nothing
+                      // measured it, and the new row sat at the estimate — rows overlapped (seen in Chrome on 268 lines).
+                      // Keyed by row, an element appears with its row and is measured as it mounts.
+                      key={fitRows ? String(virtualItem.key) : virtualItem.index}
                       rowIndex={virtualItem.index}
                       columns={cols}
                       virtualRow={virtualItem}
@@ -5001,6 +5076,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
                       onToggleRowSelect={handleToggleRowSelect}
                       compiledFormats={compiledFormats}
                       columnWindow={columnVirtualizer}
+                      measureRef={fitRows ? rowVirtualizer.measureElement : undefined}
+                      minRowHeight={dataRowHeight}
+                      fitOffered={fitRowsToContent}
                     />
                   );
                 })}

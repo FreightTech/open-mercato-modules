@@ -3787,3 +3787,31 @@ td.hot-cell-flash {
         box-shadow: inset 0 0 0 2px var(--m3-primary);
     }
 }
+
+/* ── fitRowsToContent ─────────────────────────────────────────────────────────
+   A fitted row (`tr[data-fit-row]`, see VirtualRow) is as tall as its content and never shorter than the density's
+   row height (an inline min-height); the virtualiser measures it. Its cells drop the `height: 100%` that ties a cell
+   to a fixed row and stretch to the row instead, so every cell of a tall row — the checkbox, the frozen columns, the
+   actions — fills it. Only a `wrap` column's text wraps (`.cell-wrap`, from `ColumnDef.wrap`); every other cell keeps
+   its one line. A wrapped text keeps its own line breaks (`pre-line`: a description of several lines reads one line
+   each) and wraps a line too long for the column. A table without `fitRowsToContent` has neither attribute nor class,
+   so none of this applies to it. */
+.hot-table tbody tr[data-fit-row] > td {
+    height: auto;
+    align-self: stretch;
+}
+.hot-table td.hot-cell.cell-wrap,
+.hot-table td.hot-cell.cell-wrap > .cell-content {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+}
+/* A custom renderer marks its one-line text with Tailwind's `truncate` (the stack's convention): it keeps it, and the
+   text is one line with „…” wherever the cell does not wrap — a table without the flag, or the person's „One line” —
+   exactly as before; in a wrapping cell that truncation lets go, so the renderer needs no mode of its own. */
+.hot-table td.hot-cell.cell-wrap .truncate {
+    white-space: pre-line;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+}

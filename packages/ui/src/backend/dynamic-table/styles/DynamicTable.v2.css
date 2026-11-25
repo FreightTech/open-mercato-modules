@@ -2968,3 +2968,12 @@
 .hot-config-panel.hot-appearance-v2 .hot-config-panel-save > div:first-child { flex: 1 1 260px; max-width: none; }
 .hot-config-panel.hot-appearance-v2 .hot-config-save-colors { gap: 6px; min-height: 36px; align-items: center; }
 .hot-config-panel.hot-appearance-v2 .hot-config-save-color-btn { width: 20px !important; height: 20px !important; }
+
+/* fitRowsToContent (see the block at the end of DynamicTable.css): a `wrap` column's cell lets its text wrap. Out-
+   specifies the one-line rule for a cell's children above (`td.hot-cell > *:not(…):not(…)`), which a custom
+   renderer's root element falls under too. */
+.hot-appearance-v2 td.hot-cell.cell-wrap > *:not(.cell-comment-indicator):not(.cell-badge) {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}

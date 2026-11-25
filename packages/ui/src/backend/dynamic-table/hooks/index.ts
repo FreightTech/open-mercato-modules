@@ -114,6 +114,24 @@ export function useRowRangeState(row: number): RowRangeState {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
+/**
+ * `fitRowsToContent` — whether a cell of this row has its editor open. Only a fitted row asks (`enabled`); any other
+ * row neither subscribes nor re-renders, so the default grid does exactly what it did.
+ */
+export function useRowEditing(row: number, enabled: boolean): boolean {
+  const store = useCellStore();
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => (enabled ? store.subscribeToEditing(onStoreChange) : () => {}),
+    [store, enabled]
+  );
+  const getSnapshot = useCallback(
+    (): boolean => enabled && store.getEditingCell()?.row === row,
+    [store, row, enabled]
+  );
+  const getServerSnapshot = useCallback((): boolean => false, []);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
 // ============================================
 // DRAG HANDLING HOOK
 // ============================================
