@@ -25,7 +25,7 @@ import * as React from 'react'
 import { render, fireEvent, act } from '@testing-library/react'
 import { I18nProvider } from '@open-mercato/shared/lib/i18n/context'
 import DynamicTable from '../DynamicTable'
-import { DENSITY_METRICS } from '../index'
+import { DENSITY_METRICS, ROW_FIT_STORAGE_PREFIX } from '../index'
 import { resetDensityPreferenceStore } from '../hooks/useDensityPreference'
 import { apiCall } from '@freighttech/ui/backend/utils/apiCall'
 import type { ColumnDef } from '../types/index'
@@ -197,5 +197,99 @@ describe('fitRowsToContent on — rows grow to their content', () => {
     // the first four rows are one row height each; the tall row starts after them
     expect(offsetOf(1)).toBe(`translateY(${ROW}px)`)
     expect(offsetOf(4)).toBe(`translateY(${4 * ROW}px)`)
+  })
+})
+
+/* ── The person's switch (owner 25.11: „przełącznik w Dynamic Table, który pozwoliłby przełączać wysokość rzędów”) ── */
+
+function openMenu(): void {
+  const trigger = document.querySelector('[data-toolbar-overflow]') as HTMLElement | null
+  expect(trigger).not.toBeNull()
+  if (!document.querySelector('[data-toolbar-overflow-menu]')) {
+    act(() => {
+      fireEvent.click(trigger!)
+    })
+  }
+}
+const option = (mode: 'line' | 'fit') => document.querySelector(`[data-row-fit-option="${mode}"]`) as HTMLElement | null
+function choose(mode: 'line' | 'fit'): void {
+  openMenu()
+  act(() => {
+    fireEvent.click(option(mode)!)
+  })
+}
+const storedMode = () =>
+  Object.keys(window.localStorage)
+    .filter((key) => key.startsWith(`${ROW_FIT_STORAGE_PREFIX}:`) && key.endsWith(':fit-test'))
+    .map((key) => window.localStorage.getItem(key))
+
+describe('fitRowsToContent — the switch in the table menu', () => {
+  it('is offered only by a table that opts in, fitting by default', () => {
+    const { unmount } = render(React.createElement(Harness, { tableId: 'fit-test' }))
+    const trigger = document.querySelector('[data-toolbar-overflow]') as HTMLElement | null
+    if (trigger) {
+      act(() => {
+        fireEvent.click(trigger)
+      })
+    }
+    expect(option('line')).toBeNull()
+    expect(option('fit')).toBeNull()
+    unmount()
+
+    render(React.createElement(Harness, { tableId: 'fit-test', fitRowsToContent: true }))
+    openMenu()
+    expect(option('fit')!.getAttribute('aria-checked')).toBe('true')
+    expect(option('line')!.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('flips off -> on -> off and re-lays the rows out at once', async () => {
+    contentHeightById = { r0: 220, r1: 50 }
+    render(React.createElement(Harness, { tableId: 'fit-test', fitRowsToContent: true }))
+    expect(offsetOf(1)).toBe('translateY(220px)')
+
+    choose('line')
+    expect(rowAt(0).style.height).toBe(`${ROW}px`)
+    expect(rowAt(0).hasAttribute('data-fit-row')).toBe(false)
+    expect(document.querySelector('.cell-wrap')).toBeNull()
+    expect(document.querySelector('.hot-container')!.hasAttribute('data-fit-rows')).toBe(false)
+    expect(offsetOf(1)).toBe(`translateY(${ROW}px)`)
+    expect(storedMode()).toEqual(['line'])
+
+    choose('fit')
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 120))
+    })
+    expect(rowAt(0).getAttribute('data-fit-row')).toBe('true')
+    expect(cellAt(0, 1).classList.contains('cell-wrap')).toBe(true)
+    expect(offsetOf(1)).toBe('translateY(220px)')
+    expect(offsetOf(2)).toBe('translateY(270px)')
+    expect(storedMode()).toEqual(['fit'])
+
+    choose('line')
+    expect(offsetOf(1)).toBe(`translateY(${ROW}px)`)
+    expect(offsetOf(2)).toBe(`translateY(${2 * ROW}px)`)
+  })
+
+  it('is remembered across a reload, per table', () => {
+    contentHeightById = { r0: 220 }
+    const { unmount } = render(React.createElement(Harness, { tableId: 'fit-test', fitRowsToContent: true }))
+    choose('line')
+    unmount()
+    // a reload: the in-memory store is gone, localStorage stays
+    resetDensityPreferenceStore()
+    render(React.createElement(Harness, { tableId: 'fit-test', fitRowsToContent: true }))
+    expect(rowAt(0).style.height).toBe(`${ROW}px`)
+    expect(offsetOf(1)).toBe(`translateY(${ROW}px)`)
+    openMenu()
+    expect(option('line')!.getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('a stored choice changes nothing on a table that does not opt in', () => {
+    contentHeightById = { r0: 220 }
+    window.localStorage.setItem(`${ROW_FIT_STORAGE_PREFIX}:shared:fit-test`, 'fit')
+    render(React.createElement(Harness, { tableId: 'fit-test' }))
+    expect(rowAt(0).style.height).toBe(`${ROW}px`)
+    expect(rowAt(0).hasAttribute('data-index')).toBe(false)
+    expect(document.querySelector('.cell-wrap')).toBeNull()
   })
 })

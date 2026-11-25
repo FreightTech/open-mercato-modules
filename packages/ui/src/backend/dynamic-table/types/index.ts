@@ -1103,9 +1103,10 @@ export interface DynamicTableProps {
   /** Density of row padding (v2 design). */
   density?: 'sm' | 'md';
   /**
-   * Rows grow to fit their content: each row is measured and is as tall as its tallest cell, never shorter than the
-   * density's row height, so a long text in a `wrap` column is shown whole. Off by default: every row keeps the one
-   * fixed height and every cell stays on one line, exactly as before.
+   * The table offers rows that fit their content, as a switch in its ⋯ menu beside density (one line / fit to
+   * content; remembered per person and table; fitting by default). Fitted, a row is as tall as its tallest cell, never
+   * shorter than the density's row height, so a long text in a `wrap` column is shown whole. Off by default: no
+   * switch, every row keeps the one fixed height and every cell stays on one line, exactly as before.
    */
   fitRowsToContent?: boolean;
   /** Zebra-stripe alternate rows with the secondary surface (v2 design). */

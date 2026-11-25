@@ -267,8 +267,12 @@ export {
   subscribeDensityPreference,
   ensureDensityScope,
   resetDensityPreferenceStore,
+  ROW_FIT_STORAGE_PREFIX,
+  useRowFitPreference,
+  getRowFitPreference,
+  setRowFitPreference,
 } from './hooks/useDensityPreference';
-export type { UseDensityPreferenceResult } from './hooks/useDensityPreference';
+export type { UseDensityPreferenceResult, RowFitMode } from './hooks/useDensityPreference';
 
 // The user-facing picker. Uncontrolled by default — drop it in the toolbar and
 // it reads/writes the preference itself.

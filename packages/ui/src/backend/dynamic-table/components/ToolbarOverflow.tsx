@@ -18,7 +18,7 @@ import ReactDOM from 'react-dom'
 import { Check, Download, Maximize2, MoreHorizontal, SlidersHorizontal } from 'lucide-react'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { DENSITY_LEVELS, type DensityLevel } from '../types/density'
-import { setDensityPreference, useDensityPreference } from '../hooks/useDensityPreference'
+import { setDensityPreference, useDensityPreference, useRowFitPreference, type RowFitMode } from '../hooks/useDensityPreference'
 import type { ExportFormat } from '../utils/exportTable'
 import { computeAnchoredPosition } from '../utils/anchoredPosition'
 
@@ -43,6 +43,11 @@ export interface ToolbarOverflowProps {
   onExport?: (format: ExportFormat) => void
   exportDisabled?: boolean
   showDensity?: boolean
+  /**
+   * The table offers rows that fit their content (`fitRowsToContent`): a „Long text” choice between one line and
+   * fitting the content, below density, remembered per person and table like density (`densityTableKey`).
+   */
+  showRowFit?: boolean
   densityTableKey?: string
   onFullscreen?: () => void
   /** Host-supplied rows appended below the table's own. */
@@ -64,6 +69,13 @@ const MENU_WIDTH = 216
  */
 const MENU_MAX_HEIGHT = 720
 
+/** One line first: it is what every other table does; fitting the content is the choice this switch adds. */
+const ROW_FIT_MODES: RowFitMode[] = ['line', 'fit']
+const ROW_FIT_LABELS: Record<RowFitMode, string> = {
+  line: 'One line',
+  fit: 'Fit to content',
+}
+
 const DENSITY_LABELS: Record<DensityLevel, string> = {
   comfortable: 'Roomy',
   compact: 'Medium',
@@ -74,6 +86,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
   onExport,
   exportDisabled,
   showDensity = true,
+  showRowFit = false,
   densityTableKey,
   onFullscreen,
   extras,
@@ -118,6 +131,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
     }
   }, [open, reposition])
   const { density } = useDensityPreference(undefined, densityTableKey)
+  const { mode: rowFit, setMode: setRowFit } = useRowFitPreference(densityTableKey, showRowFit)
 
   const closeMenu = React.useCallback(() => { setOpen(false); setExportOpen(false) }, [])
 
@@ -149,7 +163,7 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
     }
   }, [open])
 
-  if (!onExport && !showDensity && !onFullscreen && !extras) return null
+  if (!onExport && !showDensity && !showRowFit && !onFullscreen && !extras) return null
 
   // One M3 menu row: the concentric 8px corner the overlay sheet gives every
   // other menu item, a translucent hover state layer, and the 12/16 body token
@@ -248,6 +262,34 @@ export const ToolbarOverflow: React.FC<ToolbarOverflowProps> = ({
                       {density === level ? <Check className="h-3.5 w-3.5 text-[var(--m3-on-surface)]" aria-hidden="true" /> : null}
                     </span>
                     {t(`dynamicTable.density.${level}`, DENSITY_LABELS[level])}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {showRowFit && (
+            <>
+              {/* Rows that fit their content — the same menu-item radios as density, its own heading. */}
+              <div className="px-2 pb-1 pt-1.5 text-label-semibold-2xs uppercase text-[var(--m3-on-surface-variant)]">
+                {t('dynamicTable.rowFit.label', 'Long text')}
+              </div>
+              <div className="px-1 pb-1" role="group" aria-label={t('dynamicTable.rowFit.label', 'Long text')}>
+                {ROW_FIT_MODES.map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={rowFit === mode}
+                    onClick={() => setRowFit(mode)}
+                    className={row}
+                    data-testid={`dynamic-table-row-fit-${mode}`}
+                    data-row-fit-option={mode}
+                  >
+                    <span className={gutter}>
+                      {rowFit === mode ? <Check className="h-3.5 w-3.5 text-[var(--m3-on-surface)]" aria-hidden="true" /> : null}
+                    </span>
+                    {t(`dynamicTable.rowFit.${mode}`, ROW_FIT_LABELS[mode])}
                   </button>
                 ))}
               </div>
