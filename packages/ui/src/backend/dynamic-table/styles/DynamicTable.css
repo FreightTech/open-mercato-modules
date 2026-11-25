@@ -3816,3 +3816,12 @@ tr[data-row-highlighted="true"] td[data-cell-selected="true"] {
     overflow-wrap: anywhere;
     text-overflow: clip;
 }
+/* A custom renderer marks its one-line text with Tailwind's `truncate` (the stack's convention): it keeps it, and the
+   text is one line with „…” wherever the cell does not wrap — a table without the flag, or the person's „One line” —
+   exactly as before; in a wrapping cell that truncation lets go, so the renderer needs no mode of its own. */
+.hot-table td.hot-cell.cell-wrap .truncate {
+    white-space: pre-line;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+}

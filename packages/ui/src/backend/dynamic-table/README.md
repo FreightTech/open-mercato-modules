@@ -339,7 +339,8 @@ A pane's settings menu (split view) offers the same choice; the expanded toolbar
 - A row whose cell editor is open keeps its height until the edit ends, so typing never moves the rows below it; the
   row is measured again with its new text after the save or the cancel.
 - The column header and the footer are not rows and do not change. Saved views store no row height.
-- A custom `renderer` wraps where its own markup lets the text wrap: give its text element no `truncate` / `nowrap`.
+- A custom `renderer` keeps its one-line text marked with Tailwind's `truncate`: one line with „…” where the cell does
+  not wrap (no flag, or „One line”), wrapped in a wrapping cell. Text styled one-line by other means does not wrap.
 - With the switch at „One line” the table renders as one without the flag (its rows only keep `data-index`).
 - Off (the default), none of this applies: no switch, rows keep the fixed height, nothing is measured and no cell wraps,
   even on a column that says `wrap`.
