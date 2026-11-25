@@ -112,6 +112,7 @@ const MyTable = () => {
 | `defaultHiddenColumns` | `string[]` | `[]` | Array of column `data` values to hide by default |
 | `debug` | `boolean` | `false` | Enable debug mode with event log panel |
 | `uiConfig` | `TableUIConfig` | `{}` | UI visibility configuration (see below) |
+| `fitRowsToContent` | `boolean` | `false` | Rows grow to fit their content; the columns with `wrap: true` wrap their text (see [Rows that fit their content](#rows-that-fit-their-content)) |
 
 ### Deprecated Props (Backward Compatible)
 
@@ -248,6 +249,7 @@ interface ColumnDef {
   type?: 'text' | 'numeric' | 'date' | 'dropdown' | 'boolean';
   readOnly?: boolean;              // Prevent editing
   sticky?: 'left' | 'right';       // Pin column to side
+  wrap?: boolean;                  // With the table's fitRowsToContent: the text wraps, the row grows to it
   source?: any[];                  // Options for dropdown type
   renderer?: (value, rowData, col, rowIndex, colIndex) => ReactNode;
   editor?: (value, onChange, onSave, onCancel, rowData, col, rowIndex, colIndex) => ReactNode;
@@ -308,6 +310,35 @@ const columns = [
   { data: 'actions', title: '', sticky: 'right' } // Pinned to right
 ];
 ```
+
+### Rows that fit their content
+
+By default every row has the one height of the user's density and every cell is one line, cut with „…”. A table whose
+long texts must be read whole (a goods description of a thousand characters, its translation) sets `fitRowsToContent`
+and marks those columns `wrap`:
+
+```tsx
+<DynamicTable
+  fitRowsToContent
+  columns={[
+    { data: 'code', title: 'Code', width: 120 },
+    { data: 'description', title: 'Description', width: 240, wrap: true },
+  ]}
+  /* … */
+/>
+```
+
+- A row is as tall as its tallest cell and never shorter than the density's row height. Only the `wrap` columns wrap;
+  every other cell keeps its one line. A wrapped text keeps its own line breaks and wraps a line too long for the
+  column.
+- Rows stay virtualised: each mounted row is measured, and its height is kept under the row's id (`rowKeyColumn`, else
+  `idColumnName`), so a sort, a filter or a reload carries it with the row.
+- A row whose cell editor is open keeps its height until the edit ends, so typing never moves the rows below it; the
+  row is measured again with its new text after the save or the cancel.
+- The column header and the footer are not rows and do not change. Saved views store no row height.
+- A custom `renderer` wraps where its own markup lets the text wrap: give its text element no `truncate` / `nowrap`.
+- Off (the default), none of this applies: rows keep the fixed height, nothing is measured and no cell wraps, even on a
+  column that says `wrap`.
 
 ## Column quick filter (Excel AutoFilter)
 
