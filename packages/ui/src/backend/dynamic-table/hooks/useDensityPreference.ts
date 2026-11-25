@@ -375,12 +375,95 @@ export function ensureDensityScope(): Promise<void> {
   return identityPromise
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   ROW FIT — the person's switch between one-line rows and rows that fit their
+   content, on a table that offers it (`fitRowsToContent`). Same store, same
+   user scope and same per-table key as density, for the same reasons (it is
+   about one person's reading, never shared, painted without a request); kept
+   under its own prefix so neither setting can read the other's value.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/** `fit`: a row grows to its content; `line`: every row is one line, as a table without the switch. */
+export type RowFitMode = 'fit' | 'line'
+
+export const ROW_FIT_STORAGE_PREFIX = 'fms.dt.rowFit'
+
+export function isRowFitMode(value: unknown): value is RowFitMode {
+  return value === 'fit' || value === 'line'
+}
+
+/** Chosen mode per table key ('' = a table with no key). Absent = the table's default. */
+const rowFitModes = new Map<string, RowFitMode>()
+
+function rowFitStorageKey(tableKey?: string): string {
+  return `${ROW_FIT_STORAGE_PREFIX}:${currentScope ?? FALLBACK_SCOPE}${tableKey ? `:${tableKey}` : ''}`
+}
+
+/** The person's chosen mode for `tableKey`, or `null` when they never chose one (the table's default then applies). */
+export function getRowFitPreference(tableKey?: string): RowFitMode | null {
+  if (!hydrated) hydrate()
+  const own = rowFitModes.get(tableKey ?? '')
+  if (own) return own
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(rowFitStorageKey(tableKey))
+    if (isRowFitMode(raw)) {
+      rowFitModes.set(tableKey ?? '', raw)
+      return raw
+    }
+  } catch {
+    /* storage blocked: the table's default */
+  }
+  return null
+}
+
+/** Set and persist the mode for `tableKey`. No-op for an unchanged or invalid value. */
+export function setRowFitPreference(mode: RowFitMode, tableKey?: string): void {
+  if (!isRowFitMode(mode)) return
+  hydrate()
+  if (rowFitModes.get(tableKey ?? '') === mode) return
+  rowFitModes.set(tableKey ?? '', mode)
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(rowFitStorageKey(tableKey), mode)
+    } catch {
+      /* best effort, as density: the click still applies for this session */
+    }
+  }
+  emit()
+}
+
+/**
+ * The mode a table renders in. `offered` false (the table did not opt in): always `line`, nothing read or written.
+ * Otherwise the person's choice for this table, else `defaultMode`.
+ */
+export function useRowFitPreference(
+  tableKey: string | undefined,
+  offered: boolean,
+  defaultMode: RowFitMode = 'fit',
+): { mode: RowFitMode; setMode: (mode: RowFitMode) => void } {
+  const getSnapshot = React.useCallback(
+    (): RowFitMode => (offered ? (getRowFitPreference(tableKey) ?? defaultMode) : 'line'),
+    [offered, tableKey, defaultMode],
+  )
+  const getServerSnapshot = React.useCallback((): RowFitMode => (offered ? defaultMode : 'line'), [offered, defaultMode])
+  const mode = React.useSyncExternalStore(subscribeDensityPreference, getSnapshot, getServerSnapshot)
+  const setMode = React.useCallback(
+    (next: RowFitMode) => {
+      if (offered) setRowFitPreference(next, tableKey)
+    },
+    [offered, tableKey],
+  )
+  return { mode, setMode }
+}
+
 /**
  * Drop all in-memory state. FOR TESTS ONLY — it exists because the store is
  * module-level and therefore survives between test cases.
  */
 export function resetDensityPreferenceStore(): void {
   listeners.clear()
+  rowFitModes.clear()
   currentLevel = DEFAULT_DENSITY
   currentScope = null
   scopeFromCache = false

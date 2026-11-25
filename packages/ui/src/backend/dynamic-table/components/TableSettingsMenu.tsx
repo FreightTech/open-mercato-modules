@@ -24,7 +24,7 @@ import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { Toggle } from '../../../primitives-v2/Toggle'
 import { ChipTabs } from '../../../primitives-v2/ChipTabs'
 import { DENSITY_LEVELS, type DensityLevel } from '../types/density'
-import { setDensityPreference, useDensityPreference } from '../hooks/useDensityPreference'
+import { setDensityPreference, useDensityPreference, useRowFitPreference, type RowFitMode } from '../hooks/useDensityPreference'
 import { computeAnchoredPosition } from '../utils/anchoredPosition'
 import type { TableDisplayToggle } from './TableDisplayContext'
 
@@ -40,11 +40,14 @@ export function TableSettingsMenu({
   densityTableKey,
   toggles,
   showDensity = true,
+  showRowFit = false,
   className = 'hot-toolbar-overflow-btn',
 }: {
   densityTableKey?: string
   toggles: TableDisplayToggle[]
   showDensity?: boolean
+  /** The table offers rows that fit their content (`fitRowsToContent`): one line / fit to content, below density. */
+  showRowFit?: boolean
   /** The trigger's look — the toolbar's round icon button by default. */
   className?: string
 }) {
@@ -54,6 +57,7 @@ export function TableSettingsMenu({
   const panelRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState({ top: 0, left: 0, maxHeight: 480, flipAbove: false })
   const { density } = useDensityPreference(undefined, densityTableKey)
+  const { mode: rowFit, setMode: setRowFit } = useRowFitPreference(densityTableKey, showRowFit)
 
   const reposition = React.useCallback(() => {
     const trigger = triggerRef.current
@@ -148,6 +152,26 @@ export function TableSettingsMenu({
                   label: t(`dynamicTable.density.${level}`, DENSITY_FALLBACK[level]),
                   title: t(`dynamicTable.density.${level}Hint`, '') || undefined,
                   testId: `dynamic-table-density-${level}`,
+                }))}
+                className="[&>button]:flex-1 [&>button]:justify-center [&>button]:px-2"
+              />
+            </div>
+          )}
+          {showRowFit && (
+            <div className="flex flex-col gap-1">
+              <div className="text-label-semibold-2xs uppercase tracking-wider text-[var(--m3-on-surface-variant)]">
+                {t('dynamicTable.rowFit.label', 'Long text')}
+              </div>
+              <ChipTabs
+                role="radiogroup"
+                size="sm"
+                ariaLabel={t('dynamicTable.rowFit.label', 'Long text')}
+                value={rowFit}
+                onChange={(mode) => setRowFit(mode as RowFitMode)}
+                options={(['line', 'fit'] as RowFitMode[]).map((mode) => ({
+                  value: mode,
+                  label: t(`dynamicTable.rowFit.${mode}`, mode === 'line' ? 'One line' : 'Fit to content'),
+                  testId: `dynamic-table-row-fit-${mode}`,
                 }))}
                 className="[&>button]:flex-1 [&>button]:justify-center [&>button]:px-2"
               />

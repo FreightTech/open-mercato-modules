@@ -112,7 +112,7 @@ const MyTable = () => {
 | `defaultHiddenColumns` | `string[]` | `[]` | Array of column `data` values to hide by default |
 | `debug` | `boolean` | `false` | Enable debug mode with event log panel |
 | `uiConfig` | `TableUIConfig` | `{}` | UI visibility configuration (see below) |
-| `fitRowsToContent` | `boolean` | `false` | Rows grow to fit their content; the columns with `wrap: true` wrap their text (see [Rows that fit their content](#rows-that-fit-their-content)) |
+| `fitRowsToContent` | `boolean` | `false` | Offers the person a switch (⋯ menu, beside density) between one-line rows and rows that grow to fit their content, fitting by default; the columns with `wrap: true` wrap their text (see [Rows that fit their content](#rows-that-fit-their-content)) |
 
 ### Deprecated Props (Backward Compatible)
 
@@ -315,7 +315,11 @@ const columns = [
 
 By default every row has the one height of the user's density and every cell is one line, cut with „…”. A table whose
 long texts must be read whole (a goods description of a thousand characters, its translation) sets `fitRowsToContent`
-and marks those columns `wrap`:
+and marks those columns `wrap`. The table then offers the person a switch in its ⋯ menu, below density: **Long text —
+One line / Fit to content** (keys `dynamicTable.rowFit.label` / `.line` / `.fit`; the heading's fallback is not „Row
+height” because that is density's fallback). Fitting is the default; the choice is remembered per person and per table (`tableId`) in
+localStorage, exactly like density (`fms.dt.rowFit:<user>:<tableId>`), and flipping it re-lays the rows out at once.
+A pane's settings menu (split view) offers the same choice; the expanded toolbar (`expandToolbarActions`) does not.
 
 ```tsx
 <DynamicTable
@@ -336,9 +340,11 @@ and marks those columns `wrap`:
 - A row whose cell editor is open keeps its height until the edit ends, so typing never moves the rows below it; the
   row is measured again with its new text after the save or the cancel.
 - The column header and the footer are not rows and do not change. Saved views store no row height.
-- A custom `renderer` wraps where its own markup lets the text wrap: give its text element no `truncate` / `nowrap`.
-- Off (the default), none of this applies: rows keep the fixed height, nothing is measured and no cell wraps, even on a
-  column that says `wrap`.
+- A custom `renderer` keeps its one-line text marked with Tailwind's `truncate`: one line with „…” where the cell does
+  not wrap (no flag, or „One line”), wrapped in a wrapping cell. Text styled one-line by other means does not wrap.
+- With the switch at „One line” the table renders as one without the flag (its rows only keep `data-index`).
+- Off (the default), none of this applies: no switch, rows keep the fixed height, nothing is measured and no cell wraps,
+  even on a column that says `wrap`.
 
 ## Column quick filter (Excel AutoFilter)
 

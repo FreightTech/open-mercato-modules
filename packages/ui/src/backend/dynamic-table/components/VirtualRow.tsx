@@ -86,6 +86,12 @@ export interface VirtualRowProps {
   measureRef?: (element: HTMLTableRowElement | null) => void;
   /** With `measureRef`: the density's row height, the shortest a fitted row gets. */
   minRowHeight?: number;
+  /**
+   * The table offers rows that fit their content (`fitRowsToContent`), whichever way the person's switch is set. Such a
+   * row always carries `data-index`: after a switch to one line the virtualiser still watches the rows it measured, and
+   * it names a row by that attribute.
+   */
+  fitOffered?: boolean;
 }
 
 const VirtualRow: React.FC<VirtualRowProps> = memo(
@@ -123,6 +129,7 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
     columnWindow,
     measureRef,
     minRowHeight = 0,
+    fitOffered = false,
   }) => {
     const t = useT();
     const rowActionsLabel = t('dynamicTable.rowActions', 'Row actions');
@@ -233,7 +240,7 @@ const VirtualRow: React.FC<VirtualRowProps> = memo(
       <tr
         ref={measureRef}
         data-row={rowIndex}
-        data-index={fitted ? virtualRow.index : undefined}
+        data-index={fitted || fitOffered ? virtualRow.index : undefined}
         data-fit-row={fitted ? 'true' : undefined}
         data-is-new={isNewRow}
         data-row-even={rowIndex % 2 === 1 ? 'true' : undefined}
